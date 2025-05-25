@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +13,14 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
+import { NewCollaboratorDialog } from '@/components/dashboard/NewCollaboratorDialog';
+import { FeedbackDialog } from '@/components/dashboard/FeedbackDialog';
+import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
+import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
+
   const stats = [
     {
       title: 'Total de Colaboradores',
@@ -226,31 +231,15 @@ export const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Button variant="outline" className="justify-start h-auto p-4">
-                <UserPlus className="mr-2 h-5 w-5" />
-                <div className="text-left">
-                  <div className="font-medium">Novo Colaborador</div>
-                  <div className="text-xs text-muted-foreground">Iniciar onboarding</div>
-                </div>
-              </Button>
+              <NewCollaboratorDialog />
+              <FeedbackDialog />
+              <TrainingDialog />
               
-              <Button variant="outline" className="justify-start h-auto p-4">
-                <MessageSquare className="mr-2 h-5 w-5" />
-                <div className="text-left">
-                  <div className="font-medium">Enviar Feedback</div>
-                  <div className="text-xs text-muted-foreground">Avaliação de performance</div>
-                </div>
-              </Button>
-              
-              <Button variant="outline" className="justify-start h-auto p-4">
-                <BookOpen className="mr-2 h-5 w-5" />
-                <div className="text-left">
-                  <div className="font-medium">Novo Treinamento</div>
-                  <div className="text-xs text-muted-foreground">Criar curso</div>
-                </div>
-              </Button>
-              
-              <Button variant="outline" className="justify-start h-auto p-4">
+              <Button 
+                variant="outline" 
+                className="justify-start h-auto p-4"
+                onClick={() => navigate('/goals')}
+              >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 <div className="text-left">
                   <div className="font-medium">Relatórios</div>

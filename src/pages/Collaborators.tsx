@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useToast } from '@/hooks/use-toast';
 
 interface Collaborator {
   id: string;
@@ -26,9 +27,7 @@ interface Collaborator {
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
-  
-  // Mock data - em produção viria de uma API
-  const collaborators: Collaborator[] = [
+  const [collaborators, setCollaborators] = useLocalStorage<Collaborator[]>('collaborators', [
     {
       id: '1',
       name: 'João Silva',
@@ -62,7 +61,50 @@ export const Collaborators = () => {
       location: 'Belo Horizonte, MG',
       joinDate: '2023-03-10'
     }
-  ];
+  ]);
+
+  const [newCollaborator, setNewCollaborator] = useState({
+    name: '',
+    email: '',
+    role: '',
+    department: '',
+    phone: '',
+    location: ''
+  });
+
+  const { toast } = useToast();
+
+  const handleAddCollaborator = () => {
+    if (!newCollaborator.name || !newCollaborator.email || !newCollaborator.role || !newCollaborator.department) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const collaborator: Collaborator = {
+      id: Date.now().toString(),
+      name: newCollaborator.name,
+      email: newCollaborator.email,
+      role: newCollaborator.role,
+      department: newCollaborator.department,
+      status: 'active',
+      phone: newCollaborator.phone,
+      location: newCollaborator.location,
+      joinDate: new Date().toISOString().split('T')[0]
+    };
+
+    setCollaborators([...collaborators, collaborator]);
+    setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
+    setIsAddingCollaborator(false);
+    
+    toast({
+      title: "Colaborador adicionado",
+      description: "Novo colaborador foi adicionado com sucesso.",
+    });
+  };
 
   const filteredCollaborators = collaborators.filter(collaborator =>
     collaborator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,27 +159,66 @@ export const Collaborators = () => {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Nome Completo</Label>
-                  <Input id="name" placeholder="Digite o nome completo" />
+                  <Label htmlFor="name">Nome Completo *</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="Digite o nome completo"
+                    value={newCollaborator.name}
+                    onChange={(e) => setNewCollaborator({...newCollaborator, name: e.target.value})}
+                  />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Digite o email" />
+                  <Label htmlFor="email">Email *</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Digite o email"
+                    value={newCollaborator.email}
+                    onChange={(e) => setNewCollaborator({...newCollaborator, email: e.target.value})}
+                  />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="role">Cargo</Label>
-                  <Input id="role" placeholder="Digite o cargo" />
+                  <Label htmlFor="role">Cargo *</Label>
+                  <Input 
+                    id="role" 
+                    placeholder="Digite o cargo"
+                    value={newCollaborator.role}
+                    onChange={(e) => setNewCollaborator({...newCollaborator, role: e.target.value})}
+                  />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="department">Departamento</Label>
-                  <Input id="department" placeholder="Digite o departamento" />
+                  <Label htmlFor="department">Departamento *</Label>
+                  <Input 
+                    id="department" 
+                    placeholder="Digite o departamento"
+                    value={newCollaborator.department}
+                    onChange={(e) => setNewCollaborator({...newCollaborator, department: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input 
+                    id="phone" 
+                    placeholder="Digite o telefone"
+                    value={newCollaborator.phone}
+                    onChange={(e) => setNewCollaborator({...newCollaborator, phone: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="location">Localização</Label>
+                  <Input 
+                    id="location" 
+                    placeholder="Digite a localização"
+                    value={newCollaborator.location}
+                    onChange={(e) => setNewCollaborator({...newCollaborator, location: e.target.value})}
+                  />
                 </div>
               </div>
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsAddingCollaborator(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={() => setIsAddingCollaborator(false)}>
+                <Button onClick={handleAddCollaborator}>
                   Adicionar
                 </Button>
               </div>
