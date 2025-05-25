@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,11 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, Plus, Star, TrendingUp, Users, Send } from 'lucide-react';
+import { MessageSquare, Plus, Star, TrendingUp, Users, Mail, Bell } from 'lucide-react';
+import { AdvancedFeedbackDialog } from '@/components/feedback/AdvancedFeedbackDialog';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface FeedbackItem {
   id: string;
@@ -22,37 +19,22 @@ interface FeedbackItem {
   content?: string;
   createdDate: string;
   dueDate?: string;
+  subject?: string;
+  toEmail?: string;
+  urgent?: boolean;
+  sendEmail?: boolean;
+  sendNotification?: boolean;
+  anonymous?: boolean;
 }
 
 export const Feedback = () => {
   const [isCreatingFeedback, setIsCreatingFeedback] = useState(false);
-
-  const feedbacks: FeedbackItem[] = [
-    {
-      id: '1',
-      fromUser: 'Maria Santos',
-      toUser: 'João Silva',
-      type: 'performance',
-      status: 'completed',
-      rating: 4,
-      content: 'Excelente trabalho no projeto. Demonstrou grande conhecimento técnico.',
-      createdDate: '2024-01-15',
-      dueDate: '2024-01-20'
-    },
-    {
-      id: '2',
-      fromUser: 'Carlos Mendes',
-      toUser: 'Ana Costa',
-      type: '360',
-      status: 'pending',
-      createdDate: '2024-01-18',
-      dueDate: '2024-01-25'
-    }
-  ];
+  const [feedbacks] = useLocalStorage('feedbacks', []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-500';
+      case 'sent': return 'bg-blue-500';
       case 'pending': return 'bg-yellow-500';
       case 'overdue': return 'bg-red-500';
       default: return 'bg-gray-500';
@@ -68,6 +50,17 @@ export const Feedback = () => {
     ));
   };
 
+  const getFeedbackTypeLabel = (type: string) => {
+    const types: any = {
+      'performance': 'Performance',
+      '360': '360°',
+      'peer': 'Entre Pares',
+      'recognition': 'Reconhecimento',
+      'improvement': 'Melhoria'
+    };
+    return types[type] || type;
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -79,62 +72,10 @@ export const Feedback = () => {
             </p>
           </div>
           
-          <Dialog open={isCreatingFeedback} onOpenChange={setIsCreatingFeedback}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Feedback
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Enviar Feedback</DialogTitle>
-                <DialogDescription>
-                  Envie um feedback para um colaborador
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Para</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um colaborador" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="joao">João Silva</SelectItem>
-                      <SelectItem value="maria">Maria Santos</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Tipo de Feedback</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="performance">Performance</SelectItem>
-                      <SelectItem value="360">360°</SelectItem>
-                      <SelectItem value="peer">Entre Pares</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Comentários</Label>
-                  <Textarea placeholder="Digite seu feedback..." rows={4} />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsCreatingFeedback(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={() => setIsCreatingFeedback(false)}>
-                  <Send className="mr-2 h-4 w-4" />
-                  Enviar
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setIsCreatingFeedback(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Feedback
+          </Button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
@@ -150,24 +91,24 @@ export const Feedback = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-              <Badge className="bg-yellow-500 text-xs">!</Badge>
+              <CardTitle className="text-sm font-medium">Enviados</CardTitle>
+              <Badge className="bg-blue-500 text-xs">→</Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {feedbacks.filter(f => f.status === 'pending').length}
+                {feedbacks.filter((f: any) => f.status === 'sent').length}
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Concluídos</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+              <Badge className="bg-yellow-500 text-xs">!</Badge>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {feedbacks.filter(f => f.status === 'completed').length}
+                {feedbacks.filter((f: any) => f.status === 'pending').length}
               </div>
             </CardContent>
           </Card>
@@ -178,17 +119,97 @@ export const Feedback = () => {
               <Star className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">4.2</div>
+              <div className="text-2xl font-bold">
+                {feedbacks.length > 0 
+                  ? (feedbacks.reduce((acc: number, f: any) => acc + (f.rating || 0), 0) / feedbacks.filter((f: any) => f.rating).length || 0).toFixed(1)
+                  : '0.0'}
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="received" className="space-y-4">
+        <Tabs defaultValue="sent" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="received">Recebidos</TabsTrigger>
             <TabsTrigger value="sent">Enviados</TabsTrigger>
+            <TabsTrigger value="received">Recebidos</TabsTrigger>
             <TabsTrigger value="analytics">Análises</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="sent">
+            <div className="space-y-4">
+              {feedbacks.filter((f: any) => f.fromUser === 'Você').map((feedback: any) => (
+                <Card key={feedback.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center space-x-3">
+                        <Avatar>
+                          <AvatarFallback>
+                            {feedback.toUser.split(' ').map((n: string) => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-lg">Para: {feedback.toUser}</CardTitle>
+                          <CardDescription>{feedback.subject}</CardDescription>
+                          {feedback.toEmail && (
+                            <p className="text-xs text-muted-foreground flex items-center mt-1">
+                              <Mail className="h-3 w-3 mr-1" />
+                              {feedback.toEmail}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline">{getFeedbackTypeLabel(feedback.type)}</Badge>
+                        <Badge className={getStatusColor(feedback.status)}>
+                          {feedback.status === 'sent' ? 'Enviado' : 
+                           feedback.status === 'pending' ? 'Pendente' : 'Concluído'}
+                        </Badge>
+                        {feedback.urgent && (
+                          <Badge variant="destructive" className="text-xs">Urgente</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {feedback.rating && (
+                      <div className="flex items-center space-x-2 mb-3">
+                        <span className="text-sm font-medium">Avaliação:</span>
+                        <div className="flex">{renderStars(feedback.rating)}</div>
+                        <span className="text-sm text-muted-foreground">({feedback.rating}/5)</span>
+                      </div>
+                    )}
+                    {feedback.content && (
+                      <p className="text-sm mb-3">{feedback.content}</p>
+                    )}
+                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <span>Enviado em {new Date(feedback.createdDate).toLocaleDateString('pt-BR')}</span>
+                      <div className="flex items-center space-x-2">
+                        {feedback.sendEmail && <Mail className="h-4 w-4" />}
+                        {feedback.sendNotification && <Bell className="h-4 w-4" />}
+                        {feedback.anonymous && <span className="text-xs">Anônimo</span>}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              
+              {feedbacks.filter((f: any) => f.fromUser === 'Você').length === 0 && (
+                <Card>
+                  <CardContent className="py-8">
+                    <div className="text-center">
+                      <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Nenhum feedback enviado</h3>
+                      <p className="text-muted-foreground mb-4">Comece enviando feedback para seus colegas</p>
+                      <Button onClick={() => setIsCreatingFeedback(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Enviar Primeiro Feedback
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
           <TabsContent value="received">
             <div className="space-y-4">
@@ -238,18 +259,6 @@ export const Feedback = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="sent">
-            <Card>
-              <CardContent className="py-8">
-                <div className="text-center">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhum feedback enviado</h3>
-                  <p className="text-muted-foreground">Comece enviando feedback para seus colegas</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="analytics">
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
@@ -260,15 +269,19 @@ export const Feedback = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Performance</span>
-                      <span>50%</span>
+                      <span>{Math.round((feedbacks.filter((f: any) => f.type === 'performance').length / feedbacks.length || 0) * 100)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span>360°</span>
-                      <span>30%</span>
+                      <span>{Math.round((feedbacks.filter((f: any) => f.type === '360').length / feedbacks.length || 0) * 100)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Entre Pares</span>
-                      <span>20%</span>
+                      <span>{Math.round((feedbacks.filter((f: any) => f.type === 'peer').length / feedbacks.length || 0) * 100)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Reconhecimento</span>
+                      <span>{Math.round((feedbacks.filter((f: any) => f.type === 'recognition').length / feedbacks.length || 0) * 100)}%</span>
                     </div>
                   </div>
                 </CardContent>
@@ -276,19 +289,33 @@ export const Feedback = () => {
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Tendência Mensal</CardTitle>
+                  <CardTitle>Estatísticas Gerais</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <TrendingUp className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-green-500">+15%</p>
-                    <p className="text-sm text-muted-foreground">Crescimento este mês</p>
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                      <p className="text-lg font-bold text-green-500">{feedbacks.length}</p>
+                      <p className="text-sm text-muted-foreground">Total de feedbacks</p>
+                    </div>
+                    <div className="text-center">
+                      <Star className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
+                      <p className="text-lg font-bold text-yellow-500">
+                        {feedbacks.filter((f: any) => f.rating).length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Com avaliação</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
         </Tabs>
+
+        <AdvancedFeedbackDialog 
+          open={isCreatingFeedback}
+          onOpenChange={setIsCreatingFeedback}
+        />
       </div>
     </DashboardLayout>
   );

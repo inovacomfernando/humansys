@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, Clock, User, FileText, Briefcase, Users, Play } from 'lucide-react';
+import { NewOnboardingDialog } from '@/components/onboarding/NewOnboardingDialog';
+import { OnboardingDetails } from '@/components/onboarding/OnboardingDetails';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 interface OnboardingProcess {
   id: string;
@@ -29,30 +31,11 @@ interface OnboardingStep {
 }
 
 export const Onboarding = () => {
-  // Mock data
-  const onboardingProcesses: OnboardingProcess[] = [
-    {
-      id: '1',
-      collaboratorName: 'João Silva',
-      position: 'Desenvolvedor Senior',
-      department: 'Tecnologia',
-      startDate: '2024-01-22',
-      progress: 75,
-      status: 'in-progress',
-      currentStep: 'Treinamento de Segurança'
-    },
-    {
-      id: '2',
-      collaboratorName: 'Maria Santos',
-      position: 'Analista de Marketing',
-      department: 'Marketing',
-      startDate: '2024-01-20',
-      progress: 100,
-      status: 'completed',
-      currentStep: 'Concluído'
-    }
-  ];
+  const [onboardingProcesses] = useLocalStorage('onboarding-processes', []);
+  const [selectedProcess, setSelectedProcess] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
+  // Mock data
   const defaultSteps: OnboardingStep[] = [
     {
       id: '1',
@@ -130,15 +113,23 @@ export const Onboarding = () => {
     }
   };
 
+  const openDetails = (process: any) => {
+    setSelectedProcess(process);
+    setDetailsOpen(true);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">Onboarding</h1>
-          <p className="text-muted-foreground">
-            Gerencie o processo de integração de novos colaboradores
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Onboarding</h1>
+            <p className="text-muted-foreground">
+              Gerencie o processo de integração de novos colaboradores
+            </p>
+          </div>
+          <NewOnboardingDialog />
         </div>
 
         {/* Stats */}
@@ -150,7 +141,7 @@ export const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {onboardingProcesses.filter(p => p.status === 'in-progress').length}
+                {onboardingProcesses.filter((p: any) => p.status === 'in-progress').length}
               </div>
             </CardContent>
           </Card>
@@ -162,7 +153,7 @@ export const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {onboardingProcesses.filter(p => p.status === 'completed').length}
+                {onboardingProcesses.filter((p: any) => p.status === 'completed').length}
               </div>
             </CardContent>
           </Card>
@@ -183,7 +174,11 @@ export const Onboarding = () => {
               <div className="h-2 w-2 bg-green-500 rounded-full"></div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">85%</div>
+              <div className="text-2xl font-bold">
+                {onboardingProcesses.length > 0 
+                  ? Math.round((onboardingProcesses.filter((p: any) => p.status === 'completed').length / onboardingProcesses.length) * 100)
+                  : 0}%
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -197,7 +192,7 @@ export const Onboarding = () => {
 
           <TabsContent value="active">
             <div className="space-y-4">
-              {onboardingProcesses.filter(p => p.status !== 'completed').map((process) => (
+              {onboardingProcesses.filter((p: any) => p.status !== 'completed').map((process: any) => (
                 <Card key={process.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -231,10 +226,10 @@ export const Onboarding = () => {
                         </p>
                       </div>
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => openDetails(process)}>
                           Ver Detalhes
                         </Button>
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => openDetails(process)}>
                           Acompanhar
                         </Button>
                       </div>
@@ -242,6 +237,19 @@ export const Onboarding = () => {
                   </CardContent>
                 </Card>
               ))}
+              
+              {onboardingProcesses.filter((p: any) => p.status !== 'completed').length === 0 && (
+                <Card>
+                  <CardContent className="py-8">
+                    <div className="text-center">
+                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Nenhum processo ativo</h3>
+                      <p className="text-muted-foreground mb-4">Comece criando um novo onboarding</p>
+                      <NewOnboardingDialog />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
@@ -298,7 +306,7 @@ export const Onboarding = () => {
 
           <TabsContent value="completed">
             <div className="space-y-4">
-              {onboardingProcesses.filter(p => p.status === 'completed').map((process) => (
+              {onboardingProcesses.filter((p: any) => p.status === 'completed').map((process: any) => (
                 <Card key={process.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -320,16 +328,34 @@ export const Onboarding = () => {
                         <Progress value={100} className="h-2 w-32" />
                         <p className="text-sm text-muted-foreground mt-1">100% concluído</p>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => openDetails(process)}>
                         Ver Relatório
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
+              
+              {onboardingProcesses.filter((p: any) => p.status === 'completed').length === 0 && (
+                <Card>
+                  <CardContent className="py-8">
+                    <div className="text-center">
+                      <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Nenhum onboarding concluído</h3>
+                      <p className="text-muted-foreground">Os processos concluídos aparecerão aqui</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>
+
+        <OnboardingDetails 
+          process={selectedProcess}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+        />
       </div>
     </DashboardLayout>
   );
