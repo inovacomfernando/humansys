@@ -11,6 +11,18 @@ import { Plans } from "./pages/Plans";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Checkout } from "./pages/Checkout";
+import { Profile } from "./pages/Profile";
+import { Collaborators } from "./pages/Collaborators";
+import { Recruitment } from "./pages/Recruitment";
+import { Onboarding } from "./pages/Onboarding";
+import { Feedback } from "./pages/Feedback";
+import { Meetings } from "./pages/Meetings";
+import { Goals } from "./pages/Goals";
+import { Training } from "./pages/Training";
+import { Certificates } from "./pages/Certificates";
+import { Surveys } from "./pages/Surveys";
+import { Documents } from "./pages/Documents";
+import { Settings } from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,30 +67,78 @@ const AppRoutes = () => {
         </ProtectedRoute>
       } />
       
-      {/* Placeholder para outras páginas do sistema */}
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Profile />
+        </ProtectedRoute>
+      } />
+      
       <Route path="/collaborators" element={
         <ProtectedRoute>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4">Gestão de Colaboradores</h2>
-              <p className="text-muted-foreground">Página em desenvolvimento</p>
-            </div>
-          </div>
+          <Collaborators />
         </ProtectedRoute>
       } />
       
       <Route path="/recruitment" element={
         <ProtectedRoute>
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-4">Recrutamento e Seleção</h2>
-              <p className="text-muted-foreground">Página em desenvolvimento</p>
-            </div>
-          </div>
+          <Recruitment />
         </ProtectedRoute>
       } />
       
-      {/* Adicionar outras rotas conforme necessário */}
+      <Route path="/onboarding" element={
+        <ProtectedRoute>
+          <Onboarding />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/feedback" element={
+        <ProtectedRoute>
+          <Feedback />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/meetings" element={
+        <ProtectedRoute>
+          <Meetings />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/goals" element={
+        <ProtectedRoute>
+          <Goals />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/training" element={
+        <ProtectedRoute>
+          <Training />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/certificates" element={
+        <ProtectedRoute>
+          <Certificates />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/surveys" element={
+        <ProtectedRoute>
+          <Surveys />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/documents" element={
+        <ProtectedRoute>
+          <Documents />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      } />
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
