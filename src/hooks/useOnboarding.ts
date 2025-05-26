@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,10 +46,13 @@ export const useOnboarding = () => {
   const { toast } = useToast();
 
   const fetchCollaborators = async () => {
-    if (!user) return;
+    if (!user?.id) {
+      console.log('useOnboarding: Usuário não autenticado para buscar colaboradores');
+      return;
+    }
 
     try {
-      console.log('Buscando colaboradores para onboarding, usuário:', user.id);
+      console.log('useOnboarding: Buscando colaboradores para onboarding, usuário:', user.id);
       
       const { data, error } = await supabase
         .from('collaborators')
@@ -58,14 +62,18 @@ export const useOnboarding = () => {
         .order('name');
 
       if (error) {
-        console.error('Erro Supabase ao buscar colaboradores:', error);
+        console.error('useOnboarding: Erro Supabase ao buscar colaboradores:', {
+          error,
+          message: error.message,
+          details: error.details
+        });
         throw error;
       }
       
-      console.log('Colaboradores para onboarding carregados:', data?.length || 0);
+      console.log('useOnboarding: Colaboradores para onboarding carregados:', data?.length || 0);
       setCollaborators(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar colaboradores:', error);
+    } catch (error: any) {
+      console.error('useOnboarding: Erro ao carregar colaboradores:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os colaboradores.",
@@ -75,16 +83,26 @@ export const useOnboarding = () => {
   };
 
   const fetchProcesses = async () => {
-    if (!user) {
-      console.log('Usuário não autenticado, limpando lista de processos');
+    if (!user?.id) {
+      console.log('useOnboarding: Usuário não autenticado, limpando lista de processos');
       setProcesses([]);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log('Buscando processos de onboarding para usuário:', user.id);
+      console.log('useOnboarding: Buscando processos de onboarding para usuário:', user.id);
       setIsLoading(true);
+      
+      // Verificar autenticação Supabase
+      const { data: { user: supabaseUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !supabaseUser) {
+        console.error('useOnboarding: Erro de autenticação Supabase:', authError);
+        throw new Error('Usuário não autenticado no Supabase');
+      }
+      
+      console.log('useOnboarding: Usuário autenticado no Supabase:', supabaseUser.id);
       
       const { data, error } = await supabase
         .from('onboarding_processes')
@@ -96,11 +114,19 @@ export const useOnboarding = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro Supabase ao buscar processos:', error);
+        console.error('useOnboarding: Erro Supabase ao buscar processos:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
       
-      console.log('Processos de onboarding carregados:', data?.length || 0);
+      console.log('useOnboarding: Query de processos executada com sucesso');
+      console.log('useOnboarding: Processos de onboarding carregados:', data?.length || 0);
+      console.log('useOnboarding: Primeiros dados:', data?.slice(0, 2));
       
       const formattedData = (data || []).map((item: any) => ({
         ...item,
@@ -108,21 +134,35 @@ export const useOnboarding = () => {
       }));
       
       setProcesses(formattedData);
-    } catch (error) {
-      console.error('Erro ao carregar processos de onboarding:', error);
+      console.log('useOnboarding: Estado de processos atualizado com', formattedData.length, 'processos');
+      
+    } catch (error: any) {
+      console.error('useOnboarding: Erro completo ao carregar processos:', {
+        error,
+        message: error?.message,
+        stack: error?.stack,
+        userId: user.id
+      });
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível carregar os processos de onboarding.",
+        title: "Erro ao carregar processos",
+        description: error?.message || "Não foi possível carregar os processos de onboarding.",
         variant: "destructive"
       });
+      
+      setProcesses([]);
     } finally {
       setIsLoading(false);
+      console.log('useOnboarding: Processo de carregamento finalizado');
     }
   };
 
   useEffect(() => {
-    console.log('useOnboarding: useEffect executado, user.id:', user?.id);
-    if (user) {
+    console.log('useOnboarding: useEffect executado');
+    console.log('useOnboarding: user?.id:', user?.id);
+    console.log('useOnboarding: user object:', user);
+    
+    if (user?.id) {
       fetchCollaborators();
       fetchProcesses();
     }
@@ -134,30 +174,51 @@ export const useOnboarding = () => {
     department: string;
     start_date: string;
   }) => {
-    if (!user) return;
+    if (!user?.id) {
+      console.warn('useOnboarding: Tentativa de criar processo sem autenticação');
+      return;
+    }
 
     try {
+      console.log('useOnboarding: Criando processo para usuário:', user.id);
+      console.log('useOnboarding: Dados do processo:', processData);
+      
+      const dataToInsert = {
+        ...processData,
+        user_id: user.id,
+      };
+      
+      console.log('useOnboarding: Dados para inserção:', dataToInsert);
+      
       const { data, error } = await supabase
         .from('onboarding_processes')
-        .insert([{
-          ...processData,
-          user_id: user.id,
-        }])
+        .insert([dataToInsert])
         .select(`
           *,
           collaborator:collaborators(name, email, role, department)
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('useOnboarding: Erro ao criar processo:', {
+          error,
+          message: error.message,
+          details: error.details
+        });
+        throw error;
+      }
 
-      // Criar etapas padrão se a função existir
+      console.log('useOnboarding: Processo criado com sucesso:', data);
+
+      // Criar etapas padrão
       try {
+        console.log('useOnboarding: Tentando criar etapas padrão via função RPC');
         await supabase.rpc('create_default_onboarding_steps', {
           process_id: data.id
         });
+        console.log('useOnboarding: Etapas padrão criadas via RPC');
       } catch (rpcError) {
-        console.warn('Função create_default_onboarding_steps não encontrada, criando etapas manualmente');
+        console.warn('useOnboarding: Função RPC não encontrada, criando etapas manualmente');
         
         const defaultSteps = [
           'Documentação Pessoal',
@@ -175,9 +236,16 @@ export const useOnboarding = () => {
           completed: false
         }));
 
-        await supabase
+        const { error: stepsError } = await supabase
           .from('onboarding_steps')
           .insert(stepsData);
+          
+        if (stepsError) {
+          console.error('useOnboarding: Erro ao criar etapas manuais:', stepsError);
+          throw stepsError;
+        }
+        
+        console.log('useOnboarding: Etapas padrão criadas manualmente');
       }
 
       const formattedData = {
@@ -192,11 +260,16 @@ export const useOnboarding = () => {
       });
       
       return formattedData;
-    } catch (error) {
-      console.error('Erro ao criar processo de onboarding:', error);
+    } catch (error: any) {
+      console.error('useOnboarding: Erro completo ao criar processo:', {
+        error,
+        message: error?.message,
+        stack: error?.stack
+      });
+      
       toast({
         title: "Erro",
-        description: "Não foi possível criar o processo de onboarding.",
+        description: error?.message || "Não foi possível criar o processo de onboarding.",
         variant: "destructive"
       });
       throw error;
@@ -205,28 +278,42 @@ export const useOnboarding = () => {
 
   const getProcessSteps = async (processId: string): Promise<OnboardingStep[]> => {
     try {
+      console.log('useOnboarding: Buscando etapas para processo:', processId);
+      
       const { data, error } = await supabase
         .from('onboarding_steps')
         .select('*')
         .eq('onboarding_process_id', processId)
         .order('step_order');
 
-      if (error) throw error;
+      if (error) {
+        console.error('useOnboarding: Erro ao buscar etapas:', error);
+        throw error;
+      }
+      
+      console.log('useOnboarding: Etapas carregadas:', data?.length || 0);
       return data || [];
-    } catch (error) {
-      console.error('Erro ao carregar etapas:', error);
+    } catch (error: any) {
+      console.error('useOnboarding: Erro ao carregar etapas:', error);
       return [];
     }
   };
 
   const updateStepStatus = async (stepId: string, completed: boolean, processId: string) => {
     try {
+      console.log('useOnboarding: Atualizando etapa:', stepId, 'para completed:', completed);
+      
       const { error } = await supabase
         .from('onboarding_steps')
         .update({ completed })
         .eq('id', stepId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('useOnboarding: Erro ao atualizar etapa:', error);
+        throw error;
+      }
+
+      console.log('useOnboarding: Etapa atualizada com sucesso');
 
       // Recalcular progresso
       const steps = await getProcessSteps(processId);
@@ -240,11 +327,18 @@ export const useOnboarding = () => {
       const currentStep = progress === 100 ? 'Concluído' : 
         steps.find(s => !s.completed)?.title || 'Concluído';
 
+      console.log('useOnboarding: Novo progresso calculado:', progress, '%, status:', status);
+
       // Atualizar processo
-      await supabase
+      const { error: updateError } = await supabase
         .from('onboarding_processes')
         .update({ progress, status, current_step: currentStep })
         .eq('id', processId);
+        
+      if (updateError) {
+        console.error('useOnboarding: Erro ao atualizar progresso do processo:', updateError);
+        throw updateError;
+      }
 
       // Atualizar estado local
       setProcesses(prev => 
@@ -260,11 +354,16 @@ export const useOnboarding = () => {
         description: `Progresso: ${progress}%`
       });
 
-    } catch (error) {
-      console.error('Erro ao atualizar etapa:', error);
+    } catch (error: any) {
+      console.error('useOnboarding: Erro completo ao atualizar etapa:', {
+        error,
+        message: error?.message,
+        stack: error?.stack
+      });
+      
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar a etapa.",
+        description: error?.message || "Não foi possível atualizar a etapa.",
         variant: "destructive"
       });
     }
@@ -278,6 +377,7 @@ export const useOnboarding = () => {
     getProcessSteps,
     updateStepStatus,
     refetch: () => {
+      console.log('useOnboarding: Executando refetch manual');
       fetchCollaborators();
       fetchProcesses();
     }

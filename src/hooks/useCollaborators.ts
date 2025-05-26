@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,16 +26,34 @@ export const useCollaborators = () => {
   const { toast } = useToast();
 
   const fetchCollaborators = async () => {
-    if (!user) {
-      console.log('Usuário não autenticado, limpando lista de colaboradores');
+    if (!user?.id) {
+      console.log('useCollaborators: Usuário não autenticado ou sem ID, limpando lista');
       setCollaborators([]);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log('Buscando colaboradores para usuário:', user.id);
+      console.log('useCollaborators: Iniciando busca para usuário:', user.id);
       setIsLoading(true);
+      
+      // Verificar se o usuário está autenticado no Supabase
+      const { data: { user: supabaseUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('useCollaborators: Erro de autenticação Supabase:', authError);
+        throw authError;
+      }
+      
+      if (!supabaseUser) {
+        console.error('useCollaborators: Usuário não encontrado no Supabase');
+        throw new Error('Usuário não autenticado no Supabase');
+      }
+      
+      console.log('useCollaborators: Usuário autenticado no Supabase:', supabaseUser.id);
+      
+      // Fazer a query com logs detalhados
+      console.log('useCollaborators: Executando query para user_id:', user.id);
       
       const { data, error } = await supabase
         .from('collaborators')
@@ -43,11 +62,19 @@ export const useCollaborators = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro Supabase ao buscar colaboradores:', error);
+        console.error('useCollaborators: Erro Supabase na query:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
       
-      console.log('Colaboradores carregados:', data?.length || 0);
+      console.log('useCollaborators: Query executada com sucesso');
+      console.log('useCollaborators: Dados retornados:', data?.length || 0, 'colaboradores');
+      console.log('useCollaborators: Primeiros dados:', data?.slice(0, 2));
       
       // Garantir que os dados estão no formato correto
       const formattedData = (data || []).map((item: any) => ({
@@ -56,20 +83,35 @@ export const useCollaborators = () => {
       }));
       
       setCollaborators(formattedData);
-    } catch (error) {
-      console.error('Erro ao carregar colaboradores:', error);
+      console.log('useCollaborators: Estado atualizado com', formattedData.length, 'colaboradores');
+      
+    } catch (error: any) {
+      console.error('useCollaborators: Erro completo ao carregar colaboradores:', {
+        error,
+        message: error?.message,
+        stack: error?.stack,
+        userId: user.id
+      });
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível carregar os colaboradores.",
+        title: "Erro ao carregar colaboradores",
+        description: error?.message || "Não foi possível carregar os colaboradores.",
         variant: "destructive"
       });
+      
+      // Em caso de erro, definir lista vazia
+      setCollaborators([]);
     } finally {
       setIsLoading(false);
+      console.log('useCollaborators: Processo de carregamento finalizado');
     }
   };
 
   useEffect(() => {
-    console.log('useCollaborators: useEffect executado, user.id:', user?.id);
+    console.log('useCollaborators: useEffect executado');
+    console.log('useCollaborators: user?.id:', user?.id);
+    console.log('useCollaborators: user object:', user);
+    
     fetchCollaborators();
   }, [user?.id]);
 
@@ -83,8 +125,8 @@ export const useCollaborators = () => {
     location?: string;
     join_date?: string;
   }) => {
-    if (!user) {
-      console.warn('Tentativa de criar colaborador sem autenticação');
+    if (!user?.id) {
+      console.warn('useCollaborators: Tentativa de criar colaborador sem autenticação');
       toast({
         title: "Erro de Autenticação",
         description: "Você precisa estar logado para criar um colaborador.",
@@ -94,22 +136,35 @@ export const useCollaborators = () => {
     }
 
     try {
-      console.log('Criando colaborador para usuário:', user.id);
+      console.log('useCollaborators: Criando colaborador para usuário:', user.id);
+      console.log('useCollaborators: Dados do colaborador:', collaboratorData);
+      
+      const dataToInsert = {
+        ...collaboratorData,
+        user_id: user.id,
+        status: collaboratorData.status || 'active' as const,
+      };
+      
+      console.log('useCollaborators: Dados para inserção:', dataToInsert);
       
       const { data, error } = await supabase
         .from('collaborators')
-        .insert([{
-          ...collaboratorData,
-          user_id: user.id,
-          status: collaboratorData.status || 'active' as const,
-        }])
+        .insert([dataToInsert])
         .select()
         .single();
 
       if (error) {
-        console.error('Erro Supabase ao criar colaborador:', error);
+        console.error('useCollaborators: Erro Supabase ao criar colaborador:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
+
+      console.log('useCollaborators: Colaborador criado com sucesso:', data);
 
       const formattedData = {
         ...data,
@@ -122,13 +177,17 @@ export const useCollaborators = () => {
         description: "Colaborador criado com sucesso."
       });
       
-      console.log('Colaborador criado com sucesso:', formattedData.id);
       return formattedData;
-    } catch (error) {
-      console.error('Erro ao criar colaborador:', error);
+    } catch (error: any) {
+      console.error('useCollaborators: Erro ao criar colaborador:', {
+        error,
+        message: error?.message,
+        stack: error?.stack
+      });
+      
       toast({
         title: "Erro",
-        description: "Não foi possível criar o colaborador.",
+        description: error?.message || "Não foi possível criar o colaborador.",
         variant: "destructive"
       });
       throw error;
@@ -136,9 +195,14 @@ export const useCollaborators = () => {
   };
 
   const updateCollaborator = async (id: string, updates: Partial<Collaborator>) => {
-    if (!user) return;
+    if (!user?.id) {
+      console.warn('useCollaborators: Tentativa de atualizar colaborador sem autenticação');
+      return;
+    }
 
     try {
+      console.log('useCollaborators: Atualizando colaborador:', id, 'para usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('collaborators')
         .update(updates)
@@ -147,7 +211,12 @@ export const useCollaborators = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('useCollaborators: Erro ao atualizar colaborador:', error);
+        throw error;
+      }
+
+      console.log('useCollaborators: Colaborador atualizado com sucesso:', data);
 
       const formattedData = {
         ...data,
@@ -164,11 +233,11 @@ export const useCollaborators = () => {
       });
 
       return formattedData;
-    } catch (error) {
-      console.error('Erro ao atualizar colaborador:', error);
+    } catch (error: any) {
+      console.error('useCollaborators: Erro ao atualizar colaborador:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o colaborador.",
+        description: error?.message || "Não foi possível atualizar o colaborador.",
         variant: "destructive"
       });
       throw error;
@@ -176,27 +245,37 @@ export const useCollaborators = () => {
   };
 
   const deleteCollaborator = async (id: string) => {
-    if (!user) return;
+    if (!user?.id) {
+      console.warn('useCollaborators: Tentativa de deletar colaborador sem autenticação');
+      return;
+    }
 
     try {
+      console.log('useCollaborators: Deletando colaborador:', id, 'para usuário:', user.id);
+      
       const { error } = await supabase
         .from('collaborators')
         .delete()
         .eq('id', id)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('useCollaborators: Erro ao deletar colaborador:', error);
+        throw error;
+      }
+
+      console.log('useCollaborators: Colaborador deletado com sucesso');
 
       setCollaborators(prev => prev.filter(c => c.id !== id));
       toast({
         title: "Sucesso",
         description: "Colaborador removido com sucesso."
       });
-    } catch (error) {
-      console.error('Erro ao remover colaborador:', error);
+    } catch (error: any) {
+      console.error('useCollaborators: Erro ao remover colaborador:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível remover o colaborador.",
+        description: error?.message || "Não foi possível remover o colaborador.",
         variant: "destructive"
       });
       throw error;

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,16 +32,26 @@ export const useFeedback = () => {
   const { toast } = useToast();
 
   const fetchFeedbacks = async () => {
-    if (!user) {
-      console.log('Usuário não autenticado, limpando lista de feedbacks');
+    if (!user?.id) {
+      console.log('useFeedback: Usuário não autenticado, limpando lista de feedbacks');
       setFeedbacks([]);
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log('Buscando feedbacks para usuário:', user.id);
+      console.log('useFeedback: Buscando feedbacks para usuário:', user.id);
       setIsLoading(true);
+      
+      // Verificar autenticação Supabase
+      const { data: { user: supabaseUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !supabaseUser) {
+        console.error('useFeedback: Erro de autenticação Supabase:', authError);
+        throw new Error('Usuário não autenticado no Supabase');
+      }
+      
+      console.log('useFeedback: Usuário autenticado no Supabase:', supabaseUser.id);
       
       const { data, error } = await supabase
         .from('feedbacks')
@@ -52,11 +63,18 @@ export const useFeedback = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro Supabase ao buscar feedbacks:', error);
+        console.error('useFeedback: Erro Supabase ao buscar feedbacks:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
       
-      console.log('Feedbacks carregados:', data?.length || 0);
+      console.log('useFeedback: Query de feedbacks executada com sucesso');
+      console.log('useFeedback: Feedbacks carregados:', data?.length || 0);
       
       // Garantir que os dados estão no formato correto
       const formattedData = (data || []).map((item: any) => ({
@@ -67,20 +85,33 @@ export const useFeedback = () => {
       }));
       
       setFeedbacks(formattedData);
-    } catch (error) {
-      console.error('Erro ao carregar feedbacks:', error);
+      console.log('useFeedback: Estado de feedbacks atualizado com', formattedData.length, 'feedbacks');
+      
+    } catch (error: any) {
+      console.error('useFeedback: Erro completo ao carregar feedbacks:', {
+        error,
+        message: error?.message,
+        stack: error?.stack,
+        userId: user.id
+      });
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível carregar os feedbacks.",
+        title: "Erro ao carregar feedbacks",
+        description: error?.message || "Não foi possível carregar os feedbacks.",
         variant: "destructive"
       });
+      
+      setFeedbacks([]);
     } finally {
       setIsLoading(false);
+      console.log('useFeedback: Processo de carregamento finalizado');
     }
   };
 
   useEffect(() => {
-    console.log('useFeedback: useEffect executado, user.id:', user?.id);
+    console.log('useFeedback: useEffect executado');
+    console.log('useFeedback: user?.id:', user?.id);
+    
     fetchFeedbacks();
   }, [user?.id]);
 
@@ -96,23 +127,40 @@ export const useFeedback = () => {
     send_notification: boolean;
     notification_method: 'email' | 'notification' | 'both';
   }) => {
-    if (!user) return;
+    if (!user?.id) {
+      console.warn('useFeedback: Tentativa de criar feedback sem autenticação');
+      return;
+    }
 
     try {
+      console.log('useFeedback: Criando feedback para usuário:', user.id);
+      console.log('useFeedback: Dados do feedback:', feedbackData);
+      
+      const dataToInsert = {
+        ...feedbackData,
+        user_id: user.id,
+        from_user_id: user.id,
+      };
+      
       const { data, error } = await supabase
         .from('feedbacks')
-        .insert([{
-          ...feedbackData,
-          user_id: user.id,
-          from_user_id: user.id,
-        }])
+        .insert([dataToInsert])
         .select(`
           *,
           collaborator:collaborators(name, email)
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('useFeedback: Erro ao criar feedback:', {
+          error,
+          message: error.message,
+          details: error.details
+        });
+        throw error;
+      }
+
+      console.log('useFeedback: Feedback criado com sucesso:', data);
 
       const formattedData = {
         ...data,
@@ -128,11 +176,16 @@ export const useFeedback = () => {
       });
       
       return formattedData;
-    } catch (error) {
-      console.error('Erro ao criar feedback:', error);
+    } catch (error: any) {
+      console.error('useFeedback: Erro completo ao criar feedback:', {
+        error,
+        message: error?.message,
+        stack: error?.stack
+      });
+      
       toast({
         title: "Erro",
-        description: "Não foi possível enviar o feedback.",
+        description: error?.message || "Não foi possível enviar o feedback.",
         variant: "destructive"
       });
       throw error;
@@ -140,9 +193,14 @@ export const useFeedback = () => {
   };
 
   const updateFeedback = async (id: string, updates: Partial<Feedback>) => {
-    if (!user) return;
+    if (!user?.id) {
+      console.warn('useFeedback: Tentativa de atualizar feedback sem autenticação');
+      return;
+    }
 
     try {
+      console.log('useFeedback: Atualizando feedback:', id);
+      
       const { data, error } = await supabase
         .from('feedbacks')
         .update(updates)
@@ -154,7 +212,12 @@ export const useFeedback = () => {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('useFeedback: Erro ao atualizar feedback:', error);
+        throw error;
+      }
+
+      console.log('useFeedback: Feedback atualizado com sucesso:', data);
 
       const formattedData = {
         ...data,
@@ -173,11 +236,11 @@ export const useFeedback = () => {
       });
 
       return formattedData;
-    } catch (error) {
-      console.error('Erro ao atualizar feedback:', error);
+    } catch (error: any) {
+      console.error('useFeedback: Erro ao atualizar feedback:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o feedback.",
+        description: error?.message || "Não foi possível atualizar o feedback.",
         variant: "destructive"
       });
       throw error;
