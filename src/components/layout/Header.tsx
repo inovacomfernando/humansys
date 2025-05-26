@@ -66,7 +66,14 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={getUserAvatar()} alt={getUserName()} />
+                    <AvatarImage 
+                      src={getUserAvatar()} 
+                      alt={getUserName()}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
                     <AvatarFallback>
                       {getUserName().charAt(0).toUpperCase()}
                     </AvatarFallback>

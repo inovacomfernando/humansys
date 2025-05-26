@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookOpen } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useTrainings } from '@/hooks/useTrainings';
 
 export const TrainingDialog = () => {
   const [open, setOpen] = useState(false);
@@ -16,37 +16,16 @@ export const TrainingDialog = () => {
     duration: '',
     instructor: ''
   });
-  const { toast } = useToast();
+  const { createTraining } = useTrainings();
 
-  const handleCreateTraining = () => {
+  const handleCreateTraining = async () => {
     if (!training.title || !training.description || !training.duration) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
       return;
     }
 
-    // Salvar treinamento no localStorage
-    const trainings = JSON.parse(localStorage.getItem('trainings') || '[]');
-    const newTraining = {
-      id: Date.now().toString(),
-      ...training,
-      createdAt: new Date().toISOString(),
-      status: 'active',
-      participants: 0
-    };
-    trainings.push(newTraining);
-    localStorage.setItem('trainings', JSON.stringify(trainings));
-
+    await createTraining(training);
     setTraining({ title: '', description: '', duration: '', instructor: '' });
     setOpen(false);
-    
-    toast({
-      title: "Treinamento criado",
-      description: "Novo treinamento foi criado com sucesso.",
-    });
   };
 
   return (

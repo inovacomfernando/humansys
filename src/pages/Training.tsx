@@ -6,30 +6,24 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Play, Users, Clock, Award } from 'lucide-react';
 import { useTrainingActions } from '@/hooks/useTrainingActions';
+import { useTrainings } from '@/hooks/useTrainings';
 
 export const Training = () => {
   const { handleStartCourse, handleViewCourse, handleCreateCourse, handleStatsClick } = useTrainingActions();
+  const { trainings, isLoading } = useTrainings();
 
-  const courses = [
-    {
-      id: '1',
-      title: 'Liderança e Gestão',
-      duration: '8 horas',
-      modules: 12,
-      participants: 15,
-      status: 'Ativo',
-      type: 'regular'
-    },
-    {
-      id: '2',
-      title: 'Segurança da Informação',
-      duration: '4 horas',
-      modules: 6,
-      participants: 45,
-      status: 'Obrigatório',
-      type: 'mandatory'
-    }
-  ];
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Carregando treinamentos...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -54,7 +48,7 @@ export const Training = () => {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">15</div>
+              <div className="text-2xl font-bold">{trainings.filter(t => t.status === 'active').length}</div>
             </CardContent>
           </Card>
           
@@ -64,7 +58,7 @@ export const Training = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">89</div>
+              <div className="text-2xl font-bold">{trainings.reduce((acc, t) => acc + t.participants, 0)}</div>
             </CardContent>
           </Card>
           
@@ -90,18 +84,18 @@ export const Training = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {courses.map((course) => (
+          {trainings.map((course) => (
             <Card key={course.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-lg">{course.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {course.duration} • {course.modules} módulos
+                      {course.duration} • {course.instructor || 'Instrutor não definido'}
                     </p>
                   </div>
-                  <Badge variant={course.type === 'mandatory' ? 'secondary' : 'default'}>
-                    {course.status}
+                  <Badge variant={course.status === 'active' ? 'default' : 'secondary'}>
+                    {course.status === 'active' ? 'Ativo' : 'Inativo'}
                   </Badge>
                 </div>
               </CardHeader>

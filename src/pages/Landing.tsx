@@ -17,7 +17,11 @@ import {
   Star,
   Zap,
   Shield,
-  Sparkles
+  Sparkles,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Github
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,42 +32,50 @@ export const Landing = () => {
     {
       icon: UserPlus,
       title: 'Onboarding Inteligente',
-      description: 'Processo estruturado de integração de novos colaboradores com acompanhamento automático.'
+      description: 'Processo estruturado de integração de novos colaboradores com acompanhamento automático.',
+      path: '/onboarding'
     },
     {
       icon: Users,
       title: 'Gestão de Colaboradores',
-      description: 'Controle completo do quadro de funcionários, estagiários e terceiros.'
+      description: 'Controle completo do quadro de funcionários, estagiários e terceiros.',
+      path: '/collaborators'
     },
     {
       icon: MessageSquare,
       title: 'Feedback 360°',
-      description: 'Sistema completo de feedbacks e avaliações de performance.'
+      description: 'Sistema completo de feedbacks e avaliações de performance.',
+      path: '/feedback'
     },
     {
       icon: Target,
       title: 'Metas & PDI',
-      description: 'Plano de Desenvolvimento Individual com controle de metas e indicadores.'
+      description: 'Plano de Desenvolvimento Individual com controle de metas e indicadores.',
+      path: '/goals'
     },
     {
       icon: BookOpen,
       title: 'Treinamentos',
-      description: 'Plataforma de cursos e capacitação com certificação automática.'
+      description: 'Plataforma de cursos e capacitação com certificação automática.',
+      path: '/training'
     },
     {
       icon: Award,
       title: 'Certificações',
-      description: 'Emissão automática de certificados após conclusão dos treinamentos.'
+      description: 'Emissão automática de certificados após conclusão dos treinamentos.',
+      path: '/certificates'
     },
     {
       icon: BarChart3,
       title: 'Pesquisas de Clima',
-      description: 'Análise de cultura organizacional e clima empresarial.'
+      description: 'Análise de cultura organizacional e clima empresarial.',
+      path: '/surveys'
     },
     {
       icon: FileText,
       title: 'Gestão Documental',
-      description: 'Gestão eletrônica de documentos com segurança e compliance.'
+      description: 'Gestão eletrônica de documentos com segurança e compliance.',
+      path: '/documents'
     }
   ];
 
@@ -90,6 +102,17 @@ export const Landing = () => {
       rating: 5
     }
   ];
+
+  const socialLinks = [
+    { icon: Linkedin, href: '#', label: 'LinkedIn' },
+    { icon: Instagram, href: '#', label: 'Instagram' },
+    { icon: Facebook, href: '#', label: 'Facebook' },
+    { icon: Github, href: '#', label: 'GitHub' }
+  ];
+
+  const handleFeatureClick = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,7 +172,11 @@ export const Landing = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card key={index} className="relative group hover:shadow-lg transition-all duration-300">
+                <Card 
+                  key={index} 
+                  className="relative group hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  onClick={() => handleFeatureClick(feature.path)}
+                >
                   <CardHeader>
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
                       <Icon className="h-6 w-6" />
@@ -268,8 +295,59 @@ export const Landing = () => {
       {/* Footer */}
       <footer className="border-t py-12">
         <div className="container">
-          <div className="text-center text-muted-foreground">
-            <p>&copy; 2024 RH System. Todos os direitos reservados.</p>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <h3 className="font-semibold mb-4">Produto</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/features" className="hover:text-primary">Funcionalidades</a></li>
+                <li><a href="/pricing" className="hover:text-primary">Preços</a></li>
+                <li><a href="/integrations" className="hover:text-primary">Integrações</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Empresa</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/about" className="hover:text-primary">Sobre</a></li>
+                <li><a href="/careers" className="hover:text-primary">Carreiras</a></li>
+                <li><a href="/blog" className="hover:text-primary">Blog</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Suporte</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/documentation" className="hover:text-primary">Documentação</a></li>
+                <li><a href="/help" className="hover:text-primary">Ajuda</a></li>
+                <li><a href="/contact" className="hover:text-primary">Contato</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/privacy" className="hover:text-primary">Política de Privacidade</a></li>
+                <li><a href="/terms" className="hover:text-primary">Termos de Uso</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-muted-foreground text-sm">
+              &copy; 2024 RH System. Todos os direitos reservados.
+            </p>
+            <div className="flex space-x-4 mt-4 md:mt-0">
+              {socialLinks.map((social, index) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={index}
+                    href={social.href}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    aria-label={social.label}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </a>
+                );
+              })}
+            </div>
           </div>
         </div>
       </footer>

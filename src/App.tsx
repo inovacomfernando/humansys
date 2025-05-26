@@ -23,6 +23,10 @@ import { Certificates } from "./pages/Certificates";
 import { Surveys } from "./pages/Surveys";
 import { Documents } from "./pages/Documents";
 import { Settings } from "./pages/Settings";
+import { Careers } from "./pages/Careers";
+import { Blog } from "./pages/Blog";
+import { Documentation } from "./pages/Documentation";
+import { Privacy } from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +63,12 @@ const AppRoutes = () => {
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/trial" element={<Plans />} />
       <Route path="/checkout" element={<Checkout />} />
+      
+      {/* Novas páginas públicas */}
+      <Route path="/careers" element={<Careers />} />
+      <Route path="/blog" element={<Blog />} />
+      <Route path="/documentation" element={<Documentation />} />
+      <Route path="/privacy" element={<Privacy />} />
       
       {/* Rotas protegidas */}
       <Route path="/dashboard" element={
