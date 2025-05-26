@@ -17,24 +17,16 @@ import { NewCollaboratorDialog } from '@/components/dashboard/NewCollaboratorDia
 import { FeedbackDialog } from '@/components/dashboard/FeedbackDialog';
 import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { ActivityItem } from '@/components/dashboard/ActivityItem';
-import { TaskItem } from '@/components/dashboard/TaskItem';
 import { useDashboardActions } from '@/hooks/useDashboardActions';
 
 export const Dashboard = () => {
-  const { 
-    handleStatsClick, 
-    handleActivityView, 
-    handleTaskView, 
-    handleTaskComplete,
-    handleQuickAction 
-  } = useDashboardActions();
+  const { handleStatsClick, handleQuickAction } = useDashboardActions();
 
   const stats = [
     {
       title: 'Total de Colaboradores',
-      value: '124',
-      change: '+12%',
+      value: '0',
+      change: '0%',
       trend: 'up' as const,
       icon: Users,
       color: 'text-blue-600',
@@ -42,8 +34,8 @@ export const Dashboard = () => {
     },
     {
       title: 'Novos Contratados',
-      value: '8',
-      change: '+25%',
+      value: '0',
+      change: '0%',
       trend: 'up' as const,
       icon: UserPlus,
       color: 'text-green-600',
@@ -51,8 +43,8 @@ export const Dashboard = () => {
     },
     {
       title: 'Feedbacks Pendentes',
-      value: '15',
-      change: '-5%',
+      value: '0',
+      change: '0%',
       trend: 'down' as const,
       icon: MessageSquare,
       color: 'text-orange-600',
@@ -60,64 +52,12 @@ export const Dashboard = () => {
     },
     {
       title: 'Metas Concluídas',
-      value: '67%',
-      change: '+8%',
+      value: '0%',
+      change: '0%',
       trend: 'up' as const,
       icon: Target,
       color: 'text-purple-600',
       type: 'goals'
-    }
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'onboarding',
-      title: 'João Silva iniciou processo de onboarding',
-      time: '2 horas atrás',
-      status: 'in-progress'
-    },
-    {
-      id: 2,
-      type: 'feedback',
-      title: 'Maria Santos enviou feedback para equipe',
-      time: '4 horas atrás',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      type: 'training',
-      title: 'Curso de Liderança foi concluído por 5 pessoas',
-      time: '1 dia atrás',
-      status: 'completed'
-    },
-    {
-      id: 4,
-      type: 'recruitment',
-      title: 'Nova vaga publicada: Desenvolvedor Senior',
-      time: '2 dias atrás',
-      status: 'active'
-    }
-  ];
-
-  const pendingTasks = [
-    {
-      id: 1,
-      title: 'Revisar currículos para vaga de Designer',
-      priority: 'high' as const,
-      deadline: '2 dias'
-    },
-    {
-      id: 2,
-      title: 'Agendar reunião 1:1 com equipe de vendas',
-      priority: 'medium' as const,
-      deadline: '1 semana'
-    },
-    {
-      id: 3,
-      title: 'Atualizar política de home office',
-      priority: 'low' as const,
-      deadline: '2 semanas'
     }
   ];
 
@@ -161,18 +101,12 @@ export const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <ActivityItem
-                    key={activity.id}
-                    id={activity.id}
-                    type={activity.type}
-                    title={activity.title}
-                    time={activity.time}
-                    status={activity.status}
-                    onViewDetails={handleActivityView}
-                  />
-                ))}
+              <div className="flex flex-col items-center justify-center py-8">
+                <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">Nenhuma atividade recente</h3>
+                <p className="text-muted-foreground text-center">
+                  As atividades aparecerão aqui conforme você usar o sistema.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -189,18 +123,12 @@ export const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {pendingTasks.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    id={task.id}
-                    title={task.title}
-                    priority={task.priority}
-                    deadline={task.deadline}
-                    onView={handleTaskView}
-                    onMarkComplete={handleTaskComplete}
-                  />
-                ))}
+              <div className="flex flex-col items-center justify-center py-8">
+                <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">Nenhuma tarefa pendente</h3>
+                <p className="text-muted-foreground text-center">
+                  Suas tarefas aparecerão aqui quando houver itens para revisar.
+                </p>
               </div>
             </CardContent>
           </Card>

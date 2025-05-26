@@ -38,9 +38,12 @@ export const TrainingDialog = () => {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button>
-          <BookOpen className="mr-2 h-4 w-4" />
-          Novo Treinamento
+        <Button variant="outline" className="justify-start h-auto p-4">
+          <BookOpen className="mr-2 h-5 w-5" />
+          <div className="text-left">
+            <div className="font-medium">Novo Treinamento</div>
+            <div className="text-xs text-muted-foreground">Criar curso</div>
+          </div>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
