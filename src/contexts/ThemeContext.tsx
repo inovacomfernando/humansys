@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface ThemeContextData {
@@ -22,8 +21,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     primary: '#22c55e',
     secondary: '#16a34a'
   });
-  // Definir o logo da Humansys como padrão
-  const [companyLogo, setCompanyLogo] = useState<string>('/lovable-uploads/2dd5d9fd-c9b1-4ab7-9e14-1ad97a36b4f3.png');
+  // Definir o logo correto da Humansys como padrão
+  const [companyLogo, setCompanyLogo] = useState<string>('/lovable-uploads/4eb8b2ed-a39e-4a47-b3d4-9a2a9c68f7c1.png');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('@humansys:theme') as 'light' | 'dark';

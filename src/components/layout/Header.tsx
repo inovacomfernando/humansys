@@ -74,17 +74,19 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center">
           {companyLogo ? (
-            <div className="flex items-center space-x-3">
-              <img src={companyLogo} alt="Humansys" className="h-10 w-auto" />
-              <div className="flex flex-col">
-                <span className="font-bold text-xl text-primary">Humansys</span>
-                <span className="text-xs text-muted-foreground">Tecnologia para valorizar o humano</span>
-              </div>
-            </div>
+            <img 
+              src={companyLogo} 
+              alt="Humansys" 
+              className="h-12 w-auto cursor-pointer" 
+              onClick={() => navigate('/')}
+            />
           ) : (
-            <div className="flex items-center space-x-2">
+            <div 
+              className="flex items-center space-x-2 cursor-pointer" 
+              onClick={() => navigate('/')}
+            >
               <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">H</span>
               </div>
