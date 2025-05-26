@@ -59,9 +59,9 @@ export const useTrainings = () => {
         description: training.description,
         duration: training.duration,
         instructor: training.instructor || undefined,
-        status: (training.status === 'active' || training.status === 'inactive') 
-          ? training.status as 'active' | 'inactive'
-          : 'active' as 'active' | 'inactive',
+        status: training.status === 'active' || training.status === 'inactive' 
+          ? training.status
+          : 'active',
         participants: training.participants || 0,
         user_id: training.user_id,
         created_at: training.created_at,
@@ -135,9 +135,9 @@ export const useTrainings = () => {
         description: data.description,
         duration: data.duration,
         instructor: data.instructor || undefined,
-        status: (data.status === 'active' || data.status === 'inactive') 
-          ? data.status as 'active' | 'inactive'
-          : 'active' as 'active' | 'inactive',
+        status: data.status === 'active' || data.status === 'inactive' 
+          ? data.status
+          : 'active',
         participants: data.participants || 0,
         user_id: data.user_id,
         created_at: data.created_at,
