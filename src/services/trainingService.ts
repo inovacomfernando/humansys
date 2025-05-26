@@ -7,7 +7,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const retryOperation = async <T>(
   operation: () => Promise<T>,
-  maxRetries: number = 2,
+  maxRetries: number = 3,
   delayMs: number = 1000
 ): Promise<T> => {
   let lastError: any;
@@ -21,8 +21,9 @@ const retryOperation = async <T>(
       
       // Se é um erro de rede e não é a última tentativa
       if (error?.message?.includes('Failed to fetch') && attempt < maxRetries) {
-        console.log(`Aguardando ${delayMs}ms antes da próxima tentativa...`);
-        await delay(delayMs);
+        const backoffDelay = delayMs * Math.pow(2, attempt - 1); // Exponential backoff
+        console.log(`Aguardando ${backoffDelay}ms antes da próxima tentativa...`);
+        await delay(backoffDelay);
         continue;
       }
       
@@ -37,7 +38,7 @@ const retryOperation = async <T>(
 export const fetchTrainings = async (userId: string): Promise<Training[]> => {
   console.log('Iniciando busca de treinamentos para usuário:', userId);
   
-  try {
+  return retryOperation(async () => {
     const { data, error } = await supabase
       .from('trainings')
       .select('*')
@@ -51,10 +52,7 @@ export const fetchTrainings = async (userId: string): Promise<Training[]> => {
 
     console.log('Dados recebidos do Supabase:', data);
     return (data || []).map(convertToTraining);
-  } catch (error) {
-    console.error('Erro na busca de treinamentos:', error);
-    throw error;
-  }
+  });
 };
 
 export const createTraining = async (

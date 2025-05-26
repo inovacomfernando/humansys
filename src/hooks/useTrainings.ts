@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useSystemLogs } from './useSystemLogs';
 import { useErrorHandler } from './useErrorHandler';
+import { useTrainingCache } from './useTrainingCache';
 import { Training, CreateTrainingData } from '@/types/training';
 import { validateTrainingData } from '@/utils/trainingValidation';
 import * as trainingService from '@/services/trainingService';
@@ -12,43 +13,99 @@ export const useTrainings = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUsingCache, setIsUsingCache] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0);
+  
   const { user } = useAuth();
   const { toast } = useToast();
   const { logError, logInfo, logWarning } = useSystemLogs();
   const { handleError } = useErrorHandler();
+  const { saveToCache, getFromCache, clearCache } = useTrainingCache();
 
-  const fetchTrainings = async () => {
+  const fetchTrainings = async (skipCache = false) => {
     if (!user) {
       console.log('Usuário não autenticado, limpando lista de treinamentos');
       setTrainings([]);
       setIsLoading(false);
+      setIsUsingCache(false);
       return;
     }
 
     setIsLoading(true);
     setError(null);
+
+    // Tentar usar cache primeiro se não for um refresh forçado
+    if (!skipCache) {
+      const { data: cachedData, isStale } = getFromCache();
+      if (cachedData && cachedData.length > 0) {
+        console.log('Usando dados do cache, stale:', isStale);
+        setTrainings(cachedData);
+        setIsUsingCache(true);
+        
+        // Se os dados não estão obsoletos, pode usar só o cache
+        if (!isStale) {
+          setIsLoading(false);
+          return;
+        }
+      }
+    }
     
     try {
-      logInfo('Iniciando busca de treinamentos', 'useTrainings.fetchTrainings', { userId: user.id });
+      logInfo('Iniciando busca de treinamentos', 'useTrainings.fetchTrainings', { 
+        userId: user.id,
+        skipCache,
+        forceRefresh 
+      });
 
       const fetchedTrainings = await trainingService.fetchTrainings(user.id);
+      
+      // Salvar no cache
+      saveToCache(fetchedTrainings);
+      
       setTrainings(fetchedTrainings);
+      setIsUsingCache(false);
       
       console.log('Treinamentos carregados com sucesso:', fetchedTrainings.length);
       logInfo('Treinamentos carregados com sucesso', 'useTrainings.fetchTrainings', { 
         count: fetchedTrainings.length 
       });
+
+      // Limpar erro se a busca foi bem-sucedida
+      setError(null);
     } catch (err: any) {
       console.error('Erro ao carregar treinamentos:', err);
+      
       const errorMessage = err?.message?.includes('Failed to fetch') 
-        ? 'Erro de conectividade. Verifique sua conexão e tente novamente.'
+        ? 'Erro de conectividade. Usando dados em cache quando disponíveis.'
         : 'Não foi possível carregar os treinamentos. Tente novamente.';
       
-      setError(errorMessage);
-      handleError(err, 'useTrainings.fetchTrainings', errorMessage, false);
+      // Se temos dados em cache, usar eles e mostrar aviso
+      const { data: cachedData } = getFromCache();
+      if (cachedData && cachedData.length > 0) {
+        console.log('Usando dados em cache devido a erro de conectividade');
+        setTrainings(cachedData);
+        setIsUsingCache(true);
+        setError('Usando dados salvos - alguns dados podem estar desatualizados');
+        
+        toast({
+          title: "Modo Offline",
+          description: "Exibindo dados salvos. Alguns dados podem estar desatualizados.",
+          variant: "destructive"
+        });
+      } else {
+        setError(errorMessage);
+        handleError(err, 'useTrainings.fetchTrainings', errorMessage, false);
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const forceRefreshTrainings = () => {
+    console.log('Forçando recarregamento de treinamentos');
+    clearCache();
+    setForceRefresh(prev => prev + 1);
+    fetchTrainings(true);
   };
 
   const createNewTraining = async (trainingData: CreateTrainingData) => {
@@ -87,7 +144,11 @@ export const useTrainings = () => {
       });
 
       const newTraining = await trainingService.createTraining(trainingData, user.id);
-      setTrainings(prev => [newTraining, ...prev]);
+      
+      // Atualizar lista local e cache
+      const updatedTrainings = [newTraining, ...trainings];
+      setTrainings(updatedTrainings);
+      saveToCache(updatedTrainings);
       
       logInfo('Treinamento criado com sucesso', 'useTrainings.createNewTraining', {
         trainingId: newTraining.id,
@@ -121,15 +182,17 @@ export const useTrainings = () => {
   };
 
   useEffect(() => {
-    console.log('useTrainings: useEffect executado, user.id:', user?.id);
+    console.log('useTrainings: useEffect executado, user.id:', user?.id, 'forceRefresh:', forceRefresh);
     fetchTrainings();
-  }, [user?.id]);
+  }, [user?.id, forceRefresh]);
 
   return {
     trainings,
     isLoading,
     error,
+    isUsingCache,
     createTraining: createNewTraining,
-    refetch: fetchTrainings
+    refetch: fetchTrainings,
+    forceRefresh: forceRefreshTrainings
   };
 };

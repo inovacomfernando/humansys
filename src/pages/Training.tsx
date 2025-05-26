@@ -9,35 +9,16 @@ import { TrainingGrid } from '@/components/training/TrainingGrid';
 import { EmptyTrainingState } from '@/components/training/EmptyTrainingState';
 import { LoadingState } from '@/components/training/LoadingState';
 import { ErrorState } from '@/components/training/ErrorState';
+import { TrainingControls } from '@/components/training/TrainingControls';
 
 export const Training = () => {
   const { handleStartCourse, handleViewCourse, handleStatsClick } = useTrainingActions();
-  const { trainings, isLoading, error, refetch } = useTrainings();
+  const { trainings, isLoading, error, isUsingCache, refetch, forceRefresh } = useTrainings();
 
-  if (isLoading) {
+  if (isLoading && trainings.length === 0) {
     return (
       <DashboardLayout>
         <LoadingState />
-      </DashboardLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">Treinamentos</h1>
-              <p className="text-muted-foreground">
-                Gerencie cursos e desenvolvimento de competências
-              </p>
-            </div>
-            <TrainingDialog />
-          </div>
-
-          <ErrorState error={error} onRetry={refetch} />
-        </div>
       </DashboardLayout>
     );
   }
@@ -55,9 +36,18 @@ export const Training = () => {
           <TrainingDialog />
         </div>
 
+        <TrainingControls
+          isLoading={isLoading}
+          isUsingCache={isUsingCache}
+          error={error}
+          onForceRefresh={forceRefresh}
+        />
+
         <TrainingStats trainings={trainings} onStatsClick={handleStatsClick} />
 
-        {trainings.length === 0 ? (
+        {error && trainings.length === 0 ? (
+          <ErrorState error={error} onRetry={refetch} />
+        ) : trainings.length === 0 ? (
           <EmptyTrainingState />
         ) : (
           <TrainingGrid 
