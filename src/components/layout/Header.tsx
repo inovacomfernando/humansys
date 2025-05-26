@@ -39,30 +39,34 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
     
     try {
       console.log('Iniciando logout...');
-      const { error } = await signOut();
       
-      if (error) {
-        console.error('Erro no logout:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao fazer logout. Tente novamente.",
-          variant: "destructive"
-        });
-        return;
-      }
+      // Limpar estado local primeiro
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Fazer logout do Supabase
+      await signOut();
       
       console.log('Logout realizado com sucesso');
-      navigate('/login');
+      
+      // Navegar para login
+      navigate('/login', { replace: true });
+      
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
-    } catch (error) {
-      console.error('Erro inesperado no logout:', error);
+    } catch (error: any) {
+      console.error('Erro no logout:', error);
+      
+      // Mesmo com erro, limpar estado e redirecionar
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate('/login', { replace: true });
+      
       toast({
-        title: "Erro",
-        description: "Erro ao fazer logout. Tente novamente.",
-        variant: "destructive"
+        title: "Logout realizado",
+        description: "Você foi desconectado.",
       });
     }
   };

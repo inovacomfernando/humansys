@@ -20,7 +20,8 @@ export const TrainingDialog = () => {
   const { createTraining } = useTrainings();
 
   const handleCreateTraining = async () => {
-    if (!training.title || !training.description || !training.duration) {
+    // Validação básica
+    if (!training.title.trim() || !training.description.trim() || !training.duration.trim()) {
       return;
     }
 
@@ -28,9 +29,16 @@ export const TrainingDialog = () => {
 
     try {
       setIsSubmitting(true);
-      const success = await createTraining(training);
+      
+      const success = await createTraining({
+        title: training.title.trim(),
+        description: training.description.trim(),
+        duration: training.duration.trim(),
+        instructor: training.instructor.trim() || undefined
+      });
       
       if (success) {
+        // Resetar formulário e fechar dialog
         setTraining({ title: '', description: '', duration: '', instructor: '' });
         setOpen(false);
       }
@@ -45,10 +53,13 @@ export const TrainingDialog = () => {
     if (!isSubmitting) {
       setOpen(newOpen);
       if (!newOpen) {
+        // Resetar formulário ao fechar
         setTraining({ title: '', description: '', duration: '', instructor: '' });
       }
     }
   };
+
+  const isFormValid = training.title.trim() && training.description.trim() && training.duration.trim();
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -121,7 +132,7 @@ export const TrainingDialog = () => {
           </Button>
           <Button 
             onClick={handleCreateTraining}
-            disabled={isSubmitting || !training.title || !training.description || !training.duration}
+            disabled={isSubmitting || !isFormValid}
           >
             {isSubmitting ? 'Criando...' : 'Criar Treinamento'}
           </Button>
