@@ -22,20 +22,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     primary: '#22c55e',
     secondary: '#16a34a'
   });
-  const [companyLogo, setCompanyLogo] = useState<string>();
+  // Definir o logo da Humansys como padrão
+  const [companyLogo, setCompanyLogo] = useState<string>('/lovable-uploads/2dd5d9fd-c9b1-4ab7-9e14-1ad97a36b4f3.png');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('@rh-system:theme') as 'light' | 'dark';
+    const savedTheme = localStorage.getItem('@humansys:theme') as 'light' | 'dark';
     if (savedTheme) {
       setTheme(savedTheme);
     }
     
-    const savedColors = localStorage.getItem('@rh-system:brand-colors');
+    const savedColors = localStorage.getItem('@humansys:brand-colors');
     if (savedColors) {
       setBrandColors(JSON.parse(savedColors));
     }
 
-    const savedLogo = localStorage.getItem('@rh-system:company-logo');
+    const savedLogo = localStorage.getItem('@humansys:company-logo');
     if (savedLogo) {
       setCompanyLogo(savedLogo);
     }
@@ -43,7 +44,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('@rh-system:theme', theme);
+    localStorage.setItem('@humansys:theme', theme);
   }, [theme]);
 
   const applyBrandColors = () => {
@@ -94,12 +95,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const handleSetBrandColors = (colors: { primary: string; secondary: string }) => {
     setBrandColors(colors);
-    localStorage.setItem('@rh-system:brand-colors', JSON.stringify(colors));
+    localStorage.setItem('@humansys:brand-colors', JSON.stringify(colors));
   };
 
   const handleSetCompanyLogo = (logo: string) => {
     setCompanyLogo(logo);
-    localStorage.setItem('@rh-system:company-logo', logo);
+    localStorage.setItem('@humansys:company-logo', logo);
   };
 
   return (

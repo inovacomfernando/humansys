@@ -124,14 +124,14 @@ export const Landing = () => {
           <div className="mx-auto max-w-4xl text-center animate-fade-in">
             <Badge variant="secondary" className="mb-4">
               <Sparkles className="mr-1 h-3 w-3" />
-              Solução Completa de RH
+              Tecnologia para valorizar o humano
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
               Transforme sua
               <span className="text-primary"> Gestão de Pessoas</span>
             </h1>
             <p className="mt-6 text-xl text-muted-foreground md:text-2xl">
-              Plataforma completa para recrutamento, onboarding, desenvolvimento e gestão de talentos. 
+              A Humansys é uma plataforma completa para recrutamento, onboarding, desenvolvimento e gestão de talentos. 
               Tudo que você precisa em um só lugar.
             </p>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
@@ -267,7 +267,7 @@ export const Landing = () => {
               Pronto para Começar?
             </h2>
             <p className="mt-4 text-lg opacity-90">
-              Junte-se a centenas de empresas que já transformaram sua gestão de RH
+              Junte-se a centenas de empresas que já transformaram sua gestão de RH com a Humansys
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Button 
@@ -331,7 +331,7 @@ export const Landing = () => {
           
           <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-muted-foreground text-sm">
-              &copy; 2024 RH System. Todos os direitos reservados.
+              &copy; 2024 Humansys. Todos os direitos reservados.
             </p>
             <div className="flex space-x-4 mt-4 md:mt-0">
               {socialLinks.map((social, index) => {

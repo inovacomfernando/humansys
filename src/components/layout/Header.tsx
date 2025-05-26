@@ -76,13 +76,19 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center space-x-4">
           {companyLogo ? (
-            <img src={companyLogo} alt="Logo" className="h-8 w-auto" />
+            <div className="flex items-center space-x-3">
+              <img src={companyLogo} alt="Humansys" className="h-10 w-auto" />
+              <div className="flex flex-col">
+                <span className="font-bold text-xl text-primary">Humansys</span>
+                <span className="text-xs text-muted-foreground">Tecnologia para valorizar o humano</span>
+              </div>
+            </div>
           ) : (
             <div className="flex items-center space-x-2">
               <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">RH</span>
+                <span className="text-white font-bold text-sm">H</span>
               </div>
-              <span className="font-bold text-xl">RH System</span>
+              <span className="font-bold text-xl">Humansys</span>
             </div>
           )}
         </div>
