@@ -2,87 +2,29 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, AlertCircle, CheckCircle } from 'lucide-react';
-import { useTrainings } from '@/hooks/useTrainings';
-import { useSystemLogs } from '@/hooks/useSystemLogs';
+import { BookOpen } from 'lucide-react';
+import { useTrainingForm } from '@/hooks/useTrainingForm';
+import { ValidationErrors } from './training/ValidationErrors';
+import { TrainingFormFields } from './training/TrainingFormFields';
+import { TrainingDialogActions } from './training/TrainingDialogActions';
 
 export const TrainingDialog = () => {
   const [open, setOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<string[]>([]);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    duration: '',
-    instructor: ''
-  });
-  const { createTraining } = useTrainings();
-  const { logInfo, logError } = useSystemLogs();
+  const {
+    formData,
+    isSubmitting,
+    validationErrors,
+    isFormValid,
+    handleInputChange,
+    handleSubmit,
+    resetForm
+  } = useTrainingForm();
 
-  const validateForm = () => {
-    const errors: string[] = [];
-    
-    if (!formData.title.trim() || formData.title.trim().length < 3) {
-      errors.push('Título deve ter pelo menos 3 caracteres');
+  const handleFormSubmit = async () => {
+    const success = await handleSubmit();
+    if (success) {
+      setOpen(false);
     }
-    
-    if (!formData.description.trim() || formData.description.trim().length < 10) {
-      errors.push('Descrição deve ter pelo menos 10 caracteres');
-    }
-    
-    if (!formData.duration.trim()) {
-      errors.push('Duração é obrigatória');
-    }
-    
-    setValidationErrors(errors);
-    return errors.length === 0;
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    console.log(`Campo ${field} alterado para:`, value);
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (validationErrors.length > 0) {
-      setValidationErrors([]);
-    }
-  };
-
-  const handleSubmit = async () => {
-    console.log('Iniciando submissão do formulário:', formData);
-    
-    if (!validateForm()) {
-      console.warn('Formulário inválido, não submetendo');
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      logInfo('Tentativa de submissão de formulário de treinamento', 'TrainingDialog.handleSubmit', formData);
-      
-      const success = await createTraining(formData);
-      
-      if (success) {
-        console.log('Treinamento criado com sucesso, resetando formulário');
-        resetForm();
-        setOpen(false);
-      } else {
-        console.warn('Falha na criação do treinamento');
-      }
-    } catch (error) {
-      console.error('Erro durante submissão:', error);
-      logError('Erro durante submissão do formulário', 'TrainingDialog.handleSubmit', { error });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const resetForm = () => {
-    console.log('Resetando formulário');
-    setFormData({ title: '', description: '', duration: '', instructor: '' });
-    setValidationErrors([]);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -92,10 +34,6 @@ export const TrainingDialog = () => {
       resetForm();
     }
   };
-
-  const isFormValid = formData.title.trim().length >= 3 && 
-                     formData.description.trim().length >= 10 && 
-                     formData.duration.trim().length > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -113,96 +51,21 @@ export const TrainingDialog = () => {
           </DialogDescription>
         </DialogHeader>
         
-        {validationErrors.length > 0 && (
-          <div className="bg-destructive/15 border border-destructive/20 rounded-md p-3">
-            <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              <span className="font-medium">Erros de validação:</span>
-            </div>
-            <ul className="mt-2 text-sm text-destructive">
-              {validationErrors.map((error, index) => (
-                <li key={index} className="ml-4">• {error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <ValidationErrors errors={validationErrors} />
         
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="title">Título do Curso *</Label>
-            <Input 
-              id="title" 
-              placeholder="Digite o título do curso"
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              disabled={isSubmitting}
-              className={validationErrors.some(e => e.includes('Título')) ? 'border-destructive' : ''}
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="description">Descrição *</Label>
-            <Textarea 
-              id="description" 
-              placeholder="Descreva o conteúdo do curso..."
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              rows={3}
-              disabled={isSubmitting}
-              className={validationErrors.some(e => e.includes('Descrição')) ? 'border-destructive' : ''}
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="duration">Duração *</Label>
-            <Input 
-              id="duration" 
-              placeholder="Ex: 8 horas, 2 semanas..."
-              value={formData.duration}
-              onChange={(e) => handleInputChange('duration', e.target.value)}
-              disabled={isSubmitting}
-              className={validationErrors.some(e => e.includes('Duração')) ? 'border-destructive' : ''}
-            />
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="instructor">Instrutor</Label>
-            <Input 
-              id="instructor" 
-              placeholder="Nome do instrutor"
-              value={formData.instructor}
-              onChange={(e) => handleInputChange('instructor', e.target.value)}
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
+        <TrainingFormFields 
+          formData={formData}
+          validationErrors={validationErrors}
+          isSubmitting={isSubmitting}
+          onInputChange={handleInputChange}
+        />
         
-        <div className="flex justify-end space-x-2">
-          <Button 
-            variant="outline" 
-            onClick={() => handleOpenChange(false)}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={isSubmitting || !isFormValid}
-            className="min-w-[140px]"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Criando...
-              </>
-            ) : (
-              <>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Criar Treinamento
-              </>
-            )}
-          </Button>
-        </div>
+        <TrainingDialogActions
+          isSubmitting={isSubmitting}
+          isFormValid={isFormValid}
+          onCancel={() => handleOpenChange(false)}
+          onSubmit={handleFormSubmit}
+        />
       </DialogContent>
     </Dialog>
   );
