@@ -42,9 +42,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     { icon: Award, label: 'Certificados', path: '/certificates' },
     { icon: BarChart3, label: 'Pesquisas', path: '/surveys' },
     { icon: FileText, label: 'Documentos', path: '/documents' },
-  ];
-
-  const adminItems = [
     { icon: Settings, label: 'Configurações', path: '/settings' },
   ];
 
@@ -91,29 +88,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
           );
         })}
       </nav>
-
-      {/* Admin Section */}
-      {user?.role === 'admin' && (
-        <div className="border-t p-2 space-y-1">
-          {adminItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Button
-                key={item.path}
-                variant={isActive(item.path) ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start h-10",
-                  collapsed && "justify-center"
-                )}
-                onClick={() => navigate(item.path)}
-              >
-                <Icon className={cn("h-4 w-4", !collapsed && "mr-2")} />
-                {!collapsed && <span>{item.label}</span>}
-              </Button>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 };

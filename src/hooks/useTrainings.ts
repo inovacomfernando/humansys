@@ -24,10 +24,15 @@ export const useTrainings = () => {
   const { toast } = useToast();
 
   const fetchTrainings = async () => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
+      console.log('Fetching trainings for user:', user.id);
+      
       const { data, error } = await supabase
         .from('trainings')
         .select('*')
@@ -44,15 +49,24 @@ export const useTrainings = () => {
         return;
       }
 
+      console.log('Trainings fetched:', data);
+
       // Cast the data to match our Training interface
       const typedTrainings: Training[] = (data || []).map(training => ({
         ...training,
-        status: training.status as 'active' | 'inactive'
+        status: (training.status === 'active' || training.status === 'inactive') 
+          ? training.status 
+          : 'active' as 'active' | 'inactive'
       }));
 
       setTrainings(typedTrainings);
     } catch (error) {
       console.error('Error:', error);
+      toast({
+        title: "Erro",
+        description: "Erro inesperado ao carregar treinamentos",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -64,9 +78,18 @@ export const useTrainings = () => {
     duration: string;
     instructor?: string;
   }) => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
+      console.log('Creating training:', trainingData);
+      
       const { data, error } = await supabase
         .from('trainings')
         .insert([
@@ -90,10 +113,14 @@ export const useTrainings = () => {
         return;
       }
 
+      console.log('Training created:', data);
+
       // Cast the new training data to match our interface
       const newTraining: Training = {
         ...data,
-        status: data.status as 'active' | 'inactive'
+        status: (data.status === 'active' || data.status === 'inactive') 
+          ? data.status 
+          : 'active' as 'active' | 'inactive'
       };
 
       setTrainings(prev => [newTraining, ...prev]);
