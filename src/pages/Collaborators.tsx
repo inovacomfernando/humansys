@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,60 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useToast } from '@/hooks/use-toast';
-
-interface Collaborator {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  status: 'active' | 'inactive' | 'vacation';
-  avatar?: string;
-  phone?: string;
-  location?: string;
-  joinDate: string;
-}
+import { useCollaborators } from '@/hooks/useCollaborators';
 
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
-  const [collaborators, setCollaborators] = useLocalStorage<Collaborator[]>('collaborators', [
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao.silva@empresa.com',
-      role: 'Desenvolvedor Senior',
-      department: 'Tecnologia',
-      status: 'active',
-      phone: '(11) 99999-9999',
-      location: 'São Paulo, SP',
-      joinDate: '2023-01-15'
-    },
-    {
-      id: '2',
-      name: 'Maria Santos',
-      email: 'maria.santos@empresa.com',
-      role: 'Gerente de Projetos',
-      department: 'Gestão',
-      status: 'active',
-      phone: '(11) 88888-8888',
-      location: 'Rio de Janeiro, RJ',
-      joinDate: '2022-08-20'
-    },
-    {
-      id: '3',
-      name: 'Pedro Oliveira',
-      email: 'pedro.oliveira@empresa.com',
-      role: 'Designer UX/UI',
-      department: 'Design',
-      status: 'vacation',
-      phone: '(11) 77777-7777',
-      location: 'Belo Horizonte, MG',
-      joinDate: '2023-03-10'
-    }
-  ]);
+  const { collaborators, isLoading, addCollaborator } = useCollaborators();
 
   const [newCollaborator, setNewCollaborator] = useState({
     name: '',
@@ -72,38 +25,21 @@ export const Collaborators = () => {
     location: ''
   });
 
-  const { toast } = useToast();
-
-  const handleAddCollaborator = () => {
+  const handleAddCollaborator = async () => {
     if (!newCollaborator.name || !newCollaborator.email || !newCollaborator.role || !newCollaborator.department) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive"
-      });
       return;
     }
 
-    const collaborator: Collaborator = {
-      id: Date.now().toString(),
-      name: newCollaborator.name,
-      email: newCollaborator.email,
-      role: newCollaborator.role,
-      department: newCollaborator.department,
-      status: 'active',
-      phone: newCollaborator.phone,
-      location: newCollaborator.location,
-      joinDate: new Date().toISOString().split('T')[0]
-    };
-
-    setCollaborators([...collaborators, collaborator]);
-    setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
-    setIsAddingCollaborator(false);
-    
-    toast({
-      title: "Colaborador adicionado",
-      description: "Novo colaborador foi adicionado com sucesso.",
-    });
+    try {
+      await addCollaborator({
+        ...newCollaborator,
+        status: 'active' as const
+      });
+      setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
+      setIsAddingCollaborator(false);
+    } catch (error) {
+      // Error handled in hook
+    }
   };
 
   const filteredCollaborators = collaborators.filter(collaborator =>
@@ -130,6 +66,16 @@ export const Collaborators = () => {
       default: return 'Desconhecido';
     }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -301,7 +247,6 @@ export const Collaborators = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
                     <Avatar>
-                      <AvatarImage src={collaborator.avatar} alt={collaborator.name} />
                       <AvatarFallback>
                         {collaborator.name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
@@ -351,6 +296,26 @@ export const Collaborators = () => {
             </Card>
           ))}
         </div>
+
+        {filteredCollaborators.length === 0 && (
+          <Card>
+            <CardContent className="py-8">
+              <div className="text-center">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">Nenhum colaborador encontrado</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchTerm ? 'Tente ajustar sua busca' : 'Comece adicionando seu primeiro colaborador'}
+                </p>
+                {!searchTerm && (
+                  <Button onClick={() => setIsAddingCollaborator(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Adicionar Primeiro Colaborador
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

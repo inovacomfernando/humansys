@@ -9,13 +9,279 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      collaborators: {
+        Row: {
+          created_at: string
+          department: string
+          email: string
+          id: string
+          join_date: string
+          location: string | null
+          name: string
+          phone: string | null
+          role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          email: string
+          id?: string
+          join_date?: string
+          location?: string | null
+          name: string
+          phone?: string | null
+          role: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          email?: string
+          id?: string
+          join_date?: string
+          location?: string | null
+          name?: string
+          phone?: string | null
+          role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feedbacks: {
+        Row: {
+          anonymous: boolean
+          content: string
+          created_at: string
+          from_user_id: string
+          id: string
+          notification_method: string
+          rating: number | null
+          send_email: boolean
+          send_notification: boolean
+          status: string
+          subject: string
+          to_collaborator_id: string
+          type: string
+          updated_at: string
+          urgent: boolean
+          user_id: string
+        }
+        Insert: {
+          anonymous?: boolean
+          content: string
+          created_at?: string
+          from_user_id: string
+          id?: string
+          notification_method?: string
+          rating?: number | null
+          send_email?: boolean
+          send_notification?: boolean
+          status?: string
+          subject: string
+          to_collaborator_id: string
+          type?: string
+          updated_at?: string
+          urgent?: boolean
+          user_id: string
+        }
+        Update: {
+          anonymous?: boolean
+          content?: string
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          notification_method?: string
+          rating?: number | null
+          send_email?: boolean
+          send_notification?: boolean
+          status?: string
+          subject?: string
+          to_collaborator_id?: string
+          type?: string
+          updated_at?: string
+          urgent?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_to_collaborator_id_fkey"
+            columns: ["to_collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_processes: {
+        Row: {
+          collaborator_id: string
+          created_at: string
+          current_step: string
+          department: string
+          id: string
+          position: string
+          progress: number
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          collaborator_id: string
+          created_at?: string
+          current_step?: string
+          department: string
+          id?: string
+          position: string
+          progress?: number
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          collaborator_id?: string
+          created_at?: string
+          current_step?: string
+          department?: string
+          id?: string
+          position?: string
+          progress?: number
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_processes_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_steps: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          onboarding_process_id: string
+          step_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          onboarding_process_id: string
+          step_order: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          onboarding_process_id?: string
+          step_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_steps_onboarding_process_id_fkey"
+            columns: ["onboarding_process_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trainings: {
+        Row: {
+          created_at: string
+          description: string
+          duration: string
+          id: string
+          instructor: string | null
+          participants: number
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration: string
+          id?: string
+          instructor?: string | null
+          participants?: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: string
+          id?: string
+          instructor?: string | null
+          participants?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_default_onboarding_steps: {
+        Args: { process_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

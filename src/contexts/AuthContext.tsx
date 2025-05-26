@@ -1,72 +1,23 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
+import { User } from '@supabase/supabase-js';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'collaborator' | 'intern' | 'third-party';
-  avatar?: string;
-  company?: string;
-}
-
-interface AuthContextData {
+interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
   isLoading: boolean;
+  signUp: (email: string, password: string, name: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<any>;
 }
 
-const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Simular verificação de token
-    const token = localStorage.getItem('@rh-system:token');
-    if (token) {
-      // Simular usuário logado
-      setUser({
-        id: '1',
-        email: 'admin@exemplo.com',
-        name: 'Administrator',
-        role: 'admin',
-        company: 'Minha Empresa'
-      });
-    }
-    setIsLoading(false);
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      // Simular login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const userData = {
-        id: '1',
-        email,
-        name: 'Administrator',
-        role: 'admin' as const,
-        company: 'Minha Empresa'
-      };
-      
-      setUser(userData);
-      localStorage.setItem('@rh-system:token', 'fake-token');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('@rh-system:token');
-  };
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const auth = useSupabaseAuth();
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={auth}>
       {children}
     </AuthContext.Provider>
   );
@@ -74,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

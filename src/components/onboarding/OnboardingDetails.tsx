@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Clock, Play } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useOnboarding, OnboardingStep } from '@/hooks/useOnboarding';
 
 interface OnboardingDetailsProps {
   process: any;
@@ -15,46 +14,38 @@ interface OnboardingDetailsProps {
 }
 
 export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDetailsProps) => {
-  const [onboardingProcesses, setOnboardingProcesses] = useLocalStorage('onboarding-processes', []);
-  const { toast } = useToast();
+  const { getProcessSteps, updateStepStatus } = useOnboarding();
+  const [steps, setSteps] = useState<OnboardingStep[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const defaultSteps = [
-    { id: '1', title: 'Documentação Pessoal', completed: false },
-    { id: '2', title: 'Apresentação da Empresa', completed: false },
-    { id: '3', title: 'Reunião com Gestor', completed: false },
-    { id: '4', title: 'Treinamento de Segurança', completed: false },
-    { id: '5', title: 'Setup do Ambiente', completed: false },
-    { id: '6', title: 'Integração com a Equipe', completed: false }
-  ];
+  useEffect(() => {
+    if (process?.id && open) {
+      loadSteps();
+    }
+  }, [process?.id, open]);
 
-  const [steps, setSteps] = useState(defaultSteps);
-
-  const toggleStep = (stepId: string) => {
-    const updatedSteps = steps.map(step => 
-      step.id === stepId ? { ...step, completed: !step.completed } : step
-    );
-    setSteps(updatedSteps);
-
-    const completedSteps = updatedSteps.filter(step => step.completed).length;
-    const progress = Math.round((completedSteps / updatedSteps.length) * 100);
+  const loadSteps = async () => {
+    if (!process?.id) return;
     
-    const updatedProcesses = onboardingProcesses.map((p: any) => 
-      p.id === process.id 
-        ? { 
-            ...p, 
-            progress,
-            status: progress === 100 ? 'completed' : progress > 0 ? 'in-progress' : 'not-started',
-            currentStep: progress === 100 ? 'Concluído' : updatedSteps.find(s => !s.completed)?.title || 'Concluído'
-          } 
-        : p
-    );
-    
-    setOnboardingProcesses(updatedProcesses);
+    setIsLoading(true);
+    try {
+      const processSteps = await getProcessSteps(process.id);
+      setSteps(processSteps);
+    } catch (error) {
+      console.error('Erro ao carregar etapas:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    toast({
-      title: "Etapa atualizada",
-      description: `Progresso: ${progress}%`,
-    });
+  const toggleStep = async (stepId: string, currentCompleted: boolean) => {
+    try {
+      await updateStepStatus(stepId, !currentCompleted, process.id);
+      // Recarregar etapas para refletir mudanças
+      await loadSteps();
+    } catch (error) {
+      console.error('Erro ao atualizar etapa:', error);
+    }
   };
 
   if (!process) return null;
@@ -63,7 +54,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Onboarding - {process.collaboratorName}</DialogTitle>
+          <DialogTitle>Onboarding - {process.collaborator?.name}</DialogTitle>
           <DialogDescription>
             {process.position} • {process.department}
           </DialogDescription>
@@ -80,33 +71,39 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
           <div className="space-y-3">
             <h4 className="font-medium">Etapas do Onboarding</h4>
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center space-x-3 p-3 border rounded-lg">
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10">
-                  <span className="text-xs font-medium">{index + 1}</span>
-                </div>
-                <div className="flex-1">
-                  <h5 className="font-medium">{step.title}</h5>
-                </div>
-                <Button
-                  size="sm"
-                  variant={step.completed ? "default" : "outline"}
-                  onClick={() => toggleStep(step.id)}
-                >
-                  {step.completed ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    <Play className="h-4 w-4" />
-                  )}
-                </Button>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               </div>
-            ))}
+            ) : (
+              steps.map((step, index) => (
+                <div key={step.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10">
+                    <span className="text-xs font-medium">{index + 1}</span>
+                  </div>
+                  <div className="flex-1">
+                    <h5 className="font-medium">{step.title}</h5>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={step.completed ? "default" : "outline"}
+                    onClick={() => toggleStep(step.id, step.completed)}
+                  >
+                    {step.completed ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              ))
+            )}
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t">
             <div>
               <p className="text-sm text-muted-foreground">
-                Iniciado em {new Date(process.startDate).toLocaleDateString('pt-BR')}
+                Iniciado em {new Date(process.start_date).toLocaleDateString('pt-BR')}
               </p>
             </div>
             <Badge className={
