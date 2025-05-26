@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { BookOpen, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTrainings } from '@/hooks/useTrainings';
+import { useSystemLogs } from '@/hooks/useSystemLogs';
 
 export const TrainingDialog = () => {
   const [open, setOpen] = useState(false);
@@ -19,6 +20,7 @@ export const TrainingDialog = () => {
     instructor: ''
   });
   const { createTraining } = useTrainings();
+  const { logInfo } = useSystemLogs();
 
   // Validação em tempo real
   const validateForm = () => {
@@ -49,33 +51,26 @@ export const TrainingDialog = () => {
   };
 
   const handleSubmit = async () => {
-    console.log('🔄 Iniciando submissão do formulário...');
-    console.log('📝 Dados do formulário:', formData);
-
     // Validar formulário
     if (!validateForm()) {
-      console.log('❌ Formulário inválido:', validationErrors);
       return;
     }
 
     setIsSubmitting(true);
     
     try {
-      console.log('📤 Chamando createTraining...');
+      logInfo('Tentativa de submissão de formulário de treinamento', 'TrainingDialog.handleSubmit', formData);
+      
       const success = await createTraining(formData);
       
       if (success) {
-        console.log('✅ Treinamento criado com sucesso, resetando formulário...');
         resetForm();
         setOpen(false);
-      } else {
-        console.log('❌ Falha na criação do treinamento');
       }
     } catch (error) {
-      console.error('💥 Erro durante submissão:', error);
+      console.error('Erro durante submissão:', error);
     } finally {
       setIsSubmitting(false);
-      console.log('✅ Submissão finalizada');
     }
   };
 
