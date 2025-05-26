@@ -17,6 +17,22 @@ export interface Training {
   updated_at: string;
 }
 
+// Função para converter dados do Supabase para o tipo Training
+const convertToTraining = (data: any): Training => {
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    duration: data.duration,
+    instructor: data.instructor,
+    status: data.status === 'inactive' ? 'inactive' : 'active', // Garantir que seja um dos valores válidos
+    participants: data.participants || 0,
+    user_id: data.user_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
+  };
+};
+
 export const useTrainings = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +63,9 @@ export const useTrainings = () => {
         return;
       }
 
-      setTrainings(data || []);
+      // Converter os dados para o tipo Training
+      const convertedTrainings = (data || []).map(convertToTraining);
+      setTrainings(convertedTrainings);
     } catch (err) {
       console.error('Erro inesperado:', err);
       setError('Erro inesperado ao carregar treinamentos');
@@ -93,7 +111,9 @@ export const useTrainings = () => {
       }
 
       if (data) {
-        setTrainings(prev => [data, ...prev]);
+        // Converter o novo treinamento para o tipo Training
+        const newTraining = convertToTraining(data);
+        setTrainings(prev => [newTraining, ...prev]);
         toast({
           title: "Sucesso",
           description: "Treinamento criado com sucesso!",
