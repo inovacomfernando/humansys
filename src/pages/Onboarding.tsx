@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,15 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, Clock, User, FileText, Briefcase, Users, Play } from 'lucide-react';
+import { CheckCircle, Clock, User, FileText, Briefcase, Users, Play, Bug } from 'lucide-react';
 import { NewOnboardingDialog } from '@/components/onboarding/NewOnboardingDialog';
 import { OnboardingDetails } from '@/components/onboarding/OnboardingDetails';
+import { AuthDebugPanel } from '@/components/debug/AuthDebugPanel';
 import { useOnboarding } from '@/hooks/useOnboarding';
 
 export const Onboarding = () => {
   const { processes, isLoading } = useOnboarding();
   const [selectedProcess, setSelectedProcess] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Mock data para o modelo de onboarding
   const defaultSteps = [
@@ -112,7 +113,7 @@ export const Onboarding = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header com Debug */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Onboarding</h1>
@@ -120,8 +121,23 @@ export const Onboarding = () => {
               Gerencie o processo de integração de novos colaboradores
             </p>
           </div>
-          <NewOnboardingDialog />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDebug(!showDebug)}
+            >
+              <Bug className="h-4 w-4 mr-2" />
+              {showDebug ? 'Ocultar' : 'Debug'}
+            </Button>
+            <NewOnboardingDialog />
+          </div>
         </div>
+
+        {/* Debug Panel */}
+        {showDebug && (
+          <AuthDebugPanel />
+        )}
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
