@@ -20,9 +20,8 @@ export const TrainingDialog = () => {
     instructor: ''
   });
   const { createTraining } = useTrainings();
-  const { logInfo } = useSystemLogs();
+  const { logInfo, logError } = useSystemLogs();
 
-  // Validação em tempo real
   const validateForm = () => {
     const errors: string[] = [];
     
@@ -43,16 +42,18 @@ export const TrainingDialog = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
+    console.log(`Campo ${field} alterado para:`, value);
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Limpar erros quando o usuário começar a digitar
     if (validationErrors.length > 0) {
       setValidationErrors([]);
     }
   };
 
   const handleSubmit = async () => {
-    // Validar formulário
+    console.log('Iniciando submissão do formulário:', formData);
+    
     if (!validateForm()) {
+      console.warn('Formulário inválido, não submetendo');
       return;
     }
 
@@ -64,22 +65,28 @@ export const TrainingDialog = () => {
       const success = await createTraining(formData);
       
       if (success) {
+        console.log('Treinamento criado com sucesso, resetando formulário');
         resetForm();
         setOpen(false);
+      } else {
+        console.warn('Falha na criação do treinamento');
       }
     } catch (error) {
       console.error('Erro durante submissão:', error);
+      logError('Erro durante submissão do formulário', 'TrainingDialog.handleSubmit', { error });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const resetForm = () => {
+    console.log('Resetando formulário');
     setFormData({ title: '', description: '', duration: '', instructor: '' });
     setValidationErrors([]);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
+    console.log('Dialog open state changed:', newOpen);
     setOpen(newOpen);
     if (!newOpen) {
       resetForm();

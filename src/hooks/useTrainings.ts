@@ -18,7 +18,6 @@ export interface Training {
   updated_at: string;
 }
 
-// Função para converter dados do Supabase para o tipo Training
 const convertToTraining = (data: any): Training => {
   return {
     id: data.id,
@@ -34,7 +33,6 @@ const convertToTraining = (data: any): Training => {
   };
 };
 
-// Função para validar dados de entrada
 const validateTrainingData = (data: {
   title: string;
   description: string;
@@ -68,6 +66,7 @@ export const useTrainings = () => {
 
   const fetchTrainings = async () => {
     if (!user) {
+      console.log('Usuário não autenticado, limpando lista de treinamentos');
       setTrainings([]);
       setIsLoading(false);
       return;
@@ -77,6 +76,7 @@ export const useTrainings = () => {
       setIsLoading(true);
       setError(null);
       
+      console.log('Iniciando busca de treinamentos para usuário:', user.id);
       logInfo('Iniciando busca de treinamentos', 'useTrainings.fetchTrainings', { userId: user.id });
 
       const { data, error: fetchError } = await supabase
@@ -86,17 +86,21 @@ export const useTrainings = () => {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
+        console.error('Erro do Supabase ao buscar treinamentos:', fetchError);
         throw fetchError;
       }
 
+      console.log('Dados recebidos do Supabase:', data);
       const convertedTrainings = (data || []).map(convertToTraining);
       setTrainings(convertedTrainings);
       
+      console.log('Treinamentos carregados com sucesso:', convertedTrainings.length);
       logInfo('Treinamentos carregados com sucesso', 'useTrainings.fetchTrainings', { 
         count: convertedTrainings.length 
       });
 
     } catch (err: any) {
+      console.error('Erro ao buscar treinamentos:', err);
       const errorMessage = err.message || 'Erro desconhecido ao carregar treinamentos';
       setError('Erro ao carregar treinamentos: ' + errorMessage);
       
@@ -121,8 +125,10 @@ export const useTrainings = () => {
     duration: string;
     instructor?: string;
   }) => {
-    // Verificar autenticação
+    console.log('Iniciando criação de treinamento:', trainingData);
+    
     if (!user?.id) {
+      console.warn('Tentativa de criar treinamento sem autenticação');
       logWarning('Tentativa de criar treinamento sem autenticação', 'useTrainings.createTraining');
       toast({
         title: "Erro de Autenticação",
@@ -132,9 +138,9 @@ export const useTrainings = () => {
       return false;
     }
 
-    // Validar dados de entrada
     const validationErrors = validateTrainingData(trainingData);
     if (validationErrors.length > 0) {
+      console.warn('Dados inválidos para criação de treinamento:', validationErrors);
       logWarning('Dados inválidos para criação de treinamento', 'useTrainings.createTraining', {
         errors: validationErrors,
         data: trainingData
@@ -147,7 +153,6 @@ export const useTrainings = () => {
       return false;
     }
 
-    // Preparar dados para inserção
     const insertData = {
       title: trainingData.title.trim(),
       description: trainingData.description.trim(),
@@ -159,6 +164,7 @@ export const useTrainings = () => {
     };
 
     try {
+      console.log('Dados preparados para inserção:', insertData);
       logInfo('Criando novo treinamento', 'useTrainings.createTraining', { 
         userId: user.id,
         title: insertData.title 
@@ -171,6 +177,7 @@ export const useTrainings = () => {
         .single();
 
       if (createError) {
+        console.error('Erro do Supabase ao criar treinamento:', createError);
         throw createError;
       }
 
@@ -178,7 +185,7 @@ export const useTrainings = () => {
         throw new Error('Nenhum dado retornado após inserção');
       }
 
-      // Converter e adicionar à lista
+      console.log('Treinamento criado com sucesso:', data);
       const newTraining = convertToTraining(data);
       setTrainings(prev => [newTraining, ...prev]);
       
@@ -194,6 +201,8 @@ export const useTrainings = () => {
       
       return true;
     } catch (err: any) {
+      console.error('Erro na criação de treinamento:', err);
+      
       let errorMessage = 'Erro desconhecido ao criar treinamento';
       
       if (err.code === '42501') {
@@ -220,6 +229,7 @@ export const useTrainings = () => {
   };
 
   useEffect(() => {
+    console.log('useTrainings: useEffect executado, user.id:', user?.id);
     fetchTrainings();
   }, [user?.id]);
 
