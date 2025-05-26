@@ -44,7 +44,13 @@ export const useTrainings = () => {
         return;
       }
 
-      setTrainings(data || []);
+      // Cast the data to match our Training interface
+      const typedTrainings: Training[] = (data || []).map(training => ({
+        ...training,
+        status: training.status as 'active' | 'inactive'
+      }));
+
+      setTrainings(typedTrainings);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -84,13 +90,19 @@ export const useTrainings = () => {
         return;
       }
 
-      setTrainings(prev => [data, ...prev]);
+      // Cast the new training data to match our interface
+      const newTraining: Training = {
+        ...data,
+        status: data.status as 'active' | 'inactive'
+      };
+
+      setTrainings(prev => [newTraining, ...prev]);
       toast({
         title: "Treinamento criado",
         description: "Novo treinamento foi criado com sucesso.",
       });
 
-      return data;
+      return newTraining;
     } catch (error) {
       console.error('Error:', error);
       toast({
