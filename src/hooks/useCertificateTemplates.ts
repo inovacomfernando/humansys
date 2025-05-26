@@ -47,7 +47,16 @@ export const useCertificateTemplates = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTemplates(data || []);
+      
+      // Convert the data to match our interface
+      const convertedData: CertificateTemplate[] = (data || []).map(item => ({
+        ...item,
+        auto_fill_data: typeof item.auto_fill_data === 'object' && item.auto_fill_data !== null 
+          ? item.auto_fill_data as { fields: string[] }
+          : { fields: ['name', 'date'] }
+      }));
+      
+      setTemplates(convertedData);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
       toast({

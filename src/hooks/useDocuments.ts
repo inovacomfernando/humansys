@@ -49,7 +49,14 @@ export const useDocuments = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDocuments(data || []);
+      
+      // Convert the data to match our interface
+      const convertedData: Document[] = (data || []).map(item => ({
+        ...item,
+        access_level: (item.access_level as 'all' | 'managers' | 'admin') || 'all'
+      }));
+      
+      setDocuments(convertedData);
     } catch (error) {
       console.error('Erro ao carregar documentos:', error);
       toast({
@@ -159,9 +166,20 @@ export const useDocuments = () => {
     if (!user) return;
 
     try {
+      // Get current document
+      const { data: currentDoc, error: fetchError } = await supabase
+        .from('documents')
+        .select('download_count')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update with incremented count
       const { error } = await supabase
         .from('documents')
-        .update({ download_count: supabase.raw('download_count + 1') })
+        .update({ download_count: (currentDoc.download_count || 0) + 1 })
         .eq('id', id)
         .eq('user_id', user.id);
 

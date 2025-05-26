@@ -49,7 +49,14 @@ export const useTrainingEnrollments = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setEnrollments(data || []);
+      
+      // Convert the data to match our interface
+      const convertedData: TrainingEnrollment[] = (data || []).map(item => ({
+        ...item,
+        status: (item.status as 'enrolled' | 'in_progress' | 'completed' | 'dropped') || 'enrolled'
+      }));
+      
+      setEnrollments(convertedData);
     } catch (error) {
       console.error('Erro ao carregar matrículas:', error);
       toast({
