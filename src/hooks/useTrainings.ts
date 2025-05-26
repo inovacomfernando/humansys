@@ -35,13 +35,7 @@ export const useTrainings = () => {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Fetching trainings for user:', user.id);
       
-      // Verificar se o cliente Supabase está configurado
-      if (!supabase) {
-        throw new Error('Supabase client not configured');
-      }
-
       const { data, error: fetchError } = await supabase
         .from('trainings')
         .select('*')
@@ -50,17 +44,10 @@ export const useTrainings = () => {
 
       if (fetchError) {
         console.error('Error fetching trainings:', fetchError);
-        setError('Erro ao carregar treinamentos');
+        setError('Não foi possível carregar os treinamentos');
         setTrainings([]);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar treinamentos",
-          variant: "destructive"
-        });
         return;
       }
-
-      console.log('Trainings fetched successfully:', data);
 
       const typedTrainings: Training[] = (data || []).map(training => ({
         id: training.id,
@@ -81,14 +68,8 @@ export const useTrainings = () => {
       setError(null);
     } catch (error: any) {
       console.error('Unexpected error:', error);
-      const errorMessage = error?.message || 'Erro inesperado ao carregar treinamentos';
-      setError(errorMessage);
+      setError('Erro inesperado ao carregar treinamentos');
       setTrainings([]);
-      toast({
-        title: "Erro",
-        description: errorMessage,
-        variant: "destructive"
-      });
     } finally {
       setIsLoading(false);
     }
@@ -110,8 +91,6 @@ export const useTrainings = () => {
     }
 
     try {
-      console.log('Creating training:', trainingData);
-      
       const newTrainingData = {
         title: trainingData.title.trim(),
         description: trainingData.description.trim(),
@@ -137,8 +116,6 @@ export const useTrainings = () => {
         });
         return false;
       }
-
-      console.log('Training created successfully:', data);
 
       const newTraining: Training = {
         id: data.id,
@@ -174,7 +151,9 @@ export const useTrainings = () => {
   };
 
   useEffect(() => {
-    fetchTrainings();
+    if (user) {
+      fetchTrainings();
+    }
   }, [user?.id]);
 
   return {

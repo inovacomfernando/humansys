@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Play, Users, Clock, Award, AlertCircle, RefreshCw } from 'lucide-react';
+import { BookOpen, Play, Users, Clock, Award, AlertCircle, RefreshCw, Loader } from 'lucide-react';
 import { useTrainingActions } from '@/hooks/useTrainingActions';
 import { useTrainings } from '@/hooks/useTrainings';
 import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
@@ -18,8 +18,8 @@ export const Training = () => {
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Carregando treinamentos...</p>
+            <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Carregando treinamentos...</p>
           </div>
         </div>
       </DashboardLayout>
@@ -30,7 +30,7 @@ export const Training = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-center">
+          <div className="text-center max-w-md">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Erro ao carregar treinamentos</h3>
             <p className="text-muted-foreground mb-4">{error}</p>
@@ -84,7 +84,7 @@ export const Training = () => {
               <Award className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
+              <div className="text-2xl font-bold">0</div>
             </CardContent>
           </Card>
           
@@ -94,7 +94,7 @@ export const Training = () => {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">342h</div>
+              <div className="text-2xl font-bold">0h</div>
             </CardContent>
           </Card>
         </div>
@@ -102,7 +102,7 @@ export const Training = () => {
         {trainings.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Nenhum treinamento encontrado</h3>
               <p className="text-muted-foreground text-center mb-4">
                 Você ainda não criou nenhum treinamento. Comece criando seu primeiro curso.
@@ -116,12 +116,12 @@ export const Training = () => {
               <Card key={course.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">{course.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-2">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg mb-2">{course.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground mb-2">
                         {course.description}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-muted-foreground">
                         {course.duration} • {course.instructor || 'Instrutor não definido'}
                       </p>
                     </div>
