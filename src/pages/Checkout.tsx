@@ -8,11 +8,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CreditCard, Lock, Shield } from 'lucide-react';
+import { CreditCard, Lock, Shield, Gift } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { plan, price, billing } = location.state || {};
   
   const [formData, setFormData] = useState({
@@ -20,12 +24,13 @@ export const Checkout = () => {
     expiryDate: '',
     cvv: '',
     cardName: '',
-    email: '',
+    email: user?.email || '',
     companyName: '',
     taxId: ''
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [startTrial, setStartTrial] = useState(false);
 
   if (!plan) {
     navigate('/plans');
@@ -39,6 +44,28 @@ export const Checkout = () => {
     }));
   };
 
+  const handleStartTrial = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    // Simular ativação do teste grátis
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    console.log('Teste grátis ativado para:', { user: user.email, plan });
+    
+    toast({
+      title: "Teste grátis ativado!",
+      description: "Você tem 30 dias para explorar todas as funcionalidades do sistema.",
+    });
+    
+    setIsProcessing(false);
+    navigate('/dashboard');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
@@ -46,11 +73,15 @@ export const Checkout = () => {
     // Simular processamento do pagamento
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    // Aqui seria integrada a API do gateway de pagamento
     console.log('Dados do pagamento:', { plan, price, billing, ...formData });
     
+    toast({
+      title: "Pagamento processado!",
+      description: "Sua assinatura foi ativada com sucesso.",
+    });
+    
     setIsProcessing(false);
-    navigate('/payment-success');
+    navigate('/dashboard');
   };
 
   const formatPrice = (value: string) => {
@@ -74,8 +105,51 @@ export const Checkout = () => {
           </div>
 
           <div className="grid gap-8 lg:grid-cols-3">
-            {/* Formulário de Pagamento */}
+            {/* Opção de Teste Grátis */}
             <div className="lg:col-span-2">
+              <Card className="mb-6 border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-green-800">
+                    <Gift className="mr-2 h-5 w-5" />
+                    Teste Grátis de 30 Dias
+                  </CardTitle>
+                  <CardDescription className="text-green-700">
+                    Experimente todas as funcionalidades sem compromisso
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-sm text-green-700">
+                      ✅ Acesso completo por 30 dias<br/>
+                      ✅ Sem dados de cartão necessários<br/>
+                      ✅ Cancele a qualquer momento<br/>
+                      ✅ Sem cobrança automática
+                    </div>
+                    
+                    <Button 
+                      onClick={handleStartTrial}
+                      className="w-full bg-green-600 hover:bg-green-700" 
+                      size="lg"
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? 'Ativando...' : 'Começar Teste Grátis Agora'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="text-center mb-6">
+                <div className="relative">
+                  <Separator />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="bg-background px-4 text-sm text-muted-foreground">
+                      ou contrate diretamente
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Formulário de Pagamento */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
@@ -235,25 +309,6 @@ export const Checkout = () => {
                       <Shield className="h-4 w-4 text-green-600" />
                       <span>Suporte técnico incluído</span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Integração de Gateway */}
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">Gateway de Pagamento</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-sm text-muted-foreground">
-                    Este sistema está preparado para integração com:
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div>• Stripe (API/Webhook)</div>
-                    <div>• PagSeguro</div>
-                    <div>• Mercado Pago</div>
-                    <div>• PayPal</div>
-                    <div>• PIX/Boleto</div>
                   </div>
                 </CardContent>
               </Card>

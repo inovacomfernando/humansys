@@ -19,8 +19,17 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const { theme, toggleTheme, companyLogo } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const getUserName = () => {
+    if (!user) return '';
+    return user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
+  };
+
+  const getUserAvatar = () => {
+    return user?.user_metadata?.avatar_url || '';
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -57,9 +66,9 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={getUserAvatar()} alt={getUserName()} />
                     <AvatarFallback>
-                      {user.name.charAt(0).toUpperCase()}
+                      {getUserName().charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -73,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                   <Settings className="mr-2 h-4 w-4" />
                   Configurações
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem onClick={signOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </DropdownMenuItem>

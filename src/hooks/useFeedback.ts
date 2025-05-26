@@ -44,7 +44,16 @@ export const useFeedback = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFeedbacks(data || []);
+      
+      // Garantir que os dados estão no formato correto
+      const formattedData = (data || []).map((item: any) => ({
+        ...item,
+        type: item.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
+        status: item.status as 'sent' | 'pending' | 'completed',
+        notification_method: item.notification_method as 'email' | 'notification' | 'both',
+      }));
+      
+      setFeedbacks(formattedData);
     } catch (error) {
       console.error('Erro ao carregar feedbacks:', error);
       toast({
@@ -63,7 +72,7 @@ export const useFeedback = () => {
 
   const createFeedback = async (feedbackData: {
     to_collaborator_id: string;
-    type: string;
+    type: 'performance' | '360' | 'peer' | 'recognition' | 'improvement';
     subject: string;
     content: string;
     rating?: number;
@@ -71,7 +80,7 @@ export const useFeedback = () => {
     urgent: boolean;
     send_email: boolean;
     send_notification: boolean;
-    notification_method: string;
+    notification_method: 'email' | 'notification' | 'both';
   }) => {
     if (!user) return;
 
@@ -91,13 +100,20 @@ export const useFeedback = () => {
 
       if (error) throw error;
 
-      setFeedbacks(prev => [data, ...prev]);
+      const formattedData = {
+        ...data,
+        type: data.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
+        status: data.status as 'sent' | 'pending' | 'completed',
+        notification_method: data.notification_method as 'email' | 'notification' | 'both',
+      };
+
+      setFeedbacks(prev => [formattedData, ...prev]);
       toast({
         title: "Sucesso",
         description: "Feedback enviado com sucesso."
       });
       
-      return data;
+      return formattedData;
     } catch (error) {
       console.error('Erro ao criar feedback:', error);
       toast({
@@ -125,8 +141,15 @@ export const useFeedback = () => {
 
       if (error) throw error;
 
+      const formattedData = {
+        ...data,
+        type: data.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
+        status: data.status as 'sent' | 'pending' | 'completed',
+        notification_method: data.notification_method as 'email' | 'notification' | 'both',
+      };
+
       setFeedbacks(prev => 
-        prev.map(f => f.id === id ? { ...f, ...data } : f)
+        prev.map(f => f.id === id ? { ...f, ...formattedData } : f)
       );
 
       toast({
@@ -134,7 +157,7 @@ export const useFeedback = () => {
         description: "Feedback atualizado com sucesso."
       });
 
-      return data;
+      return formattedData;
     } catch (error) {
       console.error('Erro ao atualizar feedback:', error);
       toast({

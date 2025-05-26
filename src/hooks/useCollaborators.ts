@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface Collaborator {
   id: string;
+  user_id: string;
   name: string;
   email: string;
   role: string;
@@ -14,6 +15,8 @@ export interface Collaborator {
   phone?: string;
   location?: string;
   join_date: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useCollaborators = () => {
@@ -32,7 +35,14 @@ export const useCollaborators = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCollaborators(data || []);
+      
+      // Garantir que os dados estão no formato correto
+      const formattedData = (data || []).map((item: any) => ({
+        ...item,
+        status: item.status as 'active' | 'inactive' | 'vacation',
+      }));
+      
+      setCollaborators(formattedData);
     } catch (error) {
       console.error('Erro ao carregar colaboradores:', error);
       toast({
@@ -49,7 +59,16 @@ export const useCollaborators = () => {
     fetchCollaborators();
   }, [user]);
 
-  const addCollaborator = async (collaboratorData: Omit<Collaborator, 'id' | 'join_date'>) => {
+  const createCollaborator = async (collaboratorData: {
+    name: string;
+    email: string;
+    role: string;
+    department: string;
+    status?: 'active' | 'inactive' | 'vacation';
+    phone?: string;
+    location?: string;
+    join_date?: string;
+  }) => {
     if (!user) return;
 
     try {
@@ -58,24 +77,30 @@ export const useCollaborators = () => {
         .insert([{
           ...collaboratorData,
           user_id: user.id,
+          status: collaboratorData.status || 'active' as const,
         }])
         .select()
         .single();
 
       if (error) throw error;
 
-      setCollaborators(prev => [data, ...prev]);
+      const formattedData = {
+        ...data,
+        status: data.status as 'active' | 'inactive' | 'vacation',
+      };
+
+      setCollaborators(prev => [formattedData, ...prev]);
       toast({
         title: "Sucesso",
-        description: "Colaborador adicionado com sucesso."
+        description: "Colaborador criado com sucesso."
       });
       
-      return data;
+      return formattedData;
     } catch (error) {
-      console.error('Erro ao adicionar colaborador:', error);
+      console.error('Erro ao criar colaborador:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível adicionar o colaborador.",
+        description: "Não foi possível criar o colaborador.",
         variant: "destructive"
       });
       throw error;
@@ -95,8 +120,13 @@ export const useCollaborators = () => {
 
       if (error) throw error;
 
+      const formattedData = {
+        ...data,
+        status: data.status as 'active' | 'inactive' | 'vacation',
+      };
+
       setCollaborators(prev => 
-        prev.map(c => c.id === id ? { ...c, ...data } : c)
+        prev.map(c => c.id === id ? { ...c, ...formattedData } : c)
       );
 
       toast({
@@ -104,7 +134,7 @@ export const useCollaborators = () => {
         description: "Colaborador atualizado com sucesso."
       });
 
-      return data;
+      return formattedData;
     } catch (error) {
       console.error('Erro ao atualizar colaborador:', error);
       toast({
@@ -146,7 +176,7 @@ export const useCollaborators = () => {
   return {
     collaborators,
     isLoading,
-    addCollaborator,
+    createCollaborator,
     updateCollaborator,
     deleteCollaborator,
     refetch: fetchCollaborators

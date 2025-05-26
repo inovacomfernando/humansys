@@ -9,6 +9,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;
+  login: (email: string, password: string) => Promise<any>; // Alias para signIn
+  logout: () => Promise<any>; // Alias para signOut
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,8 +18,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const auth = useSupabaseAuth();
 
+  // Criar aliases para manter compatibilidade
+  const contextValue: AuthContextType = {
+    ...auth,
+    login: auth.signIn,
+    logout: auth.signOut,
+  };
+
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
