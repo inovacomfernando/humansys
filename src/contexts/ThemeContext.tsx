@@ -22,7 +22,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     secondary: '#16a34a'
   });
   // Definir o logo correto da Humansys como padrão
-  const [companyLogo, setCompanyLogo] = useState<string>('/lovable-uploads/4eb8b2ed-a39e-4a47-b3d4-9a2a9c68f7c1.png');
+  const [companyLogo, setCompanyLogo] = useState<string>('/lovable-uploads/13e05f7c-729b-455c-8b54-f17d3376a3a3.png');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('@humansys:theme') as 'light' | 'dark';
