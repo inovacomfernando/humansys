@@ -13,6 +13,8 @@ export const Training = () => {
   const { handleStartCourse, handleViewCourse, handleStatsClick } = useTrainingActions();
   const { trainings, isLoading, error, refetch } = useTrainings();
 
+  console.log('Training page render state:', { trainings: trainings.length, isLoading, error });
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -29,20 +31,35 @@ export const Training = () => {
   if (error) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center max-w-md">
-            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Erro ao carregar treinamentos</h3>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={refetch} variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Tentar novamente
-            </Button>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">Treinamentos</h1>
+              <p className="text-muted-foreground">
+                Gerencie cursos e desenvolvimento de competências
+              </p>
+            </div>
+            <TrainingDialog />
+          </div>
+
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center max-w-md">
+              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">Erro ao carregar treinamentos</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={refetch} variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Tentar novamente
+              </Button>
+            </div>
           </div>
         </div>
       </DashboardLayout>
     );
   }
+
+  const activeTrainings = trainings.filter(t => t.status === 'active');
+  const totalParticipants = trainings.reduce((acc, t) => acc + t.participants, 0);
 
   return (
     <DashboardLayout>
@@ -64,7 +81,7 @@ export const Training = () => {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{trainings.filter(t => t.status === 'active').length}</div>
+              <div className="text-2xl font-bold">{activeTrainings.length}</div>
             </CardContent>
           </Card>
           
@@ -74,7 +91,7 @@ export const Training = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{trainings.reduce((acc, t) => acc + t.participants, 0)}</div>
+              <div className="text-2xl font-bold">{totalParticipants}</div>
             </CardContent>
           </Card>
           
