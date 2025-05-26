@@ -8,15 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
 import { CollaboratorActions } from '@/components/collaborators/CollaboratorActions';
+import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
 import { useToast } from '@/hooks/use-toast';
 
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
-  const { collaborators, isLoading, createCollaborator } = useCollaborators();
+  const { collaborators, isLoading, error, createCollaborator, refetch } = useCollaborators();
   const { toast } = useToast();
 
   const [newCollaborator, setNewCollaborator] = useState({
@@ -70,6 +72,14 @@ export const Collaborators = () => {
     });
   };
 
+  const handleRetry = () => {
+    toast({
+      title: "Tentando novamente",
+      description: "Recarregando dados..."
+    });
+    refetch();
+  };
+
   const filteredCollaborators = collaborators.filter(collaborator =>
     collaborator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     collaborator.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,7 +118,7 @@ export const Collaborators = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header com Status de Conexão */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Colaboradores</h1>
@@ -117,88 +127,110 @@ export const Collaborators = () => {
             </p>
           </div>
           
-          <Dialog open={isAddingCollaborator} onOpenChange={setIsAddingCollaborator}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Novo Colaborador
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Adicionar Novo Colaborador</DialogTitle>
-                <DialogDescription>
-                  Preencha as informações do novo colaborador
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Nome Completo *</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="Digite o nome completo"
-                    value={newCollaborator.name}
-                    onChange={(e) => setNewCollaborator({...newCollaborator, name: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Digite o email"
-                    value={newCollaborator.email}
-                    onChange={(e) => setNewCollaborator({...newCollaborator, email: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="role">Cargo *</Label>
-                  <Input 
-                    id="role" 
-                    placeholder="Digite o cargo"
-                    value={newCollaborator.role}
-                    onChange={(e) => setNewCollaborator({...newCollaborator, role: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="department">Departamento *</Label>
-                  <Input 
-                    id="department" 
-                    placeholder="Digite o departamento"
-                    value={newCollaborator.department}
-                    onChange={(e) => setNewCollaborator({...newCollaborator, department: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input 
-                    id="phone" 
-                    placeholder="Digite o telefone"
-                    value={newCollaborator.phone}
-                    onChange={(e) => setNewCollaborator({...newCollaborator, phone: e.target.value})}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="location">Localização</Label>
-                  <Input 
-                    id="location" 
-                    placeholder="Digite a localização"
-                    value={newCollaborator.location}
-                    onChange={(e) => setNewCollaborator({...newCollaborator, location: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsAddingCollaborator(false)}>
-                  Cancelar
+          <div className="flex items-center space-x-4">
+            <ConnectionStatus />
+            <Dialog open={isAddingCollaborator} onOpenChange={setIsAddingCollaborator}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Novo Colaborador
                 </Button>
-                <Button onClick={handleAddCollaborator}>
-                  Adicionar
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adicionar Novo Colaborador</DialogTitle>
+                  <DialogDescription>
+                    Preencha as informações do novo colaborador
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Nome Completo *</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="Digite o nome completo"
+                      value={newCollaborator.name}
+                      onChange={(e) => setNewCollaborator({...newCollaborator, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="Digite o email"
+                      value={newCollaborator.email}
+                      onChange={(e) => setNewCollaborator({...newCollaborator, email: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="role">Cargo *</Label>
+                    <Input 
+                      id="role" 
+                      placeholder="Digite o cargo"
+                      value={newCollaborator.role}
+                      onChange={(e) => setNewCollaborator({...newCollaborator, role: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="department">Departamento *</Label>
+                    <Input 
+                      id="department" 
+                      placeholder="Digite o departamento"
+                      value={newCollaborator.department}
+                      onChange={(e) => setNewCollaborator({...newCollaborator, department: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Telefone</Label>
+                    <Input 
+                      id="phone" 
+                      placeholder="Digite o telefone"
+                      value={newCollaborator.phone}
+                      onChange={(e) => setNewCollaborator({...newCollaborator, phone: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="location">Localização</Label>
+                    <Input 
+                      id="location" 
+                      placeholder="Digite a localização"
+                      value={newCollaborator.location}
+                      onChange={(e) => setNewCollaborator({...newCollaborator, location: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setIsAddingCollaborator(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleAddCollaborator}>
+                    Adicionar
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
+
+        {/* Alert de Erro */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>{error}</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRetry}
+                className="ml-2"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Tentar Novamente
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
@@ -322,7 +354,7 @@ export const Collaborators = () => {
           ))}
         </div>
 
-        {filteredCollaborators.length === 0 && (
+        {filteredCollaborators.length === 0 && !error && (
           <Card>
             <CardContent className="py-8">
               <div className="text-center">

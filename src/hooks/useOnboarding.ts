@@ -43,6 +43,7 @@ export const useOnboarding = () => {
   const [processes, setProcesses] = useState<OnboardingProcess[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { executeQuery } = useSupabaseQuery();
@@ -50,14 +51,14 @@ export const useOnboarding = () => {
   const fetchCollaborators = async () => {
     if (!user?.id) return;
 
-    const result = await executeQuery(
+    const result = await executeQuery<Collaborator[]>(
       () => supabase
         .from('collaborators')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('name'),
-      { maxRetries: 3, requireAuth: true }
+      { maxRetries: 3, requireAuth: true, timeout: 8000 }
     );
 
     if (result && Array.isArray(result)) {
@@ -74,12 +75,14 @@ export const useOnboarding = () => {
       console.log('useOnboarding: Usuário não autenticado, limpando processos');
       setProcesses([]);
       setIsLoading(false);
+      setError(null);
       return;
     }
 
     setIsLoading(true);
+    setError(null);
 
-    const result = await executeQuery(
+    const result = await executeQuery<OnboardingProcess[]>(
       () => supabase
         .from('onboarding_processes')
         .select(`
@@ -88,7 +91,7 @@ export const useOnboarding = () => {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
-      { maxRetries: 3, requireAuth: true }
+      { maxRetries: 3, requireAuth: true, timeout: 8000 }
     );
 
     if (result && Array.isArray(result)) {
@@ -98,9 +101,11 @@ export const useOnboarding = () => {
       }));
       
       setProcesses(formattedData);
+      setError(null);
       console.log('useOnboarding: Processos carregados com sucesso:', formattedData.length);
     } else {
       setProcesses([]);
+      setError('Falha ao carregar processos de onboarding');
     }
 
     setIsLoading(false);
@@ -137,7 +142,7 @@ export const useOnboarding = () => {
           collaborator:collaborators(name, email, role, department)
         `)
         .single(),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result) {
@@ -162,7 +167,7 @@ export const useOnboarding = () => {
 
       await executeQuery(
         () => supabase.from('onboarding_steps').insert(stepsData),
-        { maxRetries: 1, requireAuth: true }
+        { maxRetries: 1, requireAuth: true, timeout: 5000 }
       );
 
       const formattedData: OnboardingProcess = {
@@ -181,13 +186,13 @@ export const useOnboarding = () => {
   };
 
   const getProcessSteps = async (processId: string): Promise<OnboardingStep[]> => {
-    const result = await executeQuery(
+    const result = await executeQuery<OnboardingStep[]>(
       () => supabase
         .from('onboarding_steps')
         .select('*')
         .eq('onboarding_process_id', processId)
         .order('step_order'),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     return (result && Array.isArray(result)) ? result as OnboardingStep[] : [];
@@ -199,7 +204,7 @@ export const useOnboarding = () => {
         .from('onboarding_steps')
         .update({ completed })
         .eq('id', stepId),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (stepResult !== null) {
@@ -221,7 +226,7 @@ export const useOnboarding = () => {
           .from('onboarding_processes')
           .update({ progress, status, current_step: currentStep })
           .eq('id', processId),
-        { maxRetries: 2, requireAuth: true }
+        { maxRetries: 2, requireAuth: true, timeout: 5000 }
       );
 
       // Atualizar estado local
@@ -244,6 +249,7 @@ export const useOnboarding = () => {
     processes,
     collaborators,
     isLoading,
+    error,
     createProcess,
     getProcessSteps,
     updateStepStatus,

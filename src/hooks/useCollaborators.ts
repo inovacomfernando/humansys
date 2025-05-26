@@ -23,6 +23,7 @@ export interface Collaborator {
 export const useCollaborators = () => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { executeQuery } = useSupabaseQuery();
@@ -35,18 +36,20 @@ export const useCollaborators = () => {
       console.log('useCollaborators: Usuário não autenticado, limpando lista');
       setCollaborators([]);
       setIsLoading(false);
+      setError(null);
       return;
     }
 
     setIsLoading(true);
+    setError(null);
 
-    const result = await executeQuery(
+    const result = await executeQuery<Collaborator[]>(
       () => supabase
         .from('collaborators')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
-      { maxRetries: 3, requireAuth: true }
+      { maxRetries: 3, requireAuth: true, timeout: 8000 }
     );
 
     if (result && Array.isArray(result)) {
@@ -56,9 +59,11 @@ export const useCollaborators = () => {
       }));
       
       setCollaborators(formattedData);
+      setError(null);
       console.log('useCollaborators: Colaboradores carregados com sucesso:', formattedData.length);
     } else {
       setCollaborators([]);
+      setError('Falha ao carregar colaboradores');
     }
 
     setIsLoading(false);
@@ -100,7 +105,7 @@ export const useCollaborators = () => {
         .insert([dataToInsert])
         .select()
         .single(),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result) {
@@ -131,7 +136,7 @@ export const useCollaborators = () => {
         .eq('user_id', user.id)
         .select()
         .single(),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result) {
@@ -163,7 +168,7 @@ export const useCollaborators = () => {
         .delete()
         .eq('id', id)
         .eq('user_id', user.id),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result !== null) {
@@ -178,6 +183,7 @@ export const useCollaborators = () => {
   return {
     collaborators,
     isLoading,
+    error,
     createCollaborator,
     updateCollaborator,
     deleteCollaborator,

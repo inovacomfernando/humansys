@@ -29,6 +29,7 @@ export interface Feedback {
 export const useFeedback = () => {
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const { executeQuery } = useSupabaseQuery();
@@ -41,12 +42,14 @@ export const useFeedback = () => {
       console.log('useFeedback: Usuário não autenticado, limpando feedbacks');
       setFeedbacks([]);
       setIsLoading(false);
+      setError(null);
       return;
     }
 
     setIsLoading(true);
+    setError(null);
 
-    const result = await executeQuery(
+    const result = await executeQuery<Feedback[]>(
       () => supabase
         .from('feedbacks')
         .select(`
@@ -55,7 +58,7 @@ export const useFeedback = () => {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
-      { maxRetries: 3, requireAuth: true }
+      { maxRetries: 3, requireAuth: true, timeout: 8000 }
     );
 
     if (result && Array.isArray(result)) {
@@ -67,9 +70,11 @@ export const useFeedback = () => {
       }));
       
       setFeedbacks(formattedData);
+      setError(null);
       console.log('useFeedback: Feedbacks carregados com sucesso:', formattedData.length);
     } else {
       setFeedbacks([]);
+      setError('Falha ao carregar feedbacks');
     }
 
     setIsLoading(false);
@@ -109,7 +114,7 @@ export const useFeedback = () => {
           collaborator:collaborators(name, email)
         `)
         .single(),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result) {
@@ -145,7 +150,7 @@ export const useFeedback = () => {
           collaborator:collaborators(name, email)
         `)
         .single(),
-      { maxRetries: 2, requireAuth: true }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result) {
@@ -173,6 +178,7 @@ export const useFeedback = () => {
   return {
     feedbacks,
     isLoading,
+    error,
     createFeedback,
     updateFeedback,
     refetch: fetchFeedbacks

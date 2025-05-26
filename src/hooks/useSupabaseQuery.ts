@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, checkSupabaseConnection } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -8,6 +8,7 @@ interface QueryOptions {
   maxRetries?: number;
   retryDelay?: number;
   requireAuth?: boolean;
+  timeout?: number;
 }
 
 export const useSupabaseQuery = () => {
@@ -16,10 +17,15 @@ export const useSupabaseQuery = () => {
   const { user } = useAuth();
 
   const executeQuery = useCallback(async <T>(
-    queryFn: () => any, // Changed from Promise to any to accept Supabase query builders
+    queryFn: () => any,
     options: QueryOptions = {}
   ): Promise<T | null> => {
-    const { maxRetries = 3, retryDelay = 1000, requireAuth = true } = options;
+    const { 
+      maxRetries = 3, 
+      retryDelay = 1000, 
+      requireAuth = true,
+      timeout = 10000 
+    } = options;
 
     // Verificar autenticação se necessário
     if (requireAuth && !user?.id) {
@@ -35,11 +41,25 @@ export const useSupabaseQuery = () => {
     setIsLoading(true);
     let lastError: any = null;
 
+    // Verificar conectividade básica primeiro
+    console.log('useSupabaseQuery: Verificando conectividade...');
+    const isConnected = await checkSupabaseConnection();
+    if (!isConnected) {
+      console.error('useSupabaseQuery: Sem conectividade com Supabase');
+      setIsLoading(false);
+      toast({
+        title: "Erro de Conectividade",
+        description: "Não foi possível conectar ao servidor. Verifique sua conexão.",
+        variant: "destructive"
+      });
+      return null;
+    }
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`useSupabaseQuery: Tentativa ${attempt}/${maxRetries}`);
 
-        // Verificar sessão antes da query
+        // Verificar sessão antes da query se autenticação for necessária
         if (requireAuth) {
           const { data: { session }, error: sessionError } = await supabase.auth.getSession();
           
@@ -51,23 +71,29 @@ export const useSupabaseQuery = () => {
           console.log('useSupabaseQuery: Sessão válida confirmada');
         }
 
-        // Execute the Supabase query builder
+        // Executar query com timeout
         const queryBuilder = queryFn();
-        const result = await queryBuilder;
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Query timeout')), timeout)
+        );
+
+        const result = await Promise.race([queryBuilder, timeoutPromise]);
 
         if (result.error) {
           console.error(`useSupabaseQuery: Erro na tentativa ${attempt}:`, result.error);
           lastError = result.error;
 
-          // Se é erro de autenticação, não tentar novamente
-          if (result.error.code === 'PGRST301' || result.error.message?.includes('JWT')) {
-            console.error('useSupabaseQuery: Erro de autenticação detectado, parando tentativas');
+          // Erros críticos que não devem ser retentados
+          if (result.error.code === 'PGRST301' || 
+              result.error.message?.includes('JWT') ||
+              result.error.message?.includes('permission denied')) {
+            console.error('useSupabaseQuery: Erro crítico detectado, parando tentativas');
             break;
           }
 
           // Se não é a última tentativa, esperar antes de tentar novamente
           if (attempt < maxRetries) {
-            console.log(`useSupabaseQuery: Aguardando ${retryDelay}ms antes da próxima tentativa`);
+            console.log(`useSupabaseQuery: Aguardando ${retryDelay * attempt}ms antes da próxima tentativa`);
             await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
             continue;
           }
@@ -80,8 +106,11 @@ export const useSupabaseQuery = () => {
         console.error(`useSupabaseQuery: Erro inesperado na tentativa ${attempt}:`, error);
         lastError = error;
 
-        if (attempt < maxRetries) {
+        if (attempt < maxRetries && !error.message?.includes('timeout')) {
           await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        } else if (error.message?.includes('timeout')) {
+          console.error('useSupabaseQuery: Timeout - parando tentativas');
+          break;
         }
       }
     }
@@ -92,9 +121,19 @@ export const useSupabaseQuery = () => {
     const errorMessage = lastError?.message || 'Erro desconhecido ao carregar dados';
     console.error('useSupabaseQuery: Todas as tentativas falharam:', lastError);
     
+    // Diferentes tipos de erro requerem mensagens diferentes
+    let userMessage = errorMessage;
+    if (errorMessage.includes('timeout')) {
+      userMessage = 'Timeout na conexão. Tente novamente.';
+    } else if (errorMessage.includes('Failed to fetch')) {
+      userMessage = 'Erro de conectividade. Verifique sua internet.';
+    } else if (errorMessage.includes('JWT') || errorMessage.includes('session')) {
+      userMessage = 'Sessão expirada. Faça login novamente.';
+    }
+    
     toast({
       title: "Erro ao carregar dados",
-      description: `${errorMessage} (${maxRetries} tentativas)`,
+      description: `${userMessage} (${maxRetries} tentativas)`,
       variant: "destructive"
     });
 
