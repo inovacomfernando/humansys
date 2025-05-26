@@ -3,22 +3,55 @@ import { supabase } from '@/integrations/supabase/client';
 import { Training, CreateTrainingData } from '@/types/training';
 import { convertToTraining } from '@/utils/trainingConverters';
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      console.warn(`Tentativa ${attempt} falhou:`, error);
+      
+      // Se é um erro de rede, tentar novamente
+      if (error?.message?.includes('Failed to fetch') && attempt < maxRetries) {
+        console.log(`Aguardando ${delayMs}ms antes da próxima tentativa...`);
+        await delay(delayMs * attempt); // Delay crescente
+        continue;
+      }
+      
+      // Para outros tipos de erro, não tentar novamente
+      throw error;
+    }
+  }
+  
+  throw lastError;
+};
+
 export const fetchTrainings = async (userId: string): Promise<Training[]> => {
   console.log('Iniciando busca de treinamentos para usuário:', userId);
   
-  const { data, error } = await supabase
-    .from('trainings')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+  return retryOperation(async () => {
+    const { data, error } = await supabase
+      .from('trainings')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Erro do Supabase ao buscar treinamentos:', error);
-    throw error;
-  }
+    if (error) {
+      console.error('Erro do Supabase ao buscar treinamentos:', error);
+      throw error;
+    }
 
-  console.log('Dados recebidos do Supabase:', data);
-  return (data || []).map(convertToTraining);
+    console.log('Dados recebidos do Supabase:', data);
+    return (data || []).map(convertToTraining);
+  });
 };
 
 export const createTraining = async (
@@ -37,21 +70,23 @@ export const createTraining = async (
 
   console.log('Dados preparados para inserção:', insertData);
 
-  const { data, error } = await supabase
-    .from('trainings')
-    .insert([insertData])
-    .select()
-    .single();
+  return retryOperation(async () => {
+    const { data, error } = await supabase
+      .from('trainings')
+      .insert([insertData])
+      .select()
+      .single();
 
-  if (error) {
-    console.error('Erro do Supabase ao criar treinamento:', error);
-    throw error;
-  }
+    if (error) {
+      console.error('Erro do Supabase ao criar treinamento:', error);
+      throw error;
+    }
 
-  if (!data) {
-    throw new Error('Nenhum dado retornado após inserção');
-  }
+    if (!data) {
+      throw new Error('Nenhum dado retornado após inserção');
+    }
 
-  console.log('Treinamento criado com sucesso:', data);
-  return convertToTraining(data);
+    console.log('Treinamento criado com sucesso:', data);
+    return convertToTraining(data);
+  });
 };

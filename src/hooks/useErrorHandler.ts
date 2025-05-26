@@ -14,22 +14,37 @@ export const useErrorHandler = () => {
   ) => {
     console.error(`[${source}] Erro capturado:`, error);
     
-    // Log do erro no sistema
-    logError(
-      error.message || 'Erro desconhecido',
-      source,
-      {
-        error: error,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      }
-    );
+    // Determinar mensagem de erro baseada no tipo
+    let finalMessage = userFriendlyMessage || "Ocorreu um erro inesperado. Tente novamente.";
+    
+    if (error?.message?.includes('Failed to fetch')) {
+      finalMessage = "Erro de conectividade. Verifique sua conexão com a internet e tente novamente.";
+    } else if (error?.code === '42501') {
+      finalMessage = "Erro de permissão. Verifique se você tem acesso para realizar esta ação.";
+    } else if (error?.code === '23505') {
+      finalMessage = "Já existe um registro com esses dados.";
+    }
+
+    // Log do erro no sistema (com tratamento de falha silencioso)
+    try {
+      logError(
+        error?.message || 'Erro desconhecido',
+        source,
+        {
+          error: error,
+          stack: error?.stack,
+          timestamp: new Date().toISOString()
+        }
+      );
+    } catch (logErr) {
+      console.warn('Falha ao registrar erro no sistema de logs:', logErr);
+    }
 
     // Mostrar toast para o usuário se solicitado
     if (showToast) {
       toast({
         title: "Erro",
-        description: userFriendlyMessage || "Ocorreu um erro inesperado. Tente novamente.",
+        description: finalMessage,
         variant: "destructive"
       });
     }

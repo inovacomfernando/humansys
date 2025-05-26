@@ -32,7 +32,12 @@ export const useSystemLogs = () => {
     try {
       console.log('Criando log:', { level, message, source, userId: user.id });
       
-      const { error } = await supabase
+      // Implementar timeout para evitar travamento
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout ao criar log')), 5000);
+      });
+
+      const logPromise = supabase
         .from('system_logs')
         .insert([{
           user_id: user.id,
@@ -42,37 +47,46 @@ export const useSystemLogs = () => {
           details: details ? JSON.stringify(details) : null
         }]);
 
+      const { error } = await Promise.race([logPromise, timeoutPromise]) as any;
+
       if (error) {
         console.error('Erro ao criar log no Supabase:', error);
-        // Não criar um loop infinito tentando logar o erro de log
         return;
       }
       
       console.log('Log criado com sucesso');
     } catch (err) {
-      console.error('Erro crítico na função de log:', err);
-      // Não tentar logar este erro para evitar loops infinitos
+      console.warn('Erro crítico na função de log (ignorando):', err);
     }
   };
 
   const logError = (message: string, source: string, details?: any) => {
     console.error(`[${source}] ${message}`, details);
-    createLog('error', message, source, details);
+    // Criar log de forma assíncrona sem bloquear a execução
+    createLog('error', message, source, details).catch(() => {
+      // Ignorar erros de log silenciosamente
+    });
   };
 
   const logWarning = (message: string, source: string, details?: any) => {
     console.warn(`[${source}] ${message}`, details);
-    createLog('warning', message, source, details);
+    createLog('warning', message, source, details).catch(() => {
+      // Ignorar erros de log silenciosamente
+    });
   };
 
   const logInfo = (message: string, source: string, details?: any) => {
     console.info(`[${source}] ${message}`, details);
-    createLog('info', message, source, details);
+    createLog('info', message, source, details).catch(() => {
+      // Ignorar erros de log silenciosamente
+    });
   };
 
   const logDebug = (message: string, source: string, details?: any) => {
     console.debug(`[${source}] ${message}`, details);
-    createLog('debug', message, source, details);
+    createLog('debug', message, source, details).catch(() => {
+      // Ignorar erros de log silenciosamente
+    });
   };
 
   return {
