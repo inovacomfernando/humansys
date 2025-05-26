@@ -57,6 +57,29 @@ const validateTrainingData = (data: {
   return errors;
 };
 
+// Função para tentar reconectar com retry
+const withRetry = async <T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      console.log(`🔄 Tentativa ${attempt}/${maxRetries} falhou:`, error);
+      
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Aguardar antes da próxima tentativa
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
+    }
+  }
+  throw new Error('Máximo de tentativas excedido');
+};
+
 export const useTrainings = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,33 +103,37 @@ export const useTrainings = () => {
       
       console.log('📡 Fazendo consulta ao Supabase para user_id:', user.id);
       
-      const { data, error: fetchError } = await supabase
-        .from('trainings')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const result = await withRetry(async () => {
+        const { data, error: fetchError } = await supabase
+          .from('trainings')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (fetchError) {
-        console.error('❌ Erro ao buscar treinamentos:', fetchError);
-        console.error('Detalhes do erro:', {
-          message: fetchError.message,
-          code: fetchError.code,
-          details: fetchError.details
-        });
-        setError('Erro ao carregar treinamentos: ' + fetchError.message);
-        return;
-      }
+        if (fetchError) {
+          throw fetchError;
+        }
 
-      console.log('✅ Dados recebidos do Supabase:', data);
-      console.log('📊 Número de treinamentos encontrados:', data?.length || 0);
+        return data;
+      });
 
-      const convertedTrainings = (data || []).map(convertToTraining);
+      console.log('✅ Dados recebidos do Supabase:', result);
+      console.log('📊 Número de treinamentos encontrados:', result?.length || 0);
+
+      const convertedTrainings = (result || []).map(convertToTraining);
       console.log('🔄 Treinamentos convertidos:', convertedTrainings);
       
       setTrainings(convertedTrainings);
-    } catch (err) {
-      console.error('💥 Erro inesperado ao buscar treinamentos:', err);
-      setError('Erro inesperado ao carregar treinamentos: ' + (err as Error).message);
+    } catch (err: any) {
+      console.error('💥 Erro ao buscar treinamentos:', err);
+      const errorMessage = err.message || 'Erro desconhecido ao carregar treinamentos';
+      setError('Erro ao carregar treinamentos: ' + errorMessage);
+      
+      toast({
+        title: "Erro ao Carregar",
+        description: "Não foi possível carregar os treinamentos. Tente novamente.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
       console.log('✅ Busca de treinamentos finalizada');
@@ -123,7 +150,7 @@ export const useTrainings = () => {
     console.log('📝 Dados recebidos:', trainingData);
 
     // Verificar autenticação
-    if (!user) {
+    if (!user?.id) {
       console.error('❌ Usuário não autenticado');
       toast({
         title: "Erro de Autenticação",
@@ -151,7 +178,10 @@ export const useTrainings = () => {
 
     // Preparar dados para inserção
     const insertData = {
-      ...trainingData,
+      title: trainingData.title.trim(),
+      description: trainingData.description.trim(),
+      duration: trainingData.duration.trim(),
+      instructor: trainingData.instructor?.trim() || null,
       user_id: user.id,
       status: 'active' as const,
       participants: 0
@@ -162,39 +192,21 @@ export const useTrainings = () => {
     try {
       console.log('📡 Enviando dados para Supabase...');
       
-      const { data, error: createError } = await supabase
-        .from('trainings')
-        .insert([insertData])
-        .select()
-        .single();
+      const result = await withRetry(async () => {
+        const { data, error: createError } = await supabase
+          .from('trainings')
+          .insert([insertData])
+          .select()
+          .single();
 
-      if (createError) {
-        console.error('❌ Erro na criação:', createError);
-        console.error('Detalhes do erro:', {
-          message: createError.message,
-          code: createError.code,
-          details: createError.details,
-          hint: createError.hint
-        });
-        
-        let errorMessage = 'Erro ao criar treinamento';
-        if (createError.code === '42501') {
-          errorMessage = 'Erro de permissão. Verifique se você tem acesso para criar treinamentos.';
-        } else if (createError.code === '23505') {
-          errorMessage = 'Já existe um treinamento com esses dados.';
-        } else if (createError.message) {
-          errorMessage = createError.message;
+        if (createError) {
+          throw createError;
         }
-        
-        toast({
-          title: "Erro na Criação",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        return false;
-      }
 
-      if (!data) {
+        return data;
+      });
+
+      if (!result) {
         console.error('❌ Nenhum dado retornado após inserção');
         toast({
           title: "Erro",
@@ -204,10 +216,10 @@ export const useTrainings = () => {
         return false;
       }
 
-      console.log('✅ Treinamento criado com sucesso:', data);
+      console.log('✅ Treinamento criado com sucesso:', result);
 
       // Converter e adicionar à lista
-      const newTraining = convertToTraining(data);
+      const newTraining = convertToTraining(result);
       console.log('🔄 Novo treinamento convertido:', newTraining);
       
       setTrainings(prev => {
@@ -223,13 +235,22 @@ export const useTrainings = () => {
       });
       
       return true;
-    } catch (err) {
-      console.error('💥 Erro inesperado na criação:', err);
-      console.error('Stack trace:', (err as Error).stack);
+    } catch (err: any) {
+      console.error('💥 Erro na criação:', err);
+      
+      let errorMessage = 'Erro desconhecido ao criar treinamento';
+      
+      if (err.code === '42501') {
+        errorMessage = 'Erro de permissão. Verifique se você tem acesso para criar treinamentos.';
+      } else if (err.code === '23505') {
+        errorMessage = 'Já existe um treinamento com esses dados.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
       
       toast({
-        title: "Erro Inesperado",
-        description: "Erro inesperado ao criar treinamento: " + (err as Error).message,
+        title: "Erro na Criação",
+        description: errorMessage,
         variant: "destructive"
       });
       return false;
