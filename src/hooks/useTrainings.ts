@@ -46,27 +46,37 @@ export const useTrainings = () => {
           description: "Erro ao carregar treinamentos",
           variant: "destructive"
         });
+        setTrainings([]);
         return;
       }
 
-      console.log('Trainings fetched:', data);
+      console.log('Trainings fetched successfully:', data);
 
-      // Cast the data to match our Training interface
+      // Transform the data to match our Training interface
       const typedTrainings: Training[] = (data || []).map(training => ({
-        ...training,
+        id: training.id,
+        title: training.title,
+        description: training.description,
+        duration: training.duration,
+        instructor: training.instructor || undefined,
         status: (training.status === 'active' || training.status === 'inactive') 
-          ? training.status 
-          : 'active' as 'active' | 'inactive'
+          ? training.status as 'active' | 'inactive'
+          : 'active' as 'active' | 'inactive',
+        participants: training.participants || 0,
+        user_id: training.user_id,
+        created_at: training.created_at,
+        updated_at: training.updated_at
       }));
 
       setTrainings(typedTrainings);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Unexpected error:', error);
       toast({
         title: "Erro",
         description: "Erro inesperado ao carregar treinamentos",
         variant: "destructive"
       });
+      setTrainings([]);
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +104,10 @@ export const useTrainings = () => {
         .from('trainings')
         .insert([
           {
-            ...trainingData,
+            title: trainingData.title,
+            description: trainingData.description,
+            duration: trainingData.duration,
+            instructor: trainingData.instructor || null,
             user_id: user.id,
             status: 'active',
             participants: 0
@@ -113,14 +126,22 @@ export const useTrainings = () => {
         return;
       }
 
-      console.log('Training created:', data);
+      console.log('Training created successfully:', data);
 
-      // Cast the new training data to match our interface
+      // Transform the new training data to match our interface
       const newTraining: Training = {
-        ...data,
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        duration: data.duration,
+        instructor: data.instructor || undefined,
         status: (data.status === 'active' || data.status === 'inactive') 
-          ? data.status 
-          : 'active' as 'active' | 'inactive'
+          ? data.status as 'active' | 'inactive'
+          : 'active' as 'active' | 'inactive',
+        participants: data.participants || 0,
+        user_id: data.user_id,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
 
       setTrainings(prev => [newTraining, ...prev]);
@@ -131,7 +152,7 @@ export const useTrainings = () => {
 
       return newTraining;
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Unexpected error creating training:', error);
       toast({
         title: "Erro",
         description: "Erro ao criar treinamento",

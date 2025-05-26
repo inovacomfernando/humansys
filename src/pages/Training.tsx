@@ -4,13 +4,14 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Play, Users, Clock, Award } from 'lucide-react';
+import { BookOpen, Play, Users, Clock, Award, AlertCircle } from 'lucide-react';
 import { useTrainingActions } from '@/hooks/useTrainingActions';
 import { useTrainings } from '@/hooks/useTrainings';
+import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
 
 export const Training = () => {
-  const { handleStartCourse, handleViewCourse, handleCreateCourse, handleStatsClick } = useTrainingActions();
-  const { trainings, isLoading } = useTrainings();
+  const { handleStartCourse, handleViewCourse, handleStatsClick } = useTrainingActions();
+  const { trainings, isLoading, refetch } = useTrainings();
 
   if (isLoading) {
     return (
@@ -35,10 +36,7 @@ export const Training = () => {
               Gerencie cursos e desenvolvimento de competências
             </p>
           </div>
-          <Button onClick={handleCreateCourse}>
-            <BookOpen className="mr-2 h-4 w-4" />
-            Novo Curso
-          </Button>
+          <TrainingDialog />
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
@@ -83,48 +81,64 @@ export const Training = () => {
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {trainings.map((course) => (
-            <Card key={course.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{course.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {course.duration} • {course.instructor || 'Instrutor não definido'}
-                    </p>
+        {trainings.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">Nenhum treinamento encontrado</h3>
+              <p className="text-muted-foreground text-center mb-4">
+                Você ainda não criou nenhum treinamento. Comece criando seu primeiro curso.
+              </p>
+              <TrainingDialog />
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {trainings.map((course) => (
+              <Card key={course.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg">{course.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        {course.description}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {course.duration} • {course.instructor || 'Instrutor não definido'}
+                      </p>
+                    </div>
+                    <Badge variant={course.status === 'active' ? 'default' : 'secondary'}>
+                      {course.status === 'active' ? 'Ativo' : 'Inativo'}
+                    </Badge>
                   </div>
-                  <Badge variant={course.status === 'active' ? 'default' : 'secondary'}>
-                    {course.status === 'active' ? 'Ativo' : 'Inativo'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">
-                    {course.participants} participantes
-                  </span>
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleViewCourse(course.id)}
-                    >
-                      Detalhes
-                    </Button>
-                    <Button 
-                      size="sm"
-                      onClick={() => handleStartCourse(course.id, course.title)}
-                    >
-                      <Play className="mr-2 h-4 w-4" />
-                      Iniciar
-                    </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      {course.participants} participantes
+                    </span>
+                    <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleViewCourse(course.id)}
+                      >
+                        Detalhes
+                      </Button>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleStartCourse(course.id, course.title)}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+                        Iniciar
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
