@@ -68,7 +68,18 @@ export const SystemLogsViewer = () => {
         return;
       }
 
-      setLogs(data || []);
+      // Convert the data to match SystemLog interface
+      const convertedLogs: SystemLog[] = (data || []).map(log => ({
+        id: log.id,
+        user_id: log.user_id,
+        level: log.level as LogLevel,
+        message: log.message,
+        details: log.details,
+        source: log.source,
+        created_at: log.created_at
+      }));
+
+      setLogs(convertedLogs);
     } catch (error) {
       console.error('Erro ao carregar logs:', error);
     } finally {
