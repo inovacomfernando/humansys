@@ -18,15 +18,19 @@ import { FeedbackDialog } from '@/components/dashboard/FeedbackDialog';
 import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { useDashboardActions } from '@/hooks/useDashboardActions';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const Dashboard = () => {
   const { handleStatsClick, handleQuickAction } = useDashboardActions();
+  const { stats, recentActivities, isLoading } = useDashboardData();
 
-  const stats = [
+  const statsConfig = [
     {
       title: 'Total de Colaboradores',
-      value: '0',
-      change: '0%',
+      value: stats.totalCollaborators.toString(),
+      change: '+0%',
       trend: 'up' as const,
       icon: Users,
       color: 'text-blue-600',
@@ -34,8 +38,8 @@ export const Dashboard = () => {
     },
     {
       title: 'Novos Contratados',
-      value: '0',
-      change: '0%',
+      value: stats.newHires.toString(),
+      change: '+0%',
       trend: 'up' as const,
       icon: UserPlus,
       color: 'text-green-600',
@@ -43,7 +47,7 @@ export const Dashboard = () => {
     },
     {
       title: 'Feedbacks Pendentes',
-      value: '0',
+      value: stats.pendingFeedbacks.toString(),
       change: '0%',
       trend: 'down' as const,
       icon: MessageSquare,
@@ -52,7 +56,7 @@ export const Dashboard = () => {
     },
     {
       title: 'Metas Concluídas',
-      value: '0%',
+      value: `${stats.completedGoals}%`,
       change: '0%',
       trend: 'up' as const,
       icon: Target,
@@ -74,11 +78,11 @@ export const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => (
+          {statsConfig.map((stat, index) => (
             <StatsCard
               key={index}
               title={stat.title}
-              value={stat.value}
+              value={isLoading ? '...' : stat.value}
               change={stat.change}
               trend={stat.trend}
               icon={stat.icon}
@@ -101,13 +105,28 @@ export const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-8">
-                <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhuma atividade recente</h3>
-                <p className="text-muted-foreground text-center">
-                  As atividades aparecerão aqui conforme você usar o sistema.
-                </p>
-              </div>
+              {recentActivities.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Nenhuma atividade recente</h3>
+                  <p className="text-muted-foreground text-center">
+                    As atividades aparecerão aqui conforme você usar o sistema.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentActivities.slice(0, 5).map((activity) => (
+                    <div key={activity.id} className="flex items-start space-x-3 p-3 bg-muted/50 rounded-lg">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{activity.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(activity.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 

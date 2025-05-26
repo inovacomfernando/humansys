@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      certificate_templates: {
+        Row: {
+          active: boolean
+          auto_fill_data: Json | null
+          created_at: string
+          description: string
+          id: string
+          name: string
+          template_url: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          auto_fill_data?: Json | null
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          template_url?: string | null
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          auto_fill_data?: Json | null
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          template_url?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       collaborators: {
         Row: {
           created_at: string
@@ -51,6 +90,54 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          access_level: string
+          category: string
+          created_at: string
+          description: string | null
+          download_count: number
+          file_size: number | null
+          file_url: string | null
+          id: string
+          pages: number | null
+          title: string
+          updated_at: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          access_level?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          pages?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+          version?: string
+        }
+        Update: {
+          access_level?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          pages?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          version?: string
         }
         Relationships: []
       }
@@ -115,6 +202,67 @@ export type Database = {
             columns: ["to_collaborator_id"]
             isOneToOne: false
             referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_certificates: {
+        Row: {
+          certificate_data: Json
+          collaborator_id: string
+          created_at: string
+          generated_url: string | null
+          id: string
+          issued_date: string
+          template_id: string
+          training_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          certificate_data: Json
+          collaborator_id: string
+          created_at?: string
+          generated_url?: string | null
+          id?: string
+          issued_date?: string
+          template_id: string
+          training_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          certificate_data?: Json
+          collaborator_id?: string
+          created_at?: string
+          generated_url?: string | null
+          id?: string
+          issued_date?: string
+          template_id?: string
+          training_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_certificates_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_certificates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "certificate_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_certificates_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
             referencedColumns: ["id"]
           },
         ]
@@ -234,6 +382,36 @@ export type Database = {
         }
         Relationships: []
       }
+      system_activities: {
+        Row: {
+          created_at: string
+          description: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_logs: {
         Row: {
           created_at: string
@@ -263,6 +441,60 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      training_enrollments: {
+        Row: {
+          collaborator_id: string
+          completed_at: string | null
+          created_at: string
+          enrolled_at: string
+          id: string
+          progress: number
+          status: string
+          training_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          collaborator_id: string
+          completed_at?: string | null
+          created_at?: string
+          enrolled_at?: string
+          id?: string
+          progress?: number
+          status?: string
+          training_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          collaborator_id?: string
+          completed_at?: string | null
+          created_at?: string
+          enrolled_at?: string
+          id?: string
+          progress?: number
+          status?: string
+          training_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_enrollments_collaborator_id_fkey"
+            columns: ["collaborator_id"]
+            isOneToOne: false
+            referencedRelation: "collaborators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_enrollments_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trainings: {
         Row: {
