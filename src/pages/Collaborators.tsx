@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,7 @@ import { useCollaborators } from '@/hooks/useCollaborators';
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
-  const { collaborators, isLoading, addCollaborator } = useCollaborators();
+  const { collaborators, isLoading, createCollaborator } = useCollaborators();
 
   const [newCollaborator, setNewCollaborator] = useState({
     name: '',
@@ -31,7 +30,7 @@ export const Collaborators = () => {
     }
 
     try {
-      await addCollaborator({
+      await createCollaborator({
         ...newCollaborator,
         status: 'active' as const
       });

@@ -46,7 +46,14 @@ export const useOnboarding = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProcesses(data || []);
+      
+      // Garantir que os dados estão no formato correto
+      const formattedData = (data || []).map((item: any) => ({
+        ...item,
+        status: item.status as 'not-started' | 'in-progress' | 'completed',
+      }));
+      
+      setProcesses(formattedData);
     } catch (error) {
       console.error('Erro ao carregar processos de onboarding:', error);
       toast({
@@ -91,13 +98,18 @@ export const useOnboarding = () => {
         process_id: data.id
       });
 
-      setProcesses(prev => [data, ...prev]);
+      const formattedData = {
+        ...data,
+        status: data.status as 'not-started' | 'in-progress' | 'completed',
+      };
+
+      setProcesses(prev => [formattedData, ...prev]);
       toast({
         title: "Sucesso",
         description: "Processo de onboarding criado com sucesso."
       });
       
-      return data;
+      return formattedData;
     } catch (error) {
       console.error('Erro ao criar processo de onboarding:', error);
       toast({

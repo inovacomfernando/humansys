@@ -16,13 +16,13 @@ export const Profile = () => {
   const { theme, toggleTheme } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
+    name: user?.user_metadata?.name || user?.user_metadata?.full_name || '',
     email: user?.email || '',
-    company: user?.company || '',
-    phone: '',
-    department: '',
-    position: '',
-    bio: ''
+    company: user?.user_metadata?.company || '',
+    phone: user?.user_metadata?.phone || '',
+    department: user?.user_metadata?.department || '',
+    position: user?.user_metadata?.position || '',
+    bio: user?.user_metadata?.bio || ''
   });
 
   const handleSave = () => {
@@ -37,6 +37,14 @@ export const Profile = () => {
       // Aqui implementaria o upload da imagem
       console.log('Upload de imagem:', file);
     }
+  };
+
+  const getUserName = () => {
+    return user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
+  };
+
+  const getUserAvatar = () => {
+    return user?.user_metadata?.avatar_url || '';
   };
 
   return (
@@ -72,9 +80,9 @@ export const Profile = () => {
                 {/* Avatar */}
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarImage src={getUserAvatar()} alt={getUserName()} />
                     <AvatarFallback className="text-lg">
-                      {user?.name?.charAt(0).toUpperCase()}
+                      {getUserName().charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
