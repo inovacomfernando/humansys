@@ -10,6 +10,7 @@ import { useTrainings } from '@/hooks/useTrainings';
 
 export const TrainingDialog = () => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [training, setTraining] = useState({
     title: '',
     description: '',
@@ -23,13 +24,34 @@ export const TrainingDialog = () => {
       return;
     }
 
-    await createTraining(training);
-    setTraining({ title: '', description: '', duration: '', instructor: '' });
-    setOpen(false);
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      const success = await createTraining(training);
+      
+      if (success) {
+        setTraining({ title: '', description: '', duration: '', instructor: '' });
+        setOpen(false);
+      }
+    } catch (error) {
+      console.error('Error in handleCreateTraining:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isSubmitting) {
+      setOpen(newOpen);
+      if (!newOpen) {
+        setTraining({ title: '', description: '', duration: '', instructor: '' });
+      }
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="justify-start h-auto p-4">
           <BookOpen className="mr-2 h-5 w-5" />
@@ -54,6 +76,7 @@ export const TrainingDialog = () => {
               placeholder="Digite o título do curso"
               value={training.title}
               onChange={(e) => setTraining({...training, title: e.target.value})}
+              disabled={isSubmitting}
             />
           </div>
           <div className="grid gap-2">
@@ -64,6 +87,7 @@ export const TrainingDialog = () => {
               value={training.description}
               onChange={(e) => setTraining({...training, description: e.target.value})}
               rows={3}
+              disabled={isSubmitting}
             />
           </div>
           <div className="grid gap-2">
@@ -73,6 +97,7 @@ export const TrainingDialog = () => {
               placeholder="Ex: 8 horas, 2 semanas..."
               value={training.duration}
               onChange={(e) => setTraining({...training, duration: e.target.value})}
+              disabled={isSubmitting}
             />
           </div>
           <div className="grid gap-2">
@@ -82,15 +107,23 @@ export const TrainingDialog = () => {
               placeholder="Nome do instrutor"
               value={training.instructor}
               onChange={(e) => setTraining({...training, instructor: e.target.value})}
+              disabled={isSubmitting}
             />
           </div>
         </div>
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => handleOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleCreateTraining}>
-            Criar Treinamento
+          <Button 
+            onClick={handleCreateTraining}
+            disabled={isSubmitting || !training.title || !training.description || !training.duration}
+          >
+            {isSubmitting ? 'Criando...' : 'Criar Treinamento'}
           </Button>
         </div>
       </DialogContent>

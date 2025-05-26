@@ -20,6 +20,7 @@ export interface Training {
 export const useTrainings = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -31,36 +32,32 @@ export const useTrainings = () => {
 
     try {
       setIsLoading(true);
+      setError(null);
       console.log('Fetching trainings for user:', user.id);
       
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('trainings')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching trainings:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar treinamentos",
-          variant: "destructive"
-        });
+      if (fetchError) {
+        console.error('Error fetching trainings:', fetchError);
+        setError('Erro ao carregar treinamentos');
         setTrainings([]);
         return;
       }
 
       console.log('Trainings fetched successfully:', data);
 
-      // Transform the data to match our Training interface
       const typedTrainings: Training[] = (data || []).map(training => ({
         id: training.id,
         title: training.title,
         description: training.description,
         duration: training.duration,
         instructor: training.instructor || undefined,
-        status: training.status === 'active' || training.status === 'inactive' 
-          ? training.status
+        status: (training.status === 'active' || training.status === 'inactive') 
+          ? training.status as 'active' | 'inactive'
           : 'active',
         participants: training.participants || 0,
         user_id: training.user_id,
@@ -71,11 +68,7 @@ export const useTrainings = () => {
       setTrainings(typedTrainings);
     } catch (error) {
       console.error('Unexpected error:', error);
-      toast({
-        title: "Erro",
-        description: "Erro inesperado ao carregar treinamentos",
-        variant: "destructive"
-      });
+      setError('Erro inesperado ao carregar treinamentos');
       setTrainings([]);
     } finally {
       setIsLoading(false);
@@ -94,13 +87,13 @@ export const useTrainings = () => {
         description: "Usuário não autenticado",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
     try {
       console.log('Creating training:', trainingData);
       
-      const { data, error } = await supabase
+      const { data, error: createError } = await supabase
         .from('trainings')
         .insert([
           {
@@ -116,27 +109,26 @@ export const useTrainings = () => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating training:', error);
+      if (createError) {
+        console.error('Error creating training:', createError);
         toast({
           title: "Erro",
           description: "Erro ao criar treinamento",
           variant: "destructive"
         });
-        return;
+        return false;
       }
 
       console.log('Training created successfully:', data);
 
-      // Transform the new training data to match our interface
       const newTraining: Training = {
         id: data.id,
         title: data.title,
         description: data.description,
         duration: data.duration,
         instructor: data.instructor || undefined,
-        status: data.status === 'active' || data.status === 'inactive' 
-          ? data.status
+        status: (data.status === 'active' || data.status === 'inactive') 
+          ? data.status as 'active' | 'inactive'
           : 'active',
         participants: data.participants || 0,
         user_id: data.user_id,
@@ -150,7 +142,7 @@ export const useTrainings = () => {
         description: "Novo treinamento foi criado com sucesso.",
       });
 
-      return newTraining;
+      return true;
     } catch (error) {
       console.error('Unexpected error creating training:', error);
       toast({
@@ -158,16 +150,29 @@ export const useTrainings = () => {
         description: "Erro ao criar treinamento",
         variant: "destructive"
       });
+      return false;
     }
   };
 
   useEffect(() => {
-    fetchTrainings();
-  }, [user]);
+    let mounted = true;
+    
+    if (user && mounted) {
+      fetchTrainings();
+    } else if (!user) {
+      setTrainings([]);
+      setIsLoading(false);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [user?.id]); // Apenas quando o user ID mudar
 
   return {
     trainings,
     isLoading,
+    error,
     createTraining,
     refetch: fetchTrainings
   };

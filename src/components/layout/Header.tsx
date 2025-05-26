@@ -33,16 +33,32 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
     return user?.user_metadata?.avatar_url || '';
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     try {
-      await signOut();
+      console.log('Iniciando logout...');
+      const { error } = await signOut();
+      
+      if (error) {
+        console.error('Erro no logout:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao fazer logout. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      console.log('Logout realizado com sucesso');
       navigate('/login');
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
       });
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('Erro inesperado no logout:', error);
       toast({
         title: "Erro",
         description: "Erro ao fazer logout. Tente novamente.",

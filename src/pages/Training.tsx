@@ -4,14 +4,14 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Play, Users, Clock, Award, AlertCircle } from 'lucide-react';
+import { BookOpen, Play, Users, Clock, Award, AlertCircle, RefreshCw } from 'lucide-react';
 import { useTrainingActions } from '@/hooks/useTrainingActions';
 import { useTrainings } from '@/hooks/useTrainings';
 import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
 
 export const Training = () => {
   const { handleStartCourse, handleViewCourse, handleStatsClick } = useTrainingActions();
-  const { trainings, isLoading, refetch } = useTrainings();
+  const { trainings, isLoading, error, refetch } = useTrainings();
 
   if (isLoading) {
     return (
@@ -20,6 +20,24 @@ export const Training = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p>Carregando treinamentos...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Erro ao carregar treinamentos</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={refetch} variant="outline">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Tentar novamente
+            </Button>
           </div>
         </div>
       </DashboardLayout>
