@@ -103,7 +103,7 @@ export const useTrainings = () => {
     } catch (err: any) {
       console.error('Erro na criação de treinamento:', err);
       
-      let errorMessage = 'Erro desconhecido ao criar treinamento';
+      let errorMessage = 'Erro ao criar treinamento. Tente novamente.';
       
       if (err?.message?.includes('Failed to fetch')) {
         errorMessage = 'Erro de conectividade. Verifique sua conexão com a internet e tente novamente.';
@@ -112,7 +112,7 @@ export const useTrainings = () => {
       } else if (err.code === '23505') {
         errorMessage = 'Já existe um treinamento com esses dados.';
       } else if (err.message) {
-        errorMessage = err.message;
+        errorMessage = `Erro: ${err.message}`;
       }
       
       handleError(err, 'useTrainings.createNewTraining', errorMessage);

@@ -25,20 +25,16 @@ export const useErrorHandler = () => {
       finalMessage = "Já existe um registro com esses dados.";
     }
 
-    // Log do erro no sistema (com tratamento de falha silencioso)
-    try {
-      logError(
-        error?.message || 'Erro desconhecido',
-        source,
-        {
-          error: error,
-          stack: error?.stack,
-          timestamp: new Date().toISOString()
-        }
-      );
-    } catch (logErr) {
-      console.warn('Falha ao registrar erro no sistema de logs:', logErr);
-    }
+    // Log apenas no console para evitar problemas de conectividade
+    logError(
+      error?.message || 'Erro desconhecido',
+      source,
+      {
+        error: error,
+        stack: error?.stack,
+        timestamp: new Date().toISOString()
+      }
+    );
 
     // Mostrar toast para o usuário se solicitado
     if (showToast) {
