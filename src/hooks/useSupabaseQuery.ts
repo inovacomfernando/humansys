@@ -16,7 +16,7 @@ export const useSupabaseQuery = () => {
   const { user } = useAuth();
 
   const executeQuery = useCallback(async <T>(
-    queryFn: () => Promise<{ data: T | null; error: any }>,
+    queryFn: () => any, // Changed from Promise to any to accept Supabase query builders
     options: QueryOptions = {}
   ): Promise<T | null> => {
     const { maxRetries = 3, retryDelay = 1000, requireAuth = true } = options;
@@ -51,7 +51,9 @@ export const useSupabaseQuery = () => {
           console.log('useSupabaseQuery: Sessão válida confirmada');
         }
 
-        const result = await queryFn();
+        // Execute the Supabase query builder
+        const queryBuilder = queryFn();
+        const result = await queryBuilder;
 
         if (result.error) {
           console.error(`useSupabaseQuery: Erro na tentativa ${attempt}:`, result.error);

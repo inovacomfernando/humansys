@@ -58,8 +58,8 @@ export const useFeedback = () => {
       { maxRetries: 3, requireAuth: true }
     );
 
-    if (result) {
-      const formattedData = result.map((item: any) => ({
+    if (result && Array.isArray(result)) {
+      const formattedData: Feedback[] = result.map((item: any) => ({
         ...item,
         type: item.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
         status: item.status as 'sent' | 'pending' | 'completed',
@@ -113,7 +113,7 @@ export const useFeedback = () => {
     );
 
     if (result) {
-      const formattedData = {
+      const formattedData: Feedback = {
         ...result,
         type: result.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
         status: result.status as 'sent' | 'pending' | 'completed',
@@ -148,7 +148,7 @@ export const useFeedback = () => {
     );
 
     if (result) {
-      const formattedData = {
+      const formattedData: Feedback = {
         ...result,
         type: result.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
         status: result.status as 'sent' | 'pending' | 'completed',

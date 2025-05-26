@@ -49,8 +49,8 @@ export const useCollaborators = () => {
       { maxRetries: 3, requireAuth: true }
     );
 
-    if (result) {
-      const formattedData = result.map((item: any) => ({
+    if (result && Array.isArray(result)) {
+      const formattedData: Collaborator[] = result.map((item: any) => ({
         ...item,
         status: item.status as 'active' | 'inactive' | 'vacation',
       }));
@@ -104,7 +104,7 @@ export const useCollaborators = () => {
     );
 
     if (result) {
-      const formattedData = {
+      const formattedData: Collaborator = {
         ...result,
         status: result.status as 'active' | 'inactive' | 'vacation',
       };
@@ -134,7 +134,7 @@ export const useCollaborators = () => {
     );
 
     if (result) {
-      const formattedData = {
+      const formattedData: Collaborator = {
         ...result,
         status: result.status as 'active' | 'inactive' | 'vacation',
       };

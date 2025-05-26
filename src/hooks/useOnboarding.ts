@@ -60,7 +60,7 @@ export const useOnboarding = () => {
       { maxRetries: 3, requireAuth: true }
     );
 
-    if (result) {
+    if (result && Array.isArray(result)) {
       setCollaborators(result);
       console.log('useOnboarding: Colaboradores carregados:', result.length);
     }
@@ -91,8 +91,8 @@ export const useOnboarding = () => {
       { maxRetries: 3, requireAuth: true }
     );
 
-    if (result) {
-      const formattedData = result.map((item: any) => ({
+    if (result && Array.isArray(result)) {
+      const formattedData: OnboardingProcess[] = result.map((item: any) => ({
         ...item,
         status: item.status as 'not-started' | 'in-progress' | 'completed',
       }));
@@ -163,7 +163,7 @@ export const useOnboarding = () => {
         { maxRetries: 1, requireAuth: true }
       );
 
-      const formattedData = {
+      const formattedData: OnboardingProcess = {
         ...result,
         status: result.status as 'not-started' | 'in-progress' | 'completed',
       };
@@ -188,7 +188,7 @@ export const useOnboarding = () => {
       { maxRetries: 2, requireAuth: true }
     );
 
-    return result || [];
+    return (result && Array.isArray(result)) ? result : [];
   };
 
   const updateStepStatus = async (stepId: string, completed: boolean, processId: string) => {
