@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,6 +48,8 @@ export const useOnboarding = () => {
     if (!user) return;
 
     try {
+      console.log('Buscando colaboradores para onboarding, usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('collaborators')
         .select('*')
@@ -56,8 +57,12 @@ export const useOnboarding = () => {
         .eq('status', 'active')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro Supabase ao buscar colaboradores:', error);
+        throw error;
+      }
       
+      console.log('Colaboradores para onboarding carregados:', data?.length || 0);
       setCollaborators(data || []);
     } catch (error) {
       console.error('Erro ao carregar colaboradores:', error);
@@ -70,9 +75,17 @@ export const useOnboarding = () => {
   };
 
   const fetchProcesses = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Usuário não autenticado, limpando lista de processos');
+      setProcesses([]);
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      console.log('Buscando processos de onboarding para usuário:', user.id);
+      setIsLoading(true);
+      
       const { data, error } = await supabase
         .from('onboarding_processes')
         .select(`
@@ -82,7 +95,12 @@ export const useOnboarding = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro Supabase ao buscar processos:', error);
+        throw error;
+      }
+      
+      console.log('Processos de onboarding carregados:', data?.length || 0);
       
       const formattedData = (data || []).map((item: any) => ({
         ...item,
@@ -103,11 +121,12 @@ export const useOnboarding = () => {
   };
 
   useEffect(() => {
+    console.log('useOnboarding: useEffect executado, user.id:', user?.id);
     if (user) {
       fetchCollaborators();
       fetchProcesses();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const createProcess = async (processData: {
     collaborator_id: string;

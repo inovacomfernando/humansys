@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,18 +31,32 @@ export const useFeedback = () => {
   const { toast } = useToast();
 
   const fetchFeedbacks = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Usuário não autenticado, limpando lista de feedbacks');
+      setFeedbacks([]);
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      console.log('Buscando feedbacks para usuário:', user.id);
+      setIsLoading(true);
+      
       const { data, error } = await supabase
         .from('feedbacks')
         .select(`
           *,
           collaborator:collaborators(name, email)
         `)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro Supabase ao buscar feedbacks:', error);
+        throw error;
+      }
+      
+      console.log('Feedbacks carregados:', data?.length || 0);
       
       // Garantir que os dados estão no formato correto
       const formattedData = (data || []).map((item: any) => ({
@@ -67,8 +80,9 @@ export const useFeedback = () => {
   };
 
   useEffect(() => {
+    console.log('useFeedback: useEffect executado, user.id:', user?.id);
     fetchFeedbacks();
-  }, [user]);
+  }, [user?.id]);
 
   const createFeedback = async (feedbackData: {
     to_collaborator_id: string;
@@ -133,6 +147,7 @@ export const useFeedback = () => {
         .from('feedbacks')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id)
         .select(`
           *,
           collaborator:collaborators(name, email)

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,15 +25,29 @@ export const useCollaborators = () => {
   const { toast } = useToast();
 
   const fetchCollaborators = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Usuário não autenticado, limpando lista de colaboradores');
+      setCollaborators([]);
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      console.log('Buscando colaboradores para usuário:', user.id);
+      setIsLoading(true);
+      
       const { data, error } = await supabase
         .from('collaborators')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro Supabase ao buscar colaboradores:', error);
+        throw error;
+      }
+      
+      console.log('Colaboradores carregados:', data?.length || 0);
       
       // Garantir que os dados estão no formato correto
       const formattedData = (data || []).map((item: any) => ({
@@ -56,8 +69,9 @@ export const useCollaborators = () => {
   };
 
   useEffect(() => {
+    console.log('useCollaborators: useEffect executado, user.id:', user?.id);
     fetchCollaborators();
-  }, [user]);
+  }, [user?.id]);
 
   const createCollaborator = async (collaboratorData: {
     name: string;
@@ -69,9 +83,19 @@ export const useCollaborators = () => {
     location?: string;
     join_date?: string;
   }) => {
-    if (!user) return;
+    if (!user) {
+      console.warn('Tentativa de criar colaborador sem autenticação');
+      toast({
+        title: "Erro de Autenticação",
+        description: "Você precisa estar logado para criar um colaborador.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
+      console.log('Criando colaborador para usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('collaborators')
         .insert([{
@@ -82,7 +106,10 @@ export const useCollaborators = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro Supabase ao criar colaborador:', error);
+        throw error;
+      }
 
       const formattedData = {
         ...data,
@@ -95,6 +122,7 @@ export const useCollaborators = () => {
         description: "Colaborador criado com sucesso."
       });
       
+      console.log('Colaborador criado com sucesso:', formattedData.id);
       return formattedData;
     } catch (error) {
       console.error('Erro ao criar colaborador:', error);
@@ -115,6 +143,7 @@ export const useCollaborators = () => {
         .from('collaborators')
         .update(updates)
         .eq('id', id)
+        .eq('user_id', user.id)
         .select()
         .single();
 
@@ -153,7 +182,8 @@ export const useCollaborators = () => {
       const { error } = await supabase
         .from('collaborators')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
 
