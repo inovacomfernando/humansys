@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,11 +10,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
+import { CollaboratorActions } from '@/components/collaborators/CollaboratorActions';
+import { useToast } from '@/hooks/use-toast';
 
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
   const { collaborators, isLoading, createCollaborator } = useCollaborators();
+  const { toast } = useToast();
 
   const [newCollaborator, setNewCollaborator] = useState({
     name: '',
@@ -26,6 +30,11 @@ export const Collaborators = () => {
 
   const handleAddCollaborator = async () => {
     if (!newCollaborator.name || !newCollaborator.email || !newCollaborator.role || !newCollaborator.department) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -39,6 +48,26 @@ export const Collaborators = () => {
     } catch (error) {
       // Error handled in hook
     }
+  };
+
+  const handleStatsClick = (type: string) => {
+    const filteredByStatus = collaborators.filter(c => {
+      switch (type) {
+        case 'active':
+          return c.status === 'active';
+        case 'vacation':
+          return c.status === 'vacation';
+        case 'inactive':
+          return c.status === 'inactive';
+        default:
+          return true;
+      }
+    });
+    
+    toast({
+      title: `Colaboradores ${type}`,
+      description: `${filteredByStatus.length} colaboradores encontrados`
+    });
   };
 
   const filteredCollaborators = collaborators.filter(collaborator =>
@@ -173,7 +202,7 @@ export const Collaborators = () => {
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('total')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -183,7 +212,7 @@ export const Collaborators = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('active')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Ativos</CardTitle>
               <div className="h-2 w-2 bg-green-500 rounded-full"></div>
@@ -195,7 +224,7 @@ export const Collaborators = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('vacation')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Em Férias</CardTitle>
               <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
@@ -207,7 +236,7 @@ export const Collaborators = () => {
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('departments')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Departamentos</CardTitle>
               <Filter className="h-4 w-4 text-muted-foreground" />
@@ -255,7 +284,13 @@ export const Collaborators = () => {
                       <p className="text-sm text-muted-foreground">{collaborator.role}</p>
                     </div>
                   </div>
-                  <div className={`h-3 w-3 rounded-full ${getStatusColor(collaborator.status)}`} />
+                  <div className="flex items-center space-x-2">
+                    <div className={`h-3 w-3 rounded-full ${getStatusColor(collaborator.status)}`} />
+                    <CollaboratorActions 
+                      collaboratorId={collaborator.id}
+                      collaboratorName={collaborator.name}
+                    />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -281,15 +316,6 @@ export const Collaborators = () => {
                       {collaborator.location}
                     </div>
                   )}
-                </div>
-                
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" size="sm">
-                    Ver Perfil
-                  </Button>
-                  <Button size="sm">
-                    Editar
-                  </Button>
                 </div>
               </CardContent>
             </Card>

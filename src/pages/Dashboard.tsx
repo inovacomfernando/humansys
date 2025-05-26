@@ -1,7 +1,7 @@
+
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Users,
@@ -16,43 +16,56 @@ import {
 import { NewCollaboratorDialog } from '@/components/dashboard/NewCollaboratorDialog';
 import { FeedbackDialog } from '@/components/dashboard/FeedbackDialog';
 import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
-import { useNavigate } from 'react-router-dom';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { ActivityItem } from '@/components/dashboard/ActivityItem';
+import { TaskItem } from '@/components/dashboard/TaskItem';
+import { useDashboardActions } from '@/hooks/useDashboardActions';
 
 export const Dashboard = () => {
-  const navigate = useNavigate();
+  const { 
+    handleStatsClick, 
+    handleActivityView, 
+    handleTaskView, 
+    handleTaskComplete,
+    handleQuickAction 
+  } = useDashboardActions();
 
   const stats = [
     {
       title: 'Total de Colaboradores',
       value: '124',
       change: '+12%',
-      trend: 'up',
+      trend: 'up' as const,
       icon: Users,
-      color: 'text-blue-600'
+      color: 'text-blue-600',
+      type: 'collaborators'
     },
     {
       title: 'Novos Contratados',
       value: '8',
       change: '+25%',
-      trend: 'up',
+      trend: 'up' as const,
       icon: UserPlus,
-      color: 'text-green-600'
+      color: 'text-green-600',
+      type: 'new-hires'
     },
     {
       title: 'Feedbacks Pendentes',
       value: '15',
       change: '-5%',
-      trend: 'down',
+      trend: 'down' as const,
       icon: MessageSquare,
-      color: 'text-orange-600'
+      color: 'text-orange-600',
+      type: 'feedback'
     },
     {
       title: 'Metas Concluídas',
       value: '67%',
       change: '+8%',
-      trend: 'up',
+      trend: 'up' as const,
       icon: Target,
-      color: 'text-purple-600'
+      color: 'text-purple-600',
+      type: 'goals'
     }
   ];
 
@@ -91,19 +104,19 @@ export const Dashboard = () => {
     {
       id: 1,
       title: 'Revisar currículos para vaga de Designer',
-      priority: 'high',
+      priority: 'high' as const,
       deadline: '2 dias'
     },
     {
       id: 2,
       title: 'Agendar reunião 1:1 com equipe de vendas',
-      priority: 'medium',
+      priority: 'medium' as const,
       deadline: '1 semana'
     },
     {
       id: 3,
       title: 'Atualizar política de home office',
-      priority: 'low',
+      priority: 'low' as const,
       deadline: '2 semanas'
     }
   ];
@@ -121,28 +134,18 @@ export const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground">
-                    <span className={`${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {stat.change}
-                    </span>
-                    {' '}em relação ao mês anterior
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {stats.map((stat, index) => (
+            <StatsCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              change={stat.change}
+              trend={stat.trend}
+              icon={stat.icon}
+              color={stat.color}
+              onClick={() => handleStatsClick(stat.type)}
+            />
+          ))}
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -160,17 +163,15 @@ export const Dashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${
-                      activity.status === 'completed' ? 'bg-green-500' :
-                      activity.status === 'in-progress' ? 'bg-blue-500' :
-                      'bg-orange-500'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{activity.title}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
+                  <ActivityItem
+                    key={activity.id}
+                    id={activity.id}
+                    type={activity.type}
+                    title={activity.title}
+                    time={activity.time}
+                    status={activity.status}
+                    onViewDetails={handleActivityView}
+                  />
                 ))}
               </div>
             </CardContent>
@@ -190,31 +191,15 @@ export const Dashboard = () => {
             <CardContent>
               <div className="space-y-4">
                 {pendingTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{task.title}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge 
-                          variant={
-                            task.priority === 'high' ? 'destructive' :
-                            task.priority === 'medium' ? 'default' :
-                            'secondary'
-                          }
-                          className="text-xs"
-                        >
-                          {task.priority === 'high' ? 'Alta' :
-                           task.priority === 'medium' ? 'Média' :
-                           'Baixa'}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {task.deadline}
-                        </span>
-                      </div>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      Ver
-                    </Button>
-                  </div>
+                  <TaskItem
+                    key={task.id}
+                    id={task.id}
+                    title={task.title}
+                    priority={task.priority}
+                    deadline={task.deadline}
+                    onView={handleTaskView}
+                    onMarkComplete={handleTaskComplete}
+                  />
                 ))}
               </div>
             </CardContent>
@@ -238,7 +223,7 @@ export const Dashboard = () => {
               <Button 
                 variant="outline" 
                 className="justify-start h-auto p-4"
-                onClick={() => navigate('/goals')}
+                onClick={() => handleQuickAction('reports')}
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 <div className="text-left">
