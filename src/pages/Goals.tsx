@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Target, Plus, TrendingUp, CheckCircle } from 'lucide-react';
+import { Target, TrendingUp, CheckCircle } from 'lucide-react';
+import { NewGoalDialog } from '@/components/goals/NewGoalDialog';
 
 export const Goals = () => {
   return (
@@ -17,10 +16,7 @@ export const Goals = () => {
               Plano de Desenvolvimento Individual e acompanhamento de metas
             </p>
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Meta
-          </Button>
+          <NewGoalDialog />
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">

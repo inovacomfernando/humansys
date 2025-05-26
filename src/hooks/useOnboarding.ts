@@ -16,6 +16,8 @@ export interface OnboardingProcess {
   collaborator?: {
     name: string;
     email: string;
+    role?: string;
+    department?: string;
   };
 }
 
@@ -27,11 +29,45 @@ export interface OnboardingStep {
   step_order: number;
 }
 
+export interface Collaborator {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  status: string;
+}
+
 export const useOnboarding = () => {
   const [processes, setProcesses] = useState<OnboardingProcess[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  const fetchCollaborators = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('collaborators')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('name');
+
+      if (error) throw error;
+      
+      setCollaborators(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar colaboradores:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os colaboradores.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchProcesses = async () => {
     if (!user) return;
@@ -41,13 +77,13 @@ export const useOnboarding = () => {
         .from('onboarding_processes')
         .select(`
           *,
-          collaborator:collaborators(name, email)
+          collaborator:collaborators(name, email, role, department)
         `)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Garantir que os dados estão no formato correto
       const formattedData = (data || []).map((item: any) => ({
         ...item,
         status: item.status as 'not-started' | 'in-progress' | 'completed',
@@ -67,7 +103,10 @@ export const useOnboarding = () => {
   };
 
   useEffect(() => {
-    fetchProcesses();
+    if (user) {
+      fetchCollaborators();
+      fetchProcesses();
+    }
   }, [user]);
 
   const createProcess = async (processData: {
@@ -87,16 +126,40 @@ export const useOnboarding = () => {
         }])
         .select(`
           *,
-          collaborator:collaborators(name, email)
+          collaborator:collaborators(name, email, role, department)
         `)
         .single();
 
       if (error) throw error;
 
-      // Criar etapas padrão
-      await supabase.rpc('create_default_onboarding_steps', {
-        process_id: data.id
-      });
+      // Criar etapas padrão se a função existir
+      try {
+        await supabase.rpc('create_default_onboarding_steps', {
+          process_id: data.id
+        });
+      } catch (rpcError) {
+        console.warn('Função create_default_onboarding_steps não encontrada, criando etapas manualmente');
+        
+        const defaultSteps = [
+          'Documentação Pessoal',
+          'Apresentação da Empresa', 
+          'Reunião com Gestor',
+          'Treinamento de Segurança',
+          'Setup do Ambiente',
+          'Integração com a Equipe'
+        ];
+
+        const stepsData = defaultSteps.map((title, index) => ({
+          onboarding_process_id: data.id,
+          title,
+          step_order: index + 1,
+          completed: false
+        }));
+
+        await supabase
+          .from('onboarding_steps')
+          .insert(stepsData);
+      }
 
       const formattedData = {
         ...data,
@@ -190,10 +253,14 @@ export const useOnboarding = () => {
 
   return {
     processes,
+    collaborators,
     isLoading,
     createProcess,
     getProcessSteps,
     updateStepStatus,
-    refetch: fetchProcesses
+    refetch: () => {
+      fetchCollaborators();
+      fetchProcesses();
+    }
   };
 };

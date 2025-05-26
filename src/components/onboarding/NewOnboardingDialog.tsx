@@ -7,23 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-
-interface OnboardingProcess {
-  id: string;
-  collaboratorName: string;
-  position: string;
-  department: string;
-  startDate: string;
-  progress: number;
-  status: 'not-started' | 'in-progress' | 'completed';
-  currentStep: string;
-}
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 export const NewOnboardingDialog = () => {
   const [open, setOpen] = useState(false);
-  const [collaborators] = useLocalStorage('collaborators', []);
-  const [onboardingProcesses, setOnboardingProcesses] = useLocalStorage('onboarding-processes', []);
+  const { collaborators, createProcess } = useOnboarding();
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -33,7 +21,7 @@ export const NewOnboardingDialog = () => {
     startDate: new Date().toISOString().split('T')[0]
   });
 
-  const handleCreateOnboarding = () => {
+  const handleCreateOnboarding = async () => {
     if (!formData.collaboratorId || !formData.position || !formData.department) {
       toast({
         title: "Campos obrigatórios",
@@ -43,32 +31,38 @@ export const NewOnboardingDialog = () => {
       return;
     }
 
-    const selectedCollaborator = collaborators.find((c: any) => c.id === formData.collaboratorId);
-    
-    const newProcess: OnboardingProcess = {
-      id: Date.now().toString(),
-      collaboratorName: selectedCollaborator?.name || 'Colaborador',
-      position: formData.position,
-      department: formData.department,
-      startDate: formData.startDate,
-      progress: 0,
-      status: 'not-started',
-      currentStep: 'Documentação Pessoal'
-    };
+    try {
+      await createProcess({
+        collaborator_id: formData.collaboratorId,
+        position: formData.position,
+        department: formData.department,
+        start_date: formData.startDate
+      });
 
-    setOnboardingProcesses([...onboardingProcesses, newProcess]);
-    setFormData({
-      collaboratorId: '',
-      position: '',
-      department: '',
-      startDate: new Date().toISOString().split('T')[0]
-    });
-    setOpen(false);
+      setFormData({
+        collaboratorId: '',
+        position: '',
+        department: '',
+        startDate: new Date().toISOString().split('T')[0]
+      });
+      setOpen(false);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
+  };
 
-    toast({
-      title: "Onboarding criado",
-      description: "Processo de onboarding iniciado com sucesso.",
-    });
+  const handleCollaboratorChange = (collaboratorId: string) => {
+    const selectedCollaborator = collaborators.find(c => c.id === collaboratorId);
+    if (selectedCollaborator) {
+      setFormData(prev => ({
+        ...prev,
+        collaboratorId,
+        position: selectedCollaborator.role || prev.position,
+        department: selectedCollaborator.department || prev.department
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, collaboratorId }));
+    }
   };
 
   return (
@@ -91,15 +85,15 @@ export const NewOnboardingDialog = () => {
             <Label>Colaborador</Label>
             <Select 
               value={formData.collaboratorId} 
-              onValueChange={(value) => setFormData({...formData, collaboratorId: value})}
+              onValueChange={handleCollaboratorChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um colaborador" />
               </SelectTrigger>
               <SelectContent>
-                {collaborators.map((collaborator: any) => (
+                {collaborators.map((collaborator) => (
                   <SelectItem key={collaborator.id} value={collaborator.id}>
-                    {collaborator.name}
+                    {collaborator.name} - {collaborator.role}
                   </SelectItem>
                 ))}
               </SelectContent>

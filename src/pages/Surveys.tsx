@@ -1,10 +1,12 @@
 
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Plus, Users, TrendingUp, Clipboard } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { BarChart3, Users, Clock, CheckCircle, Eye } from 'lucide-react';
+import { NewSurveyDialog } from '@/components/surveys/NewSurveyDialog';
 
 export const Surveys = () => {
   return (
@@ -14,20 +16,17 @@ export const Surveys = () => {
           <div>
             <h1 className="text-3xl font-bold">Pesquisas</h1>
             <p className="text-muted-foreground">
-              Pesquisas de clima organizacional e cultura da empresa
+              Gerencie pesquisas de satisfação e clima organizacional
             </p>
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Pesquisa
-          </Button>
+          <NewSurveyDialog />
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pesquisas Ativas</CardTitle>
-              <Clipboard className="h-4 w-4 text-muted-foreground" />
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">3</div>
@@ -36,7 +35,7 @@ export const Surveys = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Participações</CardTitle>
+              <CardTitle className="text-sm font-medium">Participantes</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -47,20 +46,20 @@ export const Surveys = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Taxa de Resposta</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">87%</div>
+              <div className="text-2xl font-bold">78%</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Satisfação Geral</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+              <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8.2/10</div>
+              <div className="text-2xl font-bold">2</div>
             </CardContent>
           </Card>
         </div>
@@ -70,25 +69,31 @@ export const Surveys = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg">Pesquisa de Clima 2024</CardTitle>
-                  <p className="text-sm text-muted-foreground">Avaliação geral do ambiente de trabalho</p>
+                  <CardTitle className="text-lg">Pesquisa de Satisfação 2024</CardTitle>
+                  <CardDescription>
+                    Avaliação geral do ambiente de trabalho • Termina em 5 dias
+                  </CardDescription>
                 </div>
-                <Badge>Ativa</Badge>
+                <Badge className="bg-green-500">Ativa</Badge>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm">45 respostas de 52 colaboradores</p>
-                  <p className="text-xs text-muted-foreground">Taxa de participação: 86%</p>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Progresso de Respostas</span>
+                  <span className="text-sm text-muted-foreground">45/58 respostas</span>
                 </div>
-                <div className="flex space-x-2">
-                  <Button variant="outline" size="sm">
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    Resultados
-                  </Button>
-                  <Button size="sm">Ver Detalhes</Button>
-                </div>
+                <Progress value={78} className="h-2" />
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" size="sm">
+                  <Eye className="mr-2 h-4 w-4" />
+                  Ver Respostas
+                </Button>
+                <Button size="sm">
+                  Gerenciar
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -97,21 +102,30 @@ export const Surveys = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg">Avaliação de Benefícios</CardTitle>
-                  <p className="text-sm text-muted-foreground">Feedback sobre pacote de benefícios</p>
+                  <CardTitle className="text-lg">Clima Organizacional Q1</CardTitle>
+                  <CardDescription>
+                    Pesquisa trimestral sobre clima • Concluída
+                  </CardDescription>
                 </div>
-                <Badge variant="secondary">Concluída</Badge>
+                <Badge variant="outline">Concluída</Badge>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm">48 respostas de 52 colaboradores</p>
-                  <p className="text-xs text-muted-foreground">Concluída em 15/12/2023</p>
+            <CardContent className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Taxa de Participação</span>
+                  <span className="text-sm text-muted-foreground">52/58 colaboradores</span>
                 </div>
+                <Progress value={90} className="h-2" />
+              </div>
+              
+              <div className="flex justify-end space-x-2">
                 <Button variant="outline" size="sm">
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Ver Relatório
+                  <Eye className="mr-2 h-4 w-4" />
+                  Ver Resultados
+                </Button>
+                <Button size="sm">
+                  Relatório
                 </Button>
               </div>
             </CardContent>

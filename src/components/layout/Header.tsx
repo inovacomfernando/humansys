@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Moon, Sun, LogOut, Settings, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   showAuth?: boolean;
@@ -21,6 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const { theme, toggleTheme, companyLogo } = useTheme();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const getUserName = () => {
     if (!user) return '';
@@ -29,6 +31,24 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
 
   const getUserAvatar = () => {
     return user?.user_metadata?.avatar_url || '';
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao fazer logout. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -89,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                   <Settings className="mr-2 h-4 w-4" />
                   Configurações
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
                 </DropdownMenuItem>

@@ -1,73 +1,16 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings as SettingsIcon, Building, Users, Database, Palette } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useToast } from '@/hooks/use-toast';
+import { Building, Bell, Shield, Palette, Award } from 'lucide-react';
+import { CertificateTemplates } from '@/components/settings/CertificateTemplates';
 
 export const Settings = () => {
-  const { brandColors, setBrandColors, companyLogo, setCompanyLogo, applyBrandColors } = useTheme();
-  const [companyData, setCompanyData] = useLocalStorage('company-data', {
-    name: 'Minha Empresa',
-    cnpj: '',
-    email: '',
-    phone: '',
-    address: ''
-  });
-  
-  const [tempColors, setTempColors] = useState(brandColors);
-  const { toast } = useToast();
-
-  const handleSaveCompany = () => {
-    toast({
-      title: "Dados salvos",
-      description: "Informações da empresa foram atualizadas com sucesso.",
-    });
-  };
-
-  const handleColorChange = (type: 'primary' | 'secondary', color: string) => {
-    setTempColors(prev => ({ ...prev, [type]: color }));
-  };
-
-  const handleSaveAppearance = () => {
-    setBrandColors(tempColors);
-    applyBrandColors();
-    toast({
-      title: "Aparência atualizada",
-      description: "As cores da marca foram aplicadas com sucesso.",
-    });
-  };
-
-  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setCompanyLogo(result);
-        toast({
-          title: "Logo atualizada",
-          description: "A logo da empresa foi alterada com sucesso.",
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const predefinedColors = [
-    '#22c55e', // Verde
-    '#3b82f6', // Azul
-    '#8b5cf6', // Roxo
-    '#ef4444', // Vermelho
-    '#f59e0b', // Amarelo
-    '#06b6d4', // Ciano
-  ];
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -79,160 +22,146 @@ export const Settings = () => {
         </div>
 
         <Tabs defaultValue="company" className="space-y-4">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="company">Empresa</TabsTrigger>
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="integrations">Integrações</TabsTrigger>
+            <TabsTrigger value="notifications">Notificações</TabsTrigger>
+            <TabsTrigger value="security">Segurança</TabsTrigger>
             <TabsTrigger value="appearance">Aparência</TabsTrigger>
+            <TabsTrigger value="certificates">Certificados</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Building className="mr-2 h-5 w-5" />
-                  Informações da Empresa
-                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Building className="h-5 w-5" />
+                  <CardTitle>Informações da Empresa</CardTitle>
+                </div>
                 <CardDescription>
-                  Configure os dados básicos da sua empresa
+                  Configure as informações básicas da sua empresa
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="company-name">Nome da Empresa</Label>
-                    <Input 
-                      id="company-name" 
-                      value={companyData.name}
-                      onChange={(e) => setCompanyData({...companyData, name: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="company-cnpj">CNPJ</Label>
-                    <Input 
-                      id="company-cnpj" 
-                      placeholder="00.000.000/0001-00"
-                      value={companyData.cnpj}
-                      onChange={(e) => setCompanyData({...companyData, cnpj: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="company-email">Email</Label>
-                    <Input 
-                      id="company-email" 
-                      type="email" 
-                      placeholder="contato@empresa.com"
-                      value={companyData.email}
-                      onChange={(e) => setCompanyData({...companyData, email: e.target.value})}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="company-phone">Telefone</Label>
-                    <Input 
-                      id="company-phone" 
-                      placeholder="(11) 9999-9999"
-                      value={companyData.phone}
-                      onChange={(e) => setCompanyData({...companyData, phone: e.target.value})}
-                    />
-                  </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="company-name">Nome da Empresa</Label>
+                  <Input id="company-name" defaultValue="Minha Empresa Ltda" />
                 </div>
                 
-                <div className="space-y-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="company-email">Email Principal</Label>
+                  <Input id="company-email" defaultValue="contato@minhaempresa.com" />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="company-phone">Telefone</Label>
+                  <Input id="company-phone" defaultValue="(11) 99999-9999" />
+                </div>
+                
+                <div className="grid gap-2">
                   <Label htmlFor="company-address">Endereço</Label>
-                  <Input 
-                    id="company-address" 
-                    placeholder="Rua da Empresa, 123, Cidade - UF"
-                    value={companyData.address}
-                    onChange={(e) => setCompanyData({...companyData, address: e.target.value})}
-                  />
+                  <Input id="company-address" defaultValue="Rua Exemplo, 123 - São Paulo, SP" />
                 </div>
                 
-                <Button onClick={handleSaveCompany}>Salvar Alterações</Button>
+                <Button>Salvar Alterações</Button>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="users">
+          <TabsContent value="notifications">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Users className="mr-2 h-5 w-5" />
-                  Gestão de Usuários
-                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Bell className="h-5 w-5" />
+                  <CardTitle>Notificações</CardTitle>
+                </div>
                 <CardDescription>
-                  Configure permissões e acessos de usuários
+                  Configure quando e como receber notificações
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Administradores</h4>
-                      <p className="text-sm text-muted-foreground">Acesso total ao sistema</p>
-                    </div>
-                    <Button variant="outline">Gerenciar</Button>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Novos colaboradores</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Notificar quando um novo colaborador for adicionado
+                    </p>
                   </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Colaboradores</h4>
-                      <p className="text-sm text-muted-foreground">Acesso limitado às suas informações</p>
-                    </div>
-                    <Button variant="outline">Gerenciar</Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Terceiros</h4>
-                      <p className="text-sm text-muted-foreground">Acesso restrito a módulos específicos</p>
-                    </div>
-                    <Button variant="outline">Gerenciar</Button>
-                  </div>
+                  <Switch defaultChecked />
                 </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Feedbacks recebidos</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Notificar quando um feedback for enviado
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Treinamentos concluídos</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Notificar quando um treinamento for concluído
+                    </p>
+                  </div>
+                  <Switch />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Onboarding completado</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Notificar quando um onboarding for concluído
+                    </p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                
+                <Button>Salvar Preferências</Button>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="integrations">
+          <TabsContent value="security">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Database className="mr-2 h-5 w-5" />
-                  Integrações
-                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <CardTitle>Segurança</CardTitle>
+                </div>
                 <CardDescription>
-                  Configure integrações com bancos de dados e APIs
+                  Configurações de segurança e acesso
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Supabase</h4>
-                      <p className="text-sm text-muted-foreground">Banco de dados principal</p>
-                    </div>
-                    <Button variant="outline">Configurar</Button>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Autenticação de dois fatores</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Adiciona uma camada extra de segurança
+                    </p>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">Gateway de Pagamento</h4>
-                      <p className="text-sm text-muted-foreground">Processamento de pagamentos</p>
-                    </div>
-                    <Button variant="outline">Configurar</Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">API de Email</h4>
-                      <p className="text-sm text-muted-foreground">Envio de notificações</p>
-                    </div>
-                    <Button variant="outline">Configurar</Button>
-                  </div>
+                  <Switch />
                 </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Sessão única</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Permite apenas uma sessão ativa por usuário
+                    </p>
+                  </div>
+                  <Switch />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="session-timeout">Timeout de sessão (minutos)</Label>
+                  <Input id="session-timeout" type="number" defaultValue="60" />
+                </div>
+                
+                <Button>Salvar Configurações</Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -240,103 +169,40 @@ export const Settings = () => {
           <TabsContent value="appearance">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Palette className="mr-2 h-5 w-5" />
-                  Aparência
-                </CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Palette className="h-5 w-5" />
+                  <CardTitle>Aparência</CardTitle>
+                </div>
                 <CardDescription>
                   Personalize a aparência do sistema
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h4 className="font-medium mb-3">Logo da Empresa</h4>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center border">
-                      {companyLogo ? (
-                        <img src={companyLogo} alt="Logo" className="w-full h-full object-contain rounded" />
-                      ) : (
-                        <Building className="h-8 w-8 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="logo-upload" className="cursor-pointer">
-                        <Button variant="outline" size="sm" asChild>
-                          <span>Alterar Logo</span>
-                        </Button>
-                      </Label>
-                      <Input
-                        id="logo-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleLogoUpload}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        PNG, JPG ou SVG (máx. 2MB)
-                      </p>
-                    </div>
-                  </div>
+              <CardContent className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="logo">Logo da Empresa</Label>
+                  <Input id="logo" type="file" accept="image/*" />
+                  <p className="text-sm text-muted-foreground">
+                    Formato recomendado: PNG, tamanho máximo: 2MB
+                  </p>
                 </div>
                 
-                <div>
-                  <h4 className="font-medium mb-3">Cores da Marca</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm">Cor Primária</Label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Input
-                          type="color"
-                          value={tempColors.primary}
-                          onChange={(e) => handleColorChange('primary', e.target.value)}
-                          className="w-12 h-8 p-0 border-0"
-                        />
-                        <Input
-                          type="text"
-                          value={tempColors.primary}
-                          onChange={(e) => handleColorChange('primary', e.target.value)}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-sm">Cor Secundária</Label>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Input
-                          type="color"
-                          value={tempColors.secondary}
-                          onChange={(e) => handleColorChange('secondary', e.target.value)}
-                          className="w-12 h-8 p-0 border-0"
-                        />
-                        <Input
-                          type="text"
-                          value={tempColors.secondary}
-                          onChange={(e) => handleColorChange('secondary', e.target.value)}
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <Label className="text-sm mb-2 block">Cores Predefinidas</Label>
-                    <div className="flex space-x-2">
-                      {predefinedColors.map((color) => (
-                        <button
-                          key={color}
-                          className="w-8 h-8 rounded border-2 border-gray-200 hover:border-gray-400 transition-colors"
-                          style={{ backgroundColor: color }}
-                          onClick={() => handleColorChange('primary', color)}
-                        />
-                      ))}
-                    </div>
-                  </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="primary-color">Cor Primária</Label>
+                  <Input id="primary-color" type="color" defaultValue="#0f172a" />
                 </div>
                 
-                <Button onClick={handleSaveAppearance}>Salvar Aparência</Button>
+                <div className="grid gap-2">
+                  <Label htmlFor="secondary-color">Cor Secundária</Label>
+                  <Input id="secondary-color" type="color" defaultValue="#64748b" />
+                </div>
+                
+                <Button>Aplicar Mudanças</Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="certificates">
+            <CertificateTemplates />
           </TabsContent>
         </Tabs>
       </div>
