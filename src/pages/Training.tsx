@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Play, Users, Clock, Award, AlertCircle, RefreshCw, Loader } from 'lucide-react';
+import { BookOpen, Play, Users, Clock, Award, AlertCircle, RefreshCw } from 'lucide-react';
 import { useTrainingActions } from '@/hooks/useTrainingActions';
 import { useTrainings } from '@/hooks/useTrainings';
 import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
@@ -13,14 +13,12 @@ export const Training = () => {
   const { handleStartCourse, handleViewCourse, handleStatsClick } = useTrainingActions();
   const { trainings, isLoading, error, refetch } = useTrainings();
 
-  console.log('Training page render state:', { trainings: trainings.length, isLoading, error });
-
   if (isLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <Loader className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Carregando treinamentos...</p>
           </div>
         </div>

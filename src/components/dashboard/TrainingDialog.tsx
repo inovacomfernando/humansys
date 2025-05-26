@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, Loader } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { useTrainings } from '@/hooks/useTrainings';
 
 export const TrainingDialog = () => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [training, setTraining] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     duration: '',
@@ -19,54 +19,40 @@ export const TrainingDialog = () => {
   });
   const { createTraining } = useTrainings();
 
-  const handleCreateTraining = async () => {
-    if (!training.title.trim() || !training.description.trim() || !training.duration.trim()) {
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.description || !formData.duration) {
       return;
     }
 
-    if (isSubmitting) return;
-
     setIsSubmitting(true);
     
-    try {
-      const success = await createTraining({
-        title: training.title.trim(),
-        description: training.description.trim(),
-        duration: training.duration.trim(),
-        instructor: training.instructor.trim() || undefined
-      });
-      
-      if (success) {
-        setTraining({ title: '', description: '', duration: '', instructor: '' });
-        setOpen(false);
-      }
-    } catch (error) {
-      console.error('Error in handleCreateTraining:', error);
-    } finally {
-      setIsSubmitting(false);
+    const success = await createTraining(formData);
+    
+    if (success) {
+      setFormData({ title: '', description: '', duration: '', instructor: '' });
+      setOpen(false);
     }
+    
+    setIsSubmitting(false);
+  };
+
+  const resetForm = () => {
+    setFormData({ title: '', description: '', duration: '', instructor: '' });
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!isSubmitting) {
-      setOpen(newOpen);
-      if (!newOpen) {
-        setTraining({ title: '', description: '', duration: '', instructor: '' });
-      }
+    setOpen(newOpen);
+    if (!newOpen) {
+      resetForm();
     }
   };
-
-  const isFormValid = training.title.trim() && training.description.trim() && training.duration.trim();
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="justify-start h-auto p-4">
-          <BookOpen className="mr-2 h-5 w-5" />
-          <div className="text-left">
-            <div className="font-medium">Novo Treinamento</div>
-            <div className="text-xs text-muted-foreground">Criar curso</div>
-          </div>
+        <Button>
+          <BookOpen className="mr-2 h-4 w-4" />
+          Novo Treinamento
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -82,8 +68,8 @@ export const TrainingDialog = () => {
             <Input 
               id="title" 
               placeholder="Digite o título do curso"
-              value={training.title}
-              onChange={(e) => setTraining({...training, title: e.target.value})}
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
               disabled={isSubmitting}
             />
           </div>
@@ -92,8 +78,8 @@ export const TrainingDialog = () => {
             <Textarea 
               id="description" 
               placeholder="Descreva o conteúdo do curso..."
-              value={training.description}
-              onChange={(e) => setTraining({...training, description: e.target.value})}
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
               rows={3}
               disabled={isSubmitting}
             />
@@ -103,8 +89,8 @@ export const TrainingDialog = () => {
             <Input 
               id="duration" 
               placeholder="Ex: 8 horas, 2 semanas..."
-              value={training.duration}
-              onChange={(e) => setTraining({...training, duration: e.target.value})}
+              value={formData.duration}
+              onChange={(e) => setFormData({...formData, duration: e.target.value})}
               disabled={isSubmitting}
             />
           </div>
@@ -113,8 +99,8 @@ export const TrainingDialog = () => {
             <Input 
               id="instructor" 
               placeholder="Nome do instrutor"
-              value={training.instructor}
-              onChange={(e) => setTraining({...training, instructor: e.target.value})}
+              value={formData.instructor}
+              onChange={(e) => setFormData({...formData, instructor: e.target.value})}
               disabled={isSubmitting}
             />
           </div>
@@ -128,17 +114,10 @@ export const TrainingDialog = () => {
             Cancelar
           </Button>
           <Button 
-            onClick={handleCreateTraining}
-            disabled={isSubmitting || !isFormValid}
+            onClick={handleSubmit}
+            disabled={isSubmitting || !formData.title || !formData.description || !formData.duration}
           >
-            {isSubmitting ? (
-              <>
-                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                Criando...
-              </>
-            ) : (
-              'Criar Treinamento'
-            )}
+            {isSubmitting ? 'Criando...' : 'Criar Treinamento'}
           </Button>
         </div>
       </DialogContent>
