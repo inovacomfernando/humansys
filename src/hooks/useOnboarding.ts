@@ -61,7 +61,7 @@ export const useOnboarding = () => {
     );
 
     if (result && Array.isArray(result)) {
-      setCollaborators(result);
+      setCollaborators(result as Collaborator[]);
       console.log('useOnboarding: Colaboradores carregados:', result.length);
     }
   };
@@ -141,6 +141,8 @@ export const useOnboarding = () => {
     );
 
     if (result) {
+      const typedResult = result as any;
+      
       // Criar etapas padrão
       const defaultSteps = [
         'Documentação Pessoal',
@@ -152,7 +154,7 @@ export const useOnboarding = () => {
       ];
 
       const stepsData = defaultSteps.map((title, index) => ({
-        onboarding_process_id: result.id,
+        onboarding_process_id: typedResult.id,
         title,
         step_order: index + 1,
         completed: false
@@ -164,8 +166,8 @@ export const useOnboarding = () => {
       );
 
       const formattedData: OnboardingProcess = {
-        ...result,
-        status: result.status as 'not-started' | 'in-progress' | 'completed',
+        ...typedResult,
+        status: typedResult.status as 'not-started' | 'in-progress' | 'completed',
       };
 
       setProcesses(prev => [formattedData, ...prev]);
@@ -188,7 +190,7 @@ export const useOnboarding = () => {
       { maxRetries: 2, requireAuth: true }
     );
 
-    return (result && Array.isArray(result)) ? result : [];
+    return (result && Array.isArray(result)) ? result as OnboardingStep[] : [];
   };
 
   const updateStepStatus = async (stepId: string, completed: boolean, processId: string) => {

@@ -113,11 +113,12 @@ export const useFeedback = () => {
     );
 
     if (result) {
+      const typedResult = result as any;
       const formattedData: Feedback = {
-        ...result,
-        type: result.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
-        status: result.status as 'sent' | 'pending' | 'completed',
-        notification_method: result.notification_method as 'email' | 'notification' | 'both',
+        ...typedResult,
+        type: typedResult.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
+        status: typedResult.status as 'sent' | 'pending' | 'completed',
+        notification_method: typedResult.notification_method as 'email' | 'notification' | 'both',
       };
 
       setFeedbacks(prev => [formattedData, ...prev]);
@@ -148,11 +149,12 @@ export const useFeedback = () => {
     );
 
     if (result) {
+      const typedResult = result as any;
       const formattedData: Feedback = {
-        ...result,
-        type: result.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
-        status: result.status as 'sent' | 'pending' | 'completed',
-        notification_method: result.notification_method as 'email' | 'notification' | 'both',
+        ...typedResult,
+        type: typedResult.type as 'performance' | '360' | 'peer' | 'recognition' | 'improvement',
+        status: typedResult.status as 'sent' | 'pending' | 'completed',
+        notification_method: typedResult.notification_method as 'email' | 'notification' | 'both',
       };
 
       setFeedbacks(prev => 

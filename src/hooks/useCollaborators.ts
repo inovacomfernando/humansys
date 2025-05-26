@@ -104,9 +104,10 @@ export const useCollaborators = () => {
     );
 
     if (result) {
+      const typedResult = result as any;
       const formattedData: Collaborator = {
-        ...result,
-        status: result.status as 'active' | 'inactive' | 'vacation',
+        ...typedResult,
+        status: typedResult.status as 'active' | 'inactive' | 'vacation',
       };
 
       setCollaborators(prev => [formattedData, ...prev]);
@@ -134,9 +135,10 @@ export const useCollaborators = () => {
     );
 
     if (result) {
+      const typedResult = result as any;
       const formattedData: Collaborator = {
-        ...result,
-        status: result.status as 'active' | 'inactive' | 'vacation',
+        ...typedResult,
+        status: typedResult.status as 'active' | 'inactive' | 'vacation',
       };
 
       setCollaborators(prev => 
