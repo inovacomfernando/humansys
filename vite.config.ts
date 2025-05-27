@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB limit
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./i,
@@ -63,4 +64,24 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-router': ['react-router-dom'],
+          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-charts': ['recharts'],
+          'analytics': [
+            'src/components/analytics/PredictiveAnalytics',
+            'src/components/analytics/EngagementAnalytics',
+            'src/components/analytics/ProductivityAnalytics',
+            'src/components/analytics/MLInsights'
+          ]
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  }
 }));
