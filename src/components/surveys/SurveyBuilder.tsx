@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Survey, SurveyQuestion } from '@/types/surveys';
 import { Plus, Trash2, GripVertical, Eye } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useToast } from '@/hooks/use-toast';
 
 interface SurveyBuilderProps {
@@ -24,6 +23,7 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
   onPreview
 }) => {
   const { toast } = useToast();
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
   
   const [editingSurvey, setEditingSurvey] = useState<Survey>(
     survey || {
@@ -115,18 +115,40 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
     }
   };
 
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return;
+  const handleDragStart = (e: React.DragEvent, questionId: string) => {
+    setDraggedItem(questionId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
 
-    const items = Array.from(editingSurvey.questions);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
 
-    setEditingSurvey(prev => ({
-      ...prev,
-      questions: items,
-      updated_at: new Date().toISOString()
-    }));
+  const handleDrop = (e: React.DragEvent, targetQuestionId: string) => {
+    e.preventDefault();
+    
+    if (!draggedItem || draggedItem === targetQuestionId) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const questions = [...editingSurvey.questions];
+    const draggedIndex = questions.findIndex(q => q.id === draggedItem);
+    const targetIndex = questions.findIndex(q => q.id === targetQuestionId);
+    
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      const [draggedQuestion] = questions.splice(draggedIndex, 1);
+      questions.splice(targetIndex, 0, draggedQuestion);
+      
+      setEditingSurvey(prev => ({
+        ...prev,
+        questions,
+        updated_at: new Date().toISOString()
+      }));
+    }
+    
+    setDraggedItem(null);
   };
 
   const handleSave = () => {
@@ -275,125 +297,119 @@ export const SurveyBuilder: React.FC<SurveyBuilderProps> = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="questions">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                  {editingSurvey.questions.map((question, index) => (
-                    <Draggable key={question.id} draggableId={question.id} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className="border rounded-lg p-4 bg-white"
-                        >
-                          <div className="flex items-start gap-4">
-                            <div {...provided.dragHandleProps}>
-                              <GripVertical className="h-5 w-5 text-muted-foreground mt-2" />
-                            </div>
-                            
-                            <div className="flex-1 space-y-3">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">#{index + 1}</span>
-                                <Input
-                                  value={question.question}
-                                  onChange={(e) => updateQuestion(question.id, { question: e.target.value })}
-                                  className="flex-1"
-                                />
-                                <Switch
-                                  checked={question.required}
-                                  onCheckedChange={(checked) => updateQuestion(question.id, { required: checked })}
-                                />
-                                <Label className="text-sm">Obrigatória</Label>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteQuestion(question.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+          <div className="space-y-4">
+            {editingSurvey.questions.map((question, index) => (
+              <div
+                key={question.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, question.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, question.id)}
+                className={`border rounded-lg p-4 bg-white cursor-move transition-all ${
+                  draggedItem === question.id ? 'opacity-50' : 'hover:shadow-md'
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="mt-2">
+                    <GripVertical className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">#{index + 1}</span>
+                      <Input
+                        value={question.question}
+                        onChange={(e) => updateQuestion(question.id, { question: e.target.value })}
+                        className="flex-1"
+                      />
+                      <Switch
+                        checked={question.required}
+                        onCheckedChange={(checked) => updateQuestion(question.id, { required: checked })}
+                      />
+                      <Label className="text-sm">Obrigatória</Label>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteQuestion(question.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
 
-                              {question.type === 'multiple_choice' && question.options && (
-                                <div className="space-y-2">
-                                  {question.options.map((option, optionIndex) => (
-                                    <div key={optionIndex} className="flex items-center gap-2">
-                                      <Input
-                                        value={option}
-                                        onChange={(e) => updateOption(question.id, optionIndex, e.target.value)}
-                                        placeholder={`Opção ${optionIndex + 1}`}
-                                      />
-                                      {question.options!.length > 2 && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => removeOption(question.id, optionIndex)}
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      )}
-                                    </div>
-                                  ))}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => addOption(question.id)}
-                                  >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Adicionar Opção
-                                  </Button>
-                                </div>
-                              )}
-
-                              {question.type === 'scale' && (
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label className="text-sm">Valor Mínimo</Label>
-                                    <Input
-                                      type="number"
-                                      value={question.scale_min || 1}
-                                      onChange={(e) => updateQuestion(question.id, { scale_min: Number(e.target.value) })}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm">Valor Máximo</Label>
-                                    <Input
-                                      type="number"
-                                      value={question.scale_max || 10}
-                                      onChange={(e) => updateQuestion(question.id, { scale_max: Number(e.target.value) })}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm">Rótulo Mínimo</Label>
-                                    <Input
-                                      value={question.scale_labels?.min || ''}
-                                      onChange={(e) => updateQuestion(question.id, {
-                                        scale_labels: { ...question.scale_labels, min: e.target.value, max: question.scale_labels?.max || '' }
-                                      })}
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label className="text-sm">Rótulo Máximo</Label>
-                                    <Input
-                                      value={question.scale_labels?.max || ''}
-                                      onChange={(e) => updateQuestion(question.id, {
-                                        scale_labels: { ...question.scale_labels, max: e.target.value, min: question.scale_labels?.min || '' }
-                                      })}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                    {question.type === 'multiple_choice' && question.options && (
+                      <div className="space-y-2">
+                        {question.options.map((option, optionIndex) => (
+                          <div key={optionIndex} className="flex items-center gap-2">
+                            <Input
+                              value={option}
+                              onChange={(e) => updateOption(question.id, optionIndex, e.target.value)}
+                              placeholder={`Opção ${optionIndex + 1}`}
+                            />
+                            {question.options!.length > 2 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeOption(question.id, optionIndex)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
+                        ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addOption(question.id)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Adicionar Opção
+                        </Button>
+                      </div>
+                    )}
+
+                    {question.type === 'scale' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm">Valor Mínimo</Label>
+                          <Input
+                            type="number"
+                            value={question.scale_min || 1}
+                            onChange={(e) => updateQuestion(question.id, { scale_min: Number(e.target.value) })}
+                          />
                         </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
+                        <div>
+                          <Label className="text-sm">Valor Máximo</Label>
+                          <Input
+                            type="number"
+                            value={question.scale_max || 10}
+                            onChange={(e) => updateQuestion(question.id, { scale_max: Number(e.target.value) })}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm">Rótulo Mínimo</Label>
+                          <Input
+                            value={question.scale_labels?.min || ''}
+                            onChange={(e) => updateQuestion(question.id, {
+                              scale_labels: { ...question.scale_labels, min: e.target.value, max: question.scale_labels?.max || '' }
+                            })}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm">Rótulo Máximo</Label>
+                          <Input
+                            value={question.scale_labels?.max || ''}
+                            onChange={(e) => updateQuestion(question.id, {
+                              scale_labels: { ...question.scale_labels, max: e.target.value, min: question.scale_labels?.min || '' }
+                            })}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+              </div>
+            ))}
+          </div>
 
           {editingSurvey.questions.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
