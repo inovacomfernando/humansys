@@ -21,7 +21,12 @@ import {
   Linkedin,
   Instagram,
   Facebook,
-  Github
+  Github,
+  Brain,
+  Trophy,
+  Smartphone,
+  TrendingUp,
+  Video
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,9 +35,23 @@ export const Landing = () => {
 
   const features = [
     {
+      icon: Brain,
+      title: 'Analytics com IA',
+      description: 'Machine Learning para prever turnover e identificar talentos em risco.',
+      path: '/analytics',
+      isNew: true
+    },
+    {
+      icon: Trophy,
+      title: 'Gamificação Completa',
+      description: 'Sistema de badges, conquistas e ranking para engajar colaboradores.',
+      path: '/dashboard',
+      isNew: true
+    },
+    {
       icon: UserPlus,
       title: 'Onboarding Inteligente',
-      description: 'Processo estruturado de integração de novos colaboradores com acompanhamento automático.',
+      description: 'Processo estruturado de integração com acompanhamento automático.',
       path: '/onboarding'
     },
     {
@@ -54,28 +73,17 @@ export const Landing = () => {
       path: '/goals'
     },
     {
-      icon: BookOpen,
-      title: 'Treinamentos',
-      description: 'Plataforma de cursos e capacitação com certificação automática.',
+      icon: Video,
+      title: 'Treinamentos Interativos',
+      description: 'Plataforma de cursos com player de vídeo integrado e certificação.',
       path: '/training'
     },
     {
-      icon: Award,
-      title: 'Certificações',
-      description: 'Emissão automática de certificados após conclusão dos treinamentos.',
-      path: '/certificates'
-    },
-    {
-      icon: BarChart3,
-      title: 'Pesquisas de Clima',
-      description: 'Análise de cultura organizacional e clima empresarial.',
-      path: '/surveys'
-    },
-    {
-      icon: FileText,
-      title: 'Gestão Documental',
-      description: 'Gestão eletrônica de documentos com segurança e compliance.',
-      path: '/documents'
+      icon: Smartphone,
+      title: 'Progressive Web App',
+      description: 'Funciona offline e pode ser instalado como aplicativo nativo.',
+      path: '/dashboard',
+      isNew: true
     }
   ];
 
@@ -83,7 +91,66 @@ export const Landing = () => {
     'Redução de 70% no tempo de onboarding',
     'Aumento de 45% na retenção de talentos',
     'Melhoria de 60% na comunicação interna',
-    'Economia de 50% em processos manuais'
+    'Economia de 50% em processos manuais',
+    'IA prevê turnover com 85% de precisão',
+    'Gamificação aumenta engajamento em 40%'
+  ];
+
+  const plans = [
+    {
+      name: 'Inicial',
+      description: 'Perfeito para empresas iniciantes',
+      monthlyPrice: 'R$ 49',
+      yearlyPrice: 'R$ 490',
+      popular: false,
+      features: [
+        'Até 10 colaboradores',
+        'Onboarding básico',
+        'Gestão de documentos',
+        'Analytics básicas',
+        'Gamificação simples',
+        'Suporte por email',
+        '1 GB de armazenamento'
+      ]
+    },
+    {
+      name: 'Em Crescimento',
+      description: 'Ideal para empresas em expansão',
+      monthlyPrice: 'R$ 99',
+      yearlyPrice: 'R$ 990',
+      popular: true,
+      features: [
+        'Até 50 colaboradores',
+        'Onboarding completo com vídeos',
+        'Sistema de feedback 360°',
+        'Treinamentos interativos',
+        'Gamificação completa',
+        'Analytics avançadas',
+        'PWA móvel',
+        'Pesquisas de clima',
+        'Suporte prioritário',
+        '10 GB de armazenamento'
+      ]
+    },
+    {
+      name: 'Profissional',
+      description: 'Para empresas estabelecidas',
+      monthlyPrice: 'R$ 199',
+      yearlyPrice: 'R$ 1990',
+      popular: false,
+      features: [
+        'Colaboradores ilimitados',
+        'Todas as funcionalidades',
+        'IA preditiva para turnover',
+        'ML insights avançados',
+        'Relatórios executivos',
+        'API personalizada',
+        'Suporte 24/7',
+        'Armazenamento ilimitado',
+        'White label',
+        'Consultoria estratégica'
+      ]
+    }
   ];
 
   const testimonials = [
@@ -91,14 +158,14 @@ export const Landing = () => {
       name: 'Maria Silva',
       role: 'Diretora de RH',
       company: 'TechCorp',
-      content: 'Revolucionou nossa gestão de pessoas. O ROI foi impressionante já no primeiro mês.',
+      content: 'A IA da Humansys nos ajudou a reduzir o turnover em 60%. Incrível!',
       rating: 5
     },
     {
       name: 'João Santos',
       role: 'CEO',
       company: 'StartupXYZ',
-      content: 'Ferramenta indispensável para escalar nossa equipe com qualidade.',
+      content: 'O sistema de gamificação transformou o engajamento da nossa equipe.',
       rating: 5
     }
   ];
@@ -114,6 +181,16 @@ export const Landing = () => {
     navigate(path);
   };
 
+  const handlePlanSelection = (planName: string, price: string, billing: 'monthly' | 'yearly') => {
+    navigate('/checkout', { 
+      state: { 
+        plan: planName, 
+        price: price.replace('R$ ', ''),
+        billing 
+      } 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
@@ -124,15 +201,18 @@ export const Landing = () => {
           <div className="mx-auto max-w-4xl text-center animate-fade-in">
             <Badge variant="secondary" className="mb-4">
               <Sparkles className="mr-1 h-3 w-3" />
-              Tecnologia para valorizar o humano
+              Agora com IA e Gamificação
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
               Transforme sua
               <span className="text-primary"> Gestão de Pessoas</span>
+              <span className="block text-3xl md:text-4xl lg:text-5xl mt-2 text-muted-foreground">
+                com Inteligência Artificial
+              </span>
             </h1>
             <p className="mt-6 text-xl text-muted-foreground md:text-2xl">
-              A Humansys é uma plataforma completa para recrutamento, onboarding, desenvolvimento e gestão de talentos. 
-              Tudo que você precisa em um só lugar.
+              A Humansys é uma plataforma completa com IA preditiva, gamificação e PWA. 
+              Preveja turnover, engaje colaboradores e transforme seu RH.
             </p>
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Button 
@@ -147,9 +227,10 @@ export const Landing = () => {
                 variant="outline" 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/changelog')}
               >
-                Fazer Login
+                <TrendingUp className="mr-2 h-5 w-5" />
+                Ver Novidades
               </Button>
             </div>
           </div>
@@ -177,6 +258,11 @@ export const Landing = () => {
                   className="relative group hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => handleFeatureClick(feature.path)}
                 >
+                  {feature.isNew && (
+                    <Badge className="absolute -top-2 -right-2 bg-green-500 text-white">
+                      Novo
+                    </Badge>
+                  )}
                   <CardHeader>
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
                       <Icon className="h-6 w-6" />
@@ -193,8 +279,78 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Benefits Section */}
+      {/* Pricing Section */}
       <section className="py-20 md:py-32 bg-muted/50">
+        <div className="container">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Planos Atualizados
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Agora com IA, gamificação e funcionalidades premium
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3 mb-16">
+            {plans.map((plan, index) => (
+              <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
+                {plan.popular && (
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+                    <Star className="mr-1 h-3 w-3" />
+                    Mais Popular
+                  </Badge>
+                )}
+                
+                <CardHeader className="text-center pb-2">
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <CardDescription className="text-base">{plan.description}</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="text-center">
+                  <div className="mb-6">
+                    <div className="text-4xl font-bold text-primary mb-2">
+                      {plan.monthlyPrice}
+                      <span className="text-base text-muted-foreground font-normal">/mês</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      ou {plan.yearlyPrice}/ano (2 meses grátis)
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-8">
+                    {plan.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-center text-left">
+                        <Check className="h-4 w-4 text-primary mr-3 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Button 
+                      className="w-full" 
+                      variant={plan.popular ? "default" : "outline"}
+                      onClick={() => handlePlanSelection(plan.name, plan.monthlyPrice, 'monthly')}
+                    >
+                      Contratar Mensal
+                    </Button>
+                    <Button 
+                      className="w-full" 
+                      variant="secondary"
+                      onClick={() => handlePlanSelection(plan.name, plan.yearlyPrice, 'yearly')}
+                    >
+                      Contratar Anual
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-20 md:py-32">
         <div className="container">
           <div className="mx-auto max-w-4xl">
             <div className="text-center mb-16">
@@ -221,7 +377,7 @@ export const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 md:py-32">
+      <section className="py-20 md:py-32 bg-muted/50">
         <div className="container">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold md:text-4xl">
@@ -232,7 +388,7 @@ export const Landing = () => {
             </p>
           </div>
           
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="relative">
                 <CardHeader>
@@ -264,10 +420,10 @@ export const Landing = () => {
         <div className="container">
           <div className="mx-auto max-w-2xl text-center text-white">
             <h2 className="text-3xl font-bold md:text-4xl">
-              Pronto para Começar?
+              Pronto para Revolucionar seu RH?
             </h2>
             <p className="mt-4 text-lg opacity-90">
-              Junte-se a centenas de empresas que já transformaram sua gestão de RH com a Humansys
+              Junte-se a centenas de empresas que já transformaram sua gestão de RH com IA
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Button 
@@ -301,6 +457,7 @@ export const Landing = () => {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="/features" className="hover:text-primary">Funcionalidades</a></li>
                 <li><a href="/pricing" className="hover:text-primary">Preços</a></li>
+                <li><a href="/changelog" className="hover:text-primary">Novidades</a></li>
                 <li><a href="/integrations" className="hover:text-primary">Integrações</a></li>
               </ul>
             </div>

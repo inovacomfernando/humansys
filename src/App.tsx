@@ -64,6 +64,7 @@ const AppRoutes = () => {
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
       <Route path="/trial" element={<Plans />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/changelog" element={<Changelog />} />
       
       {/* Novas páginas públicas */}
       <Route path="/careers" element={<Careers />} />

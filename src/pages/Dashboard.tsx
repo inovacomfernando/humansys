@@ -1,286 +1,242 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { UpdateBanner } from '@/components/layout/UpdateBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Users,
-  UserPlus,
-  MessageSquare,
-  Target,
-  BookOpen,
-  TrendingUp,
-  Clock,
-  AlertCircle,
-  Plus,
-  LayoutGrid,
-  BarChart3
-} from 'lucide-react';
-import { NewCollaboratorDialog } from '@/components/dashboard/NewCollaboratorDialog';
-import { FeedbackDialog } from '@/components/dashboard/FeedbackDialog';
-import { TrainingDialog } from '@/components/dashboard/TrainingDialog';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Widget } from '@/components/dashboard/Widget';
 import { TrendChart } from '@/components/dashboard/TrendChart';
-import { useDashboardActions } from '@/hooks/useDashboardActions';
+import { ActivityItem } from '@/components/dashboard/ActivityItem';
+import { TaskItem } from '@/components/dashboard/TaskItem';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useUserMigration } from '@/hooks/useUserMigration';
+import {
+  Users,
+  UserPlus,
+  TrendingUp,
+  Award,
+  Calendar,
+  MessageSquare,
+  Brain,
+  Trophy,
+  Zap,
+  Target
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
-  const { handleStatsClick, handleQuickAction } = useDashboardActions();
-  const { stats, recentActivities, isLoading } = useDashboardData();
-  const [expandedWidget, setExpandedWidget] = useState<string | null>(null);
-  const [widgets, setWidgets] = useState([
-    'stats',
-    'trends',
-    'activities',
-    'tasks',
-    'quick-actions'
-  ]);
+  const { data, isLoading } = useDashboardData();
+  const { migrationStatus, runFullMigration } = useUserMigration();
+  const navigate = useNavigate();
 
-  // Dados de exemplo para gráficos de tendência
-  const trendData = [
-    { date: '2024-01-15', value: 45 },
-    { date: '2024-01-16', value: 52 },
-    { date: '2024-01-17', value: 48 },
-    { date: '2024-01-18', value: 61 },
-    { date: '2024-01-19', value: 55 },
-    { date: '2024-01-20', value: 67 },
-    { date: '2024-01-21', value: 73 },
-  ];
-
-  const collaboratorsTrend = [
-    { date: '2024-01-15', value: 145 },
-    { date: '2024-01-16', value: 147 },
-    { date: '2024-01-17', value: 149 },
-    { date: '2024-01-18', value: 152 },
-    { date: '2024-01-19', value: 155 },
-    { date: '2024-01-20', value: 158 },
-    { date: '2024-01-21', value: 162 },
-  ];
-
-  const statsConfig = [
-    {
-      title: 'Total de Colaboradores',
-      value: stats.totalCollaborators.toString(),
-      change: '+2.5%',
-      trend: 'up' as const,
-      icon: Users,
-      color: 'text-blue-600',
-      type: 'collaborators'
-    },
-    {
-      title: 'Novos Contratados',
-      value: stats.newHires.toString(),
-      change: '+12%',
-      trend: 'up' as const,
-      icon: UserPlus,
-      color: 'text-green-600',
-      type: 'new-hires'
-    },
-    {
-      title: 'Feedbacks Pendentes',
-      value: stats.pendingFeedbacks.toString(),
-      change: '-8%',
-      trend: 'down' as const,
-      icon: MessageSquare,
-      color: 'text-orange-600',
-      type: 'feedback'
-    },
-    {
-      title: 'Metas Concluídas',
-      value: `${stats.completedGoals}%`,
-      change: '+5%',
-      trend: 'up' as const,
-      icon: Target,
-      color: 'text-purple-600',
-      type: 'goals'
+  React.useEffect(() => {
+    // Executar migração automaticamente para usuários existentes
+    if (!migrationStatus.isComplete && !isLoading) {
+      runFullMigration();
     }
-  ];
+  }, [migrationStatus.isComplete, isLoading]);
 
-  const handleWidgetExpand = (widgetId: string) => {
-    setExpandedWidget(expandedWidget === widgetId ? null : widgetId);
-  };
-
-  const handleWidgetRemove = (widgetId: string) => {
-    setWidgets(widgets.filter(w => w !== widgetId));
-  };
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Carregando dashboard...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header with Actions */}
-        <div className="flex justify-between items-center">
+        <UpdateBanner />
+        
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold animate-fade-in">Dashboard</h1>
-            <p className="text-muted-foreground animate-fade-in">
-              Visão geral da sua gestão de pessoas
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Bem-vindo ao seu painel de controle atualizado
             </p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <LayoutGrid className="mr-2 h-4 w-4" />
-              Personalizar
-            </Button>
-            <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Widget
-            </Button>
-          </div>
+          <Button onClick={() => navigate('/changelog')} variant="outline">
+            <Trophy className="h-4 w-4 mr-2" />
+            Ver Novidades
+          </Button>
         </div>
 
-        {/* Widgets Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 auto-rows-min">
-          {/* Stats Widget */}
-          {widgets.includes('stats') && (
+        {/* Quick Stats */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Total de Colaboradores"
+            value={data?.stats?.totalCollaborators || 0}
+            icon={Users}
+            trend={12}
+          />
+          <StatsCard
+            title="Processos Ativos"
+            value={data?.stats?.activeProcesses || 0}
+            icon={UserPlus}
+            trend={8}
+          />
+          <StatsCard
+            title="Taxa de Conclusão"
+            value={`${data?.stats?.completionRate || 0}%`}
+            icon={TrendingUp}
+            trend={15}
+          />
+          <StatsCard
+            title="Pontos Gamificação"
+            value={data?.stats?.gamificationPoints || 100}
+            icon={Trophy}
+            trend={25}
+            isNew={true}
+          />
+        </div>
+
+        {/* New Features Highlight */}
+        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Brain className="h-5 w-5 text-purple-600" />
+              <span>Novas Funcionalidades com IA</span>
+              <Badge className="bg-purple-500">Novo</Badge>
+            </CardTitle>
+            <CardDescription>
+              Explore as funcionalidades mais recentes do HumanSys
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow" 
+                   onClick={() => navigate('/analytics')}>
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Brain className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Analytics com IA</h4>
+                  <p className="text-sm text-muted-foreground">Previsões de turnover</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+                   onClick={() => navigate('/onboarding')}>
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Trophy className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Gamificação</h4>
+                  <p className="text-sm text-muted-foreground">Badges e conquistas</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+                   onClick={() => navigate('/training')}>
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <h4 className="font-medium">PWA Móvel</h4>
+                  <p className="text-sm text-muted-foreground">Acesso offline</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
             <Widget
-              id="stats"
-              title="Estatísticas Principais"
-              description="Métricas chave do sistema"
-              className={expandedWidget === 'stats' ? 'md:col-span-2 lg:col-span-4' : 'md:col-span-2 lg:col-span-4'}
-              onExpand={handleWidgetExpand}
-              onRemove={handleWidgetRemove}
-              isExpanded={expandedWidget === 'stats'}
+              title="Tendências de Performance"
+              description="Análise de performance dos últimos 6 meses"
             >
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {statsConfig.map((stat, index) => (
-                  <StatsCard
-                    key={index}
-                    title={stat.title}
-                    value={isLoading ? '...' : stat.value}
-                    change={stat.change}
-                    trend={stat.trend}
-                    icon={stat.icon}
-                    color={stat.color}
-                    onClick={() => handleStatsClick(stat.type)}
-                  />
-                ))}
+              <TrendChart data={data?.trends || []} />
+            </Widget>
+
+            <Widget
+              title="Atividades Recentes"
+              description="Últimas ações realizadas no sistema"
+            >
+              <div className="space-y-4">
+                {data?.recentActivities?.map((activity, index) => (
+                  <ActivityItem key={index} activity={activity} />
+                )) || []}
               </div>
             </Widget>
-          )}
+          </div>
 
-          {/* Trends Widget */}
-          {widgets.includes('trends') && (
+          {/* Sidebar */}
+          <div className="space-y-6">
             <Widget
-              id="trends"
-              title="Tendências"
-              description="Evolução ao longo do tempo"
-              className={expandedWidget === 'trends' ? 'md:col-span-2' : ''}
-              onExpand={handleWidgetExpand}
-              onRemove={handleWidgetRemove}
-              isExpanded={expandedWidget === 'trends'}
+              title="Metas do Mês"
+              description="Progresso das principais metas"
             >
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm font-medium mb-2">Performance Geral</h4>
-                  <TrendChart 
-                    data={trendData} 
-                    type="area" 
-                    color="#22c55e"
-                    height={expandedWidget === 'trends' ? 300 : 150}
-                  />
-                </div>
-                {expandedWidget === 'trends' && (
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Crescimento de Colaboradores</h4>
-                    <TrendChart 
-                      data={collaboratorsTrend} 
-                      type="line" 
-                      color="#3b82f6"
-                      height={200}
-                    />
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium">Onboardings</span>
+                    <span className="text-sm text-muted-foreground">75%</span>
                   </div>
-                )}
+                  <Progress value={75} />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium">Treinamentos</span>
+                    <span className="text-sm text-muted-foreground">60%</span>
+                  </div>
+                  <Progress value={60} />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-sm font-medium">Feedbacks</span>
+                    <span className="text-sm text-muted-foreground">90%</span>
+                  </div>
+                  <Progress value={90} />
+                </div>
               </div>
             </Widget>
-          )}
 
-          {/* Activities Widget */}
-          {widgets.includes('activities') && (
             <Widget
-              id="activities"
-              title="Atividades Recentes"
-              description="Últimas movimentações"
-              onExpand={handleWidgetExpand}
-              onRemove={handleWidgetRemove}
-              isExpanded={expandedWidget === 'activities'}
-            >
-              {recentActivities.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Clock className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground text-center">
-                    Nenhuma atividade recente
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentActivities.slice(0, expandedWidget === 'activities' ? 10 : 3).map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3 p-2 bg-muted/50 rounded-lg transition-colors hover:bg-muted/80">
-                      <div className="flex-1">
-                        <p className="text-xs font-medium">{activity.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(activity.created_at), 'dd/MM HH:mm', { locale: ptBR })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Widget>
-          )}
-
-          {/* Tasks Widget */}
-          {widgets.includes('tasks') && (
-            <Widget
-              id="tasks"
               title="Tarefas Pendentes"
-              description="Itens para sua atenção"
-              onExpand={handleWidgetExpand}
-              onRemove={handleWidgetRemove}
-              isExpanded={expandedWidget === 'tasks'}
+              description="Itens que precisam da sua atenção"
             >
-              <div className="flex flex-col items-center justify-center py-8">
-                <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground text-center">
-                  Nenhuma tarefa pendente
-                </p>
-                <Badge variant="secondary" className="mt-2">Em dia!</Badge>
+              <div className="space-y-3">
+                {data?.pendingTasks?.map((task, index) => (
+                  <TaskItem key={index} task={task} />
+                )) || []}
               </div>
             </Widget>
-          )}
 
-          {/* Quick Actions Widget */}
-          {widgets.includes('quick-actions') && (
             <Widget
-              id="quick-actions"
               title="Ações Rápidas"
-              description="Acesso direto às funcionalidades"
-              className={expandedWidget === 'quick-actions' ? 'md:col-span-2' : 'md:col-span-2'}
-              onExpand={handleWidgetExpand}
-              onRemove={handleWidgetRemove}
-              isExpanded={expandedWidget === 'quick-actions'}
+              description="Acesso rápido às principais funcionalidades"
             >
-              <div className="grid gap-3 md:grid-cols-2">
-                <NewCollaboratorDialog />
-                <FeedbackDialog />
-                <TrainingDialog />
-                
-                <Button 
-                  variant="outline" 
-                  className="justify-start h-auto p-3 transition-all duration-200 hover:scale-105"
-                  onClick={() => handleQuickAction('reports')}
-                >
-                  <TrendingUp className="mr-2 h-4 w-4" />
-                  <div className="text-left">
-                    <div className="text-sm font-medium">Relatórios</div>
-                    <div className="text-xs text-muted-foreground">Análises e métricas</div>
-                  </div>
+              <div className="grid gap-2">
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/collaborators')}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Adicionar Colaborador
+                </Button>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/onboarding')}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Novo Onboarding
+                </Button>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/feedback')}>
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Enviar Feedback
+                </Button>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/goals')}>
+                  <Target className="h-4 w-4 mr-2" />
+                  Definir Meta
                 </Button>
               </div>
             </Widget>
-          )}
+          </div>
         </div>
       </div>
     </DashboardLayout>
