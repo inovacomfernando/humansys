@@ -42,42 +42,7 @@ export const Dashboard = () => {
       }, 1000);
     }
   }, [migrationStatus.isComplete, isLoading, data.stats.totalCollaborators]);
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <UpdateBanner />
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="h-8 w-48 bg-muted animate-pulse rounded mb-2"></div>
-              <div className="h-4 w-80 bg-muted animate-pulse rounded"></div>
-            </div>
-            <div className="h-10 w-32 bg-muted animate-pulse rounded"></div>
-          </div>
-
-          <DashboardStatsSkeleton />
-
-          {/* Skeleton para features highlight */}
-          <Card className="p-6">
-            <div className="space-y-4">
-              <div className="h-6 w-64 bg-muted animate-pulse rounded"></div>
-              <div className="h-4 w-96 bg-muted animate-pulse rounded"></div>
-              <div className="grid gap-4 md:grid-cols-3">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="p-4 bg-muted/50 rounded-lg">
-                    <div className="h-16 w-full bg-muted animate-pulse rounded"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
+  
   return (
     <DashboardLayout>
       <div className="space-y-6">
