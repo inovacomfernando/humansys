@@ -22,6 +22,7 @@ import { Training } from "./pages/Training";
 import { Certificates } from "./pages/Certificates";
 import { Surveys } from "./pages/Surveys";
 import { Documents } from "./pages/Documents";
+import { Analytics } from "./pages/Analytics";
 import { Settings } from "./pages/Settings";
 import { Careers } from "./pages/Careers";
 import { Blog } from "./pages/Blog";
@@ -140,6 +141,12 @@ const AppRoutes = () => {
       <Route path="/documents" element={
         <ProtectedRoute>
           <Documents />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <Analytics />
         </ProtectedRoute>
       } />
       
