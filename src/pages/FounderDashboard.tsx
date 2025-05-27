@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useFounderAnalytics } from '@/hooks/useFounderAnalytics';
+import { useOptimizedFounderAnalytics } from '@/hooks/useOptimizedFounderAnalytics';
 import { CustomerHealthTable } from '@/components/founder/CustomerHealthTable';
 import { FounderDashboardHeader } from '@/components/founder/FounderDashboardHeader';
 import { FounderKPICards } from '@/components/founder/FounderKPICards';
@@ -12,6 +12,7 @@ import { FounderRevenueTab } from '@/components/founder/FounderRevenueTab';
 import { FounderEngagementTab } from '@/components/founder/FounderEngagementTab';
 import { FounderReportsTab } from '@/components/founder/FounderReportsTab';
 import { FounderDocumentationTab } from '@/components/founder/FounderDocumentationTab';
+import { KPICardsSkeleton, TabsContentSkeleton } from '@/components/common/SkeletonCards';
 import { Crown } from 'lucide-react';
 
 export const FounderDashboard = () => {
@@ -24,11 +25,31 @@ export const FounderDashboard = () => {
     isLoading, 
     isFounder, 
     refetch,
-    exportToCSV 
-  } = useFounderAnalytics();
+    exportToCSV,
+    cacheStats
+  } = useOptimizedFounderAnalytics();
   
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
 
+  // Loading state otimizado
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="h-8 w-64 bg-muted animate-pulse rounded mb-2"></div>
+              <div className="h-4 w-96 bg-muted animate-pulse rounded"></div>
+            </div>
+          </div>
+          <KPICardsSkeleton />
+          <TabsContentSkeleton />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Acesso negado
   if (!isFounder) {
     return (
       <DashboardLayout>
@@ -40,19 +61,6 @@ export const FounderDashboard = () => {
               Este dashboard é exclusivo para usuários Founder.
             </p>
           </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Carregando analytics executivos...</p>
-          </div>
         </div>
       </DashboardLayout>
     );
@@ -115,6 +123,16 @@ export const FounderDashboard = () => {
             <FounderDocumentationTab />
           </TabsContent>
         </Tabs>
+
+        {/* Debug info em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && cacheStats && (
+          <Card className="p-4 bg-muted/50">
+            <p className="text-sm text-muted-foreground">
+              Cache: {cacheStats.hits} hits, {cacheStats.misses} misses 
+              ({cacheStats.hitRate.toFixed(1)}% hit rate)
+            </p>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );
