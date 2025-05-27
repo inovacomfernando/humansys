@@ -28,8 +28,9 @@ export const DocumentAnalytics: React.FC<DocumentAnalyticsProps> = ({ documents 
   
   const averageDownloads = documents.length > 0 ? Math.round(totalDownloads / documents.length) : 0;
   
-  const categoryStats = documents.reduce((acc, doc) => {
-    acc[doc.category] = (acc[doc.category] || 0) + 1;
+  const categoryStats: Record<string, number> = documents.reduce((acc, doc) => {
+    const currentCount = acc[doc.category] || 0;
+    acc[doc.category] = currentCount + 1;
     return acc;
   }, {} as Record<string, number>);
 
