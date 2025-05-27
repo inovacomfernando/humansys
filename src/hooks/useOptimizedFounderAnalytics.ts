@@ -17,10 +17,9 @@ import { csvExporter } from '@/utils/csvExporter';
 export const useOptimizedFounderAnalytics = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const cache = useOptimizedCache<any>(
-  process.env.NODE_ENV === "development" ? 60 * 1000 : 10 * 60 * 1000
+  const founderRoleTTL = process.env.NODE_ENV === "development" ? 15 * 1000 : 60 * 1000;
 );
-// 1 minuto em DEV, 10 minutos em PROD
+// Ajuste recomendado: TTL curto para role founder (ex: 15 segundos em DEV, 1 minuto em PROD)
 
 useEffect(() => {
   if (user?.id) {
