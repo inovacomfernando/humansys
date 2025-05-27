@@ -17,7 +17,7 @@ import { csvExporter } from '@/utils/csvExporter';
 export const useOptimizedFounderAnalytics = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const cache = useOptimizedCache<any>(10 * 60 * 1000); // 10 minutos TTL
+  const cache = useOptimizedCache<any>(10 * 60 * 1000); // 1 minuto TTL
   
   const [analytics, setAnalytics] = useState<FounderAnalytics>({
     revenue: { total_mrr: 0, total_arr: 0, mrr_growth: 0, churn_rate: 0, ltv: 0, cac: 0 },
