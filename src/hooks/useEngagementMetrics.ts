@@ -44,7 +44,18 @@ export const useEngagementMetrics = () => {
     // Calcular scores por departamento
     const deptScores: DepartmentScore[] = Object.entries(deptGroups).map(([dept, collabs]) => {
       const baseScore = 70 + Math.random() * 25; // Score base entre 70-95
-      const trend = Math.random() > 0.5 ? 'up' : Math.random() > 0.25 ? 'stable' : 'down';
+      
+      // Properly type the trend assignment
+      const randomValue = Math.random();
+      let trend: 'up' | 'down' | 'stable';
+      if (randomValue > 0.6) {
+        trend = 'up';
+      } else if (randomValue > 0.3) {
+        trend = 'stable';
+      } else {
+        trend = 'down';
+      }
+      
       const change = Math.floor(Math.random() * 10) + 1;
       
       return {
