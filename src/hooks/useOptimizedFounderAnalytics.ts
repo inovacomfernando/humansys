@@ -148,15 +148,13 @@ export const useOptimizedFounderAnalytics = () => {
         setIsLoading(true);
         
         // Verificar role primeiro
-        const hasFounderRole = await checkFounderRole();
-        setIsFounder(hasFounderRole);
-        
-        if (hasFounderRole) {
-          // Carregar dados apenas se for founder
-          await loadAnalyticsData();
-        }
-      } finally {
-        setIsLoading(false);
+       const hasFounderRole = await checkFounderRole();
+      setIsFounder(hasFounderRole);
+      setIsLoading(false); // Libera painel logo após identificar founder
+      if (hasFounderRole) {
+         // Carrega dados em background, não trava o painel
+          loadAnalyticsData(); // Não precisa de await
+         }
       }
     };
 
