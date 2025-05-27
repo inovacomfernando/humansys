@@ -28,7 +28,7 @@ interface PendingTask {
 }
 
 interface TrendData {
-  name: string;
+  date: string;
   value: number;
 }
 
@@ -166,14 +166,14 @@ export const useDashboardData = () => {
   };
 
   const fetchTrends = async () => {
-    // Mock data para trends
+    // Mock data para trends with correct date format
     const mockTrends: TrendData[] = [
-      { name: 'Jan', value: 65 },
-      { name: 'Fev', value: 70 },
-      { name: 'Mar', value: 68 },
-      { name: 'Abr', value: 75 },
-      { name: 'Mai', value: 80 },
-      { name: 'Jun', value: 85 }
+      { date: '2024-01-01', value: 65 },
+      { date: '2024-02-01', value: 70 },
+      { date: '2024-03-01', value: 68 },
+      { date: '2024-04-01', value: 75 },
+      { date: '2024-05-01', value: 80 },
+      { date: '2024-06-01', value: 85 }
     ];
 
     setData(prev => ({
