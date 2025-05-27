@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/card';
@@ -31,34 +30,34 @@ export const FounderDashboard = () => {
   
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
 
-  // Mostra skeleton apenas enquanto isFounder ainda não foi determinado
-if (typeof isFounder === "undefined" || isFounder === null) {
-  return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <KPICardsSkeleton />
-        <TabsContentSkeleton />
-      </div>
-    </DashboardLayout>
-  );
-}
+  // Mostra skeleton enquanto não foi possível determinar se é founder
+  if (typeof isFounder === "undefined" || isFounder === null) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <KPICardsSkeleton />
+          <TabsContentSkeleton />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
-// Bloqueia acesso se não for founder
-if (!isFounder) {
-  return (
-    <DashboardLayout>
-      <div className="flex items-center justify-center h-64">
-        <Card className="p-8 text-center">
-          <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-          <p className="text-muted-foreground">
-            Este dashboard é exclusivo para usuários Founder.
-          </p>
-        </Card>
-      </div>
-    </DashboardLayout>
-  );
-}
+  // Bloqueia acesso se não for founder
+  if (!isFounder) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Card className="p-8 text-center">
+            <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+            <p className="text-muted-foreground">
+              Este dashboard é exclusivo para usuários Founder.
+            </p>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -118,34 +117,34 @@ if (!isFounder) {
           </TabsContent>
         </Tabs>
 
-         {/* Debug info em desenvolvimento */}
+        {/* Debug info em desenvolvimento */}
         {process.env.NODE_ENV === 'development' && cacheStats && (
           <Card className="p-4 bg-muted/50">
             <p className="text-sm text-muted-foreground">
-               Cache: {cacheStats.hits} hits, {cacheStats.misses} misses 
+              Cache: {cacheStats.hits} hits, {cacheStats.misses} misses 
               ({cacheStats.hitRate.toFixed(1)}% hit rate)
-             </p>
-           </Card>
+            </p>
+          </Card>
         )}
 
         {process.env.NODE_ENV === 'development' && (
           <button
-             onClick={refetch}
+            onClick={refetch}
             style={{
-               marginTop: 16,
-               padding: '8px 16px',
+              marginTop: 16,
+              padding: '8px 16px',
               borderRadius: 6,
-               background: '#2563eb',
+              background: '#2563eb',
               color: '#fff',
               fontWeight: 600,
               border: 'none',
-             cursor: 'pointer'
+              cursor: 'pointer'
             }}
           >
             Limpar cache e atualizar dados
           </button>
         )}
       </div>
-     </DashboardLayout>
-   );
- };
+    </DashboardLayout>
+  );
+};
