@@ -100,8 +100,8 @@ export const Landing = () => {
     {
       name: 'Inicial',
       description: 'Perfeito para empresas iniciantes',
-      monthlyPrice: 'R$ 49',
-      yearlyPrice: 'R$ 490',
+      monthlyPrice: 'R$ 79',
+      yearlyPrice: 'R$ 790',
       popular: false,
       features: [
         'Até 10 colaboradores',
@@ -116,8 +116,8 @@ export const Landing = () => {
     {
       name: 'Em Crescimento',
       description: 'Ideal para empresas em expansão',
-      monthlyPrice: 'R$ 99',
-      yearlyPrice: 'R$ 990',
+      monthlyPrice: 'R$ 129',
+      yearlyPrice: 'R$ 1290',
       popular: true,
       features: [
         'Até 50 colaboradores',
@@ -135,8 +135,8 @@ export const Landing = () => {
     {
       name: 'Profissional',
       description: 'Para empresas estabelecidas',
-      monthlyPrice: 'R$ 199',
-      yearlyPrice: 'R$ 1990',
+      monthlyPrice: 'R$ 299',
+      yearlyPrice: 'R$ 2990',
       popular: false,
       features: [
         'Colaboradores ilimitados',
