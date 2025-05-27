@@ -1,8 +1,11 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface ThemeContextData {
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'auto';
+  effectiveTheme: 'light' | 'dark';
   toggleTheme: () => void;
+  setTheme: (theme: 'light' | 'dark' | 'auto') => void;
   brandColors: {
     primary: string;
     secondary: string;
@@ -16,18 +19,31 @@ interface ThemeContextData {
 const ThemeContext = createContext<ThemeContextData>({} as ThemeContextData);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setThemeState] = useState<'light' | 'dark' | 'auto'>('light');
+  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
   const [brandColors, setBrandColors] = useState({
     primary: '#22c55e',
     secondary: '#16a34a'
   });
-  // Definir o logo correto da Humansys como padrão
   const [companyLogo, setCompanyLogo] = useState<string>('https://i.imgur.com/xXvzC69.png');
 
+  // Detectar preferência do sistema
+  const getSystemTheme = (): 'light' | 'dark' => {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  // Calcular tema efetivo
+  const calculateEffectiveTheme = (currentTheme: 'light' | 'dark' | 'auto'): 'light' | 'dark' => {
+    if (currentTheme === 'auto') {
+      return getSystemTheme();
+    }
+    return currentTheme;
+  };
+
   useEffect(() => {
-    const savedTheme = localStorage.getItem('@humansys:theme') as 'light' | 'dark';
+    const savedTheme = localStorage.getItem('@humansys:theme') as 'light' | 'dark' | 'auto';
     if (savedTheme) {
-      setTheme(savedTheme);
+      setThemeState(savedTheme);
     }
     
     const savedColors = localStorage.getItem('@humansys:brand-colors');
@@ -39,10 +55,25 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (savedLogo) {
       setCompanyLogo(savedLogo);
     }
-  }, []);
+
+    // Listener para mudanças na preferência do sistema
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = () => {
+      if (theme === 'auto') {
+        const newEffectiveTheme = getSystemTheme();
+        setEffectiveTheme(newEffectiveTheme);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+  }, [theme]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    const newEffectiveTheme = calculateEffectiveTheme(theme);
+    setEffectiveTheme(newEffectiveTheme);
+    
+    document.documentElement.classList.toggle('dark', newEffectiveTheme === 'dark');
     localStorage.setItem('@humansys:theme', theme);
   }, [theme]);
 
@@ -51,7 +82,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--primary-color', brandColors.primary);
     root.style.setProperty('--secondary-color', brandColors.secondary);
     
-    // Aplicar cores do Tailwind dinamicamente
     const style = document.createElement('style');
     style.innerHTML = `
       :root {
@@ -89,7 +119,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    const themes: ('light' | 'dark' | 'auto')[] = ['light', 'dark', 'auto'];
+    const currentIndex = themes.indexOf(theme);
+    const nextTheme = themes[(currentIndex + 1) % themes.length];
+    setThemeState(nextTheme);
+  };
+
+  const setTheme = (newTheme: 'light' | 'dark' | 'auto') => {
+    setThemeState(newTheme);
   };
 
   const handleSetBrandColors = (colors: { primary: string; secondary: string }) => {
@@ -105,7 +142,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ThemeContext.Provider value={{
       theme,
+      effectiveTheme,
       toggleTheme,
+      setTheme,
       brandColors,
       setBrandColors: handleSetBrandColors,
       companyLogo,
