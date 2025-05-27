@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Users, Clock, Zap, Target } from 'lucide-react';
+import { MetricTooltip } from './MetricTooltip';
 
 interface EngagementAnalytics {
   dau: number;
@@ -30,7 +31,9 @@ export const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ analytics 
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Users className="h-5 w-5 text-blue-500 mr-2" />
-                <span className="text-sm font-medium">DAU</span>
+                <MetricTooltip metric="dau">
+                  <span className="text-sm font-medium">DAU</span>
+                </MetricTooltip>
               </div>
               <div className="text-2xl font-bold">{analytics.dau}</div>
               <div className="text-xs text-muted-foreground">usuários/dia</div>
@@ -39,7 +42,9 @@ export const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ analytics 
             <div className="text-center">
               <div className="flex items-center justify-center mb-2">
                 <Users className="h-5 w-5 text-green-500 mr-2" />
-                <span className="text-sm font-medium">MAU</span>
+                <MetricTooltip metric="mau">
+                  <span className="text-sm font-medium">MAU</span>
+                </MetricTooltip>
               </div>
               <div className="text-2xl font-bold">{analytics.mau}</div>
               <div className="text-xs text-muted-foreground">usuários/mês</div>
@@ -51,7 +56,9 @@ export const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ analytics 
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 text-orange-500 mr-2" />
-                  <span className="text-sm font-medium">Duração Média da Sessão</span>
+                  <MetricTooltip metric="session_duration">
+                    <span className="text-sm font-medium">Duração Média da Sessão</span>
+                  </MetricTooltip>
                 </div>
                 <span className="text-sm font-bold">{analytics.avg_session_duration}min</span>
               </div>
@@ -73,7 +80,9 @@ export const EngagementMetrics: React.FC<EngagementMetricsProps> = ({ analytics 
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center">
                   <Zap className="h-4 w-4 text-yellow-500 mr-2" />
-                  <span className="text-sm font-medium">Sticky Factor (DAU/MAU)</span>
+                  <MetricTooltip metric="sticky_factor">
+                    <span className="text-sm font-medium">Sticky Factor (DAU/MAU)</span>
+                  </MetricTooltip>
                 </div>
                 <span className="text-sm font-bold">
                   {Math.round((analytics.dau / analytics.mau) * 100)}%

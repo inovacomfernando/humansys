@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ChurnAnalysis } from '@/types/founder';
+import { MetricTooltip } from './MetricTooltip';
 
 interface ChurnAnalysisChartProps {
   data: ChurnAnalysis[];
@@ -17,7 +18,11 @@ export const ChurnAnalysisChart: React.FC<ChurnAnalysisChartProps> = ({ data }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Análise de Churn</CardTitle>
+        <CardTitle>
+          <MetricTooltip metric="churn_rate">
+            <span>Análise de Churn</span>
+          </MetricTooltip>
+        </CardTitle>
         <CardDescription>
           Taxa de churn por período e principais motivos
         </CardDescription>

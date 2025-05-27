@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { RevenueChartData } from '@/types/founder';
+import { MetricTooltip } from './MetricTooltip';
 
 interface RevenueChartProps {
   data: RevenueChartData[];
@@ -12,9 +13,15 @@ export const RevenueChart: React.FC<RevenueChartProps> = ({ data }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Evolução da Receita</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <MetricTooltip metric="mrr">
+            <span>Evolução da Receita</span>
+          </MetricTooltip>
+        </CardTitle>
         <CardDescription>
-          MRR e ARR ao longo dos últimos meses
+          <MetricTooltip metric="arr">
+            <span>MRR e ARR ao longo dos últimos meses</span>
+          </MetricTooltip>
         </CardDescription>
       </CardHeader>
       <CardContent>

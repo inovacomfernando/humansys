@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { CustomerHealthTable } from '@/components/founder/CustomerHealthTable';
 import { ChurnAnalysisChart } from '@/components/founder/ChurnAnalysisChart';
 import { EngagementMetrics } from '@/components/founder/EngagementMetrics';
 import { CompanyOverview } from '@/components/founder/CompanyOverview';
+import { MetricTooltip } from '@/components/founder/MetricTooltip';
 import {
   TrendingUp,
   TrendingDown,
@@ -101,7 +101,11 @@ export const FounderDashboard = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">MRR Total</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                <MetricTooltip metric="mrr">
+                  <span>MRR Total</span>
+                </MetricTooltip>
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -117,7 +121,11 @@ export const FounderDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">ARR Total</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                <MetricTooltip metric="arr">
+                  <span>ARR Total</span>
+                </MetricTooltip>
+              </CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -125,7 +133,9 @@ export const FounderDashboard = () => {
                 R$ {analytics.revenue.total_arr.toLocaleString('pt-BR')}
               </div>
               <div className="text-xs text-muted-foreground">
-                LTV médio: R$ {analytics.revenue.ltv.toFixed(0)}
+                <MetricTooltip metric="ltv">
+                  <span>LTV médio: R$ {analytics.revenue.ltv.toFixed(0)}</span>
+                </MetricTooltip>
               </div>
             </CardContent>
           </Card>
@@ -147,7 +157,11 @@ export const FounderDashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Health Score</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                <MetricTooltip metric="health_score">
+                  <span>Health Score</span>
+                </MetricTooltip>
+              </CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -180,7 +194,11 @@ export const FounderDashboard = () => {
                 <EngagementMetrics analytics={analytics.engagement} />
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Alerta de Churn</CardTitle>
+                    <CardTitle className="text-lg">
+                      <MetricTooltip metric="churn_rate">
+                        <span>Alerta de Churn</span>
+                      </MetricTooltip>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
