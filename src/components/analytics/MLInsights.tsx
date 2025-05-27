@@ -186,7 +186,7 @@ export const MLInsights: React.FC = () => {
                 <span className="font-medium text-blue-800">Correlação Forte (r=0.87)</span>
               </div>
               <p className="text-sm text-blue-700">
-                Colaboradores que participam de >3 treinamentos/ano têm 40% menos 
+                Colaboradores que participam de {'>'}3 treinamentos/ano têm 40% menos 
                 probabilidade de deixar a empresa no próximo ano.
               </p>
             </div>
@@ -272,12 +272,12 @@ export const MLInsights: React.FC = () => {
               <div>
                 <label className="text-sm font-medium">Variáveis Consideradas</label>
                 <div className="mt-1 space-y-1">
-                  {['Performance', 'Engajamento', 'Feedback', 'Treinamentos'].map((var_ => (
-                    <label key={var_} className="flex items-center space-x-2">
+                  {['Performance', 'Engajamento', 'Feedback', 'Treinamentos'].map((variable) => (
+                    <label key={variable} className="flex items-center space-x-2">
                       <input type="checkbox" defaultChecked className="rounded" />
-                      <span className="text-sm">{var_}</span>
+                      <span className="text-sm">{variable}</span>
                     </label>
-                  )))}
+                  ))}
                 </div>
               </div>
             </div>
