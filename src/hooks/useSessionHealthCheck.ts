@@ -26,7 +26,8 @@ export const useSessionHealthCheck = () => {
   const checkNetworkSpeed = useCallback(async (): Promise<'online' | 'offline' | 'slow'> => {
     try {
       const startTime = Date.now();
-      const response = await fetch(`${supabase.supabaseUrl}/rest/v1/`, {
+      // Usar uma URL pública para testar conectividade
+      const response = await fetch('https://hdugxslfoujddlbkvvak.supabase.co/rest/v1/', {
         method: 'HEAD',
         signal: AbortSignal.timeout(5000)
       });

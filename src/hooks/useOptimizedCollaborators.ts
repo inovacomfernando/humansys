@@ -71,7 +71,14 @@ export const useOptimizedCollaborators = () => {
         ]);
 
         if (error) throw error;
-        return data || [];
+        
+        // Corrigir o tipo de status para corresponder à interface
+        const typedData: Collaborator[] = (data || []).map(item => ({
+          ...item,
+          status: item.status as 'active' | 'inactive' | 'vacation'
+        }));
+        
+        return typedData;
 
       } catch (error: any) {
         lastError = error;
@@ -173,7 +180,10 @@ export const useOptimizedCollaborators = () => {
       if (error) throw error;
 
       // Atualizar dados localmente para resposta imediata
-      const newCollaborator = result as Collaborator;
+      const newCollaborator: Collaborator = {
+        ...result,
+        status: result.status as 'active' | 'inactive' | 'vacation'
+      };
       const currentCollaborators = data.collaborators || [];
       const updatedCollaborators = [newCollaborator, ...currentCollaborators];
       
