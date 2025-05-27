@@ -70,17 +70,17 @@ export const StructuredFeedbackForm: React.FC<StructuredFeedbackFormProps> = ({
   };
 
   const calculateOverallRating = () => {
-    const evaluatedCompetencies = Object.values(evaluations).filter(eval => eval.rating > 0);
+    const evaluatedCompetencies = Object.values(evaluations).filter(evaluation => evaluation.rating > 0);
     if (evaluatedCompetencies.length === 0) return 0;
     
-    const totalWeight = evaluatedCompetencies.reduce((sum, eval) => {
-      const comp = competencies.find(c => c.id === eval.competencyId);
+    const totalWeight = evaluatedCompetencies.reduce((sum, evaluation) => {
+      const comp = competencies.find(c => c.id === evaluation.competencyId);
       return sum + (comp?.weight || 0.2);
     }, 0);
     
-    const weightedSum = evaluatedCompetencies.reduce((sum, eval) => {
-      const comp = competencies.find(c => c.id === eval.competencyId);
-      return sum + (eval.rating * (comp?.weight || 0.2));
+    const weightedSum = evaluatedCompetencies.reduce((sum, evaluation) => {
+      const comp = competencies.find(c => c.id === evaluation.competencyId);
+      return sum + (evaluation.rating * (comp?.weight || 0.2));
     }, 0);
     
     return Math.round((weightedSum / totalWeight) * 100) / 100;
