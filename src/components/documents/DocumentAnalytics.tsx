@@ -20,8 +20,12 @@ interface DocumentAnalyticsProps {
 }
 
 export const DocumentAnalytics: React.FC<DocumentAnalyticsProps> = ({ documents }) => {
-  // Calcular métricas
-  const totalDownloads = documents.reduce((sum, doc) => sum + doc.download_count, 0);
+  // Calcular métricas com verificação de tipos
+  const totalDownloads = documents.reduce((sum, doc) => {
+    const downloadCount = Number(doc.download_count) || 0;
+    return sum + downloadCount;
+  }, 0);
+  
   const averageDownloads = documents.length > 0 ? Math.round(totalDownloads / documents.length) : 0;
   
   const categoryStats = documents.reduce((acc, doc) => {
@@ -49,7 +53,7 @@ export const DocumentAnalytics: React.FC<DocumentAnalyticsProps> = ({ documents 
     { date: '2024-01-21', value: totalDownloads },
   ];
 
-  const getCategoryLabel = (category: string) => {
+  const getCategoryLabel = (category: string): string => {
     const labels: { [key: string]: string } = {
       'policies': 'Políticas',
       'procedures': 'Procedimentos',
@@ -99,7 +103,7 @@ export const DocumentAnalytics: React.FC<DocumentAnalyticsProps> = ({ documents 
               {getCategoryLabel(mostPopularCategory)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {categoryStats[mostPopularCategory]} documentos
+              {categoryStats[mostPopularCategory] || 0} documentos
             </p>
           </CardContent>
         </Card>
@@ -153,7 +157,7 @@ export const DocumentAnalytics: React.FC<DocumentAnalyticsProps> = ({ documents 
           </CardHeader>
           <CardContent className="space-y-4">
             {Object.entries(categoryStats).map(([category, count]) => {
-              const percentage = (count / documents.length) * 100;
+              const percentage = documents.length > 0 ? (count / documents.length) * 100 : 0;
               return (
                 <div key={category} className="space-y-2">
                   <div className="flex justify-between items-center">
