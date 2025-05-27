@@ -111,8 +111,15 @@ export const useFounderAnalytics = () => {
         .order('health_score', { ascending: false });
       
       if (error) throw error;
-      setHealthScores(data || []);
-      return data || [];
+      
+      // Type assertion with proper churn_risk typing
+      const typedData = (data || []).map(item => ({
+        ...item,
+        churn_risk: item.churn_risk as 'low' | 'medium' | 'high'
+      })) as CustomerHealthScore[];
+      
+      setHealthScores(typedData);
+      return typedData;
     } catch (error) {
       console.error('Error loading health scores:', error);
       return [];
@@ -187,8 +194,8 @@ export const useFounderAnalytics = () => {
       
       const chartData: RevenueChartData[] = (data || []).map((item: any) => ({
         month: new Date(item.month).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
-        mrr: parseFloat(item.total_mrr || 0),
-        arr: parseFloat(item.total_mrr || 0) * 12,
+        mrr: parseFloat(item.total_mrr || '0'),
+        arr: parseFloat(item.total_mrr || '0') * 12,
         customers: 0, // Will be calculated separately
         churn_rate: 0 // Will be calculated separately
       }));
@@ -214,7 +221,7 @@ export const useFounderAnalytics = () => {
           period: `${period} ${period === 1 ? 'mês' : 'meses'}`,
           churned: 0, // Mock data
           total: companies.length,
-          rate: parseFloat(data || 0),
+          rate: parseFloat(String(data || 0)),
           reasons: [
             { reason: 'Preço alto', count: 3, percentage: 30 },
             { reason: 'Falta de recursos', count: 2, percentage: 20 },

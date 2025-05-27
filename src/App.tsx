@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,21 +9,21 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 
 // Auth pages
-import Login from "./pages/Login";
+import { Login } from "./pages/Login";
 
 // Main app pages
-import Dashboard from "./pages/Dashboard";
+import { Dashboard } from "./pages/Dashboard";
 import { FounderDashboard } from "./pages/FounderDashboard";
-import Collaborators from "./pages/Collaborators";
-import Onboarding from "./pages/Onboarding";
-import Training from "./pages/Training";
-import Feedback from "./pages/Feedback";
-import Goals from "./pages/Goals";
-import Analytics from "./pages/Analytics";
-import Changelog from "./pages/Changelog";
-import Settings from "./pages/Settings";
-import Certificates from "./pages/Certificates";
-import Documents from "./pages/Documents";
+import { Collaborators } from "./pages/Collaborators";
+import { Onboarding } from "./pages/Onboarding";
+import { Training } from "./pages/Training";
+import { Feedback } from "./pages/Feedback";
+import { Goals } from "./pages/Goals";
+import { Analytics } from "./pages/Analytics";
+import { Changelog } from "./pages/Changelog";
+import { Settings } from "./pages/Settings";
+import { Certificates } from "./pages/Certificates";
+import { Documents } from "./pages/Documents";
 
 const queryClient = new QueryClient();
 
