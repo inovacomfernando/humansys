@@ -17,7 +17,17 @@ import { csvExporter } from '@/utils/csvExporter';
 export const useOptimizedFounderAnalytics = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const cache = useOptimizedCache<any>(10 * 60 * 1000); // 1 minuto TTL
+  const cache = useOptimizedCache<any>(
+  process.env.NODE_ENV === "development" ? 60 * 1000 : 10 * 60 * 1000
+);
+// 1 minuto em DEV, 10 minutos em PROD
+
+useEffect(() => {
+  if (user?.id) {
+    cache.clear();
+    localStorage.removeItem(`@humansys:founder-role-${user.id}`);
+  }
+}, [user?.id]);
   
   const [analytics, setAnalytics] = useState<FounderAnalytics>({
     revenue: { total_mrr: 0, total_arr: 0, mrr_growth: 0, churn_rate: 0, ltv: 0, cac: 0 },
@@ -138,13 +148,13 @@ export const useOptimizedFounderAnalytics = () => {
 
   // Inicialização otimizada
   useEffect(() => {
-    const initializeFounderDashboard = async () => {
-      if (!user?.id) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
+   const hasFounderRole = await checkFounderRole();
+       setIsFounder(hasFounderRole);
+       setIsLoading(false); // Libera painel logo após identificar founder
+       if (hasFounderRole) {
+          // Carrega dados em background, não trava o painel
+           loadAnalyticsData(); // Não precisa de await
+       }		
         setIsLoading(true);
         
         // Verificar role primeiro
