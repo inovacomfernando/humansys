@@ -51,19 +51,19 @@ export const withLazyLoading = <P extends Record<string, any>>(
   ));
 };
 
-// Lazy load dos componentes de analytics com tipos corretos
+// Lazy load dos componentes de analytics com exports nomeados
 export const LazyPredictiveAnalytics = withLazyLoading(
-  () => import('@/components/analytics/PredictiveAnalytics').then(module => ({ default: module.PredictiveAnalytics || module.default }))
+  () => import('@/components/analytics/PredictiveAnalytics').then(module => ({ default: module.PredictiveAnalytics }))
 );
 
 export const LazyEngagementAnalytics = withLazyLoading(
-  () => import('@/components/analytics/EngagementAnalytics').then(module => ({ default: module.EngagementAnalytics || module.default }))
+  () => import('@/components/analytics/EngagementAnalytics').then(module => ({ default: module.EngagementAnalytics }))
 );
 
 export const LazyProductivityAnalytics = withLazyLoading(
-  () => import('@/components/analytics/ProductivityAnalytics').then(module => ({ default: module.ProductivityAnalytics || module.default }))
+  () => import('@/components/analytics/ProductivityAnalytics').then(module => ({ default: module.ProductivityAnalytics }))
 );
 
 export const LazyMLInsights = withLazyLoading(
-  () => import('@/components/analytics/MLInsights').then(module => ({ default: module.MLInsights || module.default }))
+  () => import('@/components/analytics/MLInsights').then(module => ({ default: module.MLInsights }))
 );
