@@ -162,7 +162,12 @@ export const MeetingScheduleDialog: React.FC<MeetingScheduleDialogProps> = ({
 
                   <div>
                     <Label htmlFor="type">Tipo de Reunião</Label>
-                    <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                    <Select 
+                      value={formData.type} 
+                      onValueChange={(value: 'onboarding' | 'feedback' | 'training' | 'general') => 
+                        setFormData(prev => ({ ...prev, type: value }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
