@@ -31,40 +31,34 @@ export const FounderDashboard = () => {
   
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
 
-  // Loading state otimizado
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="h-8 w-64 bg-muted animate-pulse rounded mb-2"></div>
-              <div className="h-4 w-96 bg-muted animate-pulse rounded"></div>
-            </div>
-          </div>
-          <KPICardsSkeleton />
-          <TabsContentSkeleton />
-        </div>
-      </DashboardLayout>
-    );
-  }
+  // Mostra skeleton apenas enquanto isFounder ainda não foi determinado
+if (typeof isFounder === "undefined" || isFounder === null) {
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <KPICardsSkeleton />
+        <TabsContentSkeleton />
+      </div>
+    </DashboardLayout>
+  );
+}
 
-  // Acesso negado
-  if (!isFounder) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Card className="p-8 text-center">
-            <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-            <p className="text-muted-foreground">
-              Este dashboard é exclusivo para usuários Founder.
-            </p>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
+// Bloqueia acesso se não for founder
+if (!isFounder) {
+  return (
+    <DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <Card className="p-8 text-center">
+          <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+          <p className="text-muted-foreground">
+            Este dashboard é exclusivo para usuários Founder.
+          </p>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+}
 
   return (
     <DashboardLayout>
