@@ -1,5 +1,6 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CacheEntry<T> {
   data: T;
@@ -16,6 +17,16 @@ interface CacheStats {
 export const useOptimizedCache = <T>(defaultTTL: number = 5 * 60 * 1000) => {
   const [cache] = useState(() => new Map<string, CacheEntry<T>>());
   const [stats, setStats] = useState<CacheStats>({ hits: 0, misses: 0, totalRequests: 0 });
+  const { user } = useAuth();
+
+  // Limpar cache quando usuário faz logout
+  useEffect(() => {
+    if (!user) {
+      cache.clear();
+      setStats({ hits: 0, misses: 0, totalRequests: 0 });
+      console.log('Cache cleared due to logout');
+    }
+  }, [user, cache]);
 
   const get = useCallback((key: string, customTTL?: number): T | null => {
     setStats(prev => ({ ...prev, totalRequests: prev.totalRequests + 1 }));

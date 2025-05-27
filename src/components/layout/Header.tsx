@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Monitor, LogOut, Settings, User } from 'lucide-react';
+import { Moon, Sun, Monitor, LogOut, Settings, User, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,7 +21,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const { theme, effectiveTheme, setTheme, companyLogo } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoggingOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -41,30 +41,26 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
     try {
       console.log('Iniciando logout...');
       
-      localStorage.clear();
-      sessionStorage.clear();
+      // Mostrar feedback imediato
+      toast({
+        title: "Saindo...",
+        description: "Aguarde enquanto fazemos o logout.",
+      });
       
       await signOut();
       
       console.log('Logout realizado com sucesso');
       
-      navigate('/login', { replace: true });
+      // Forçar redirecionamento
+      window.location.href = '/login';
       
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
     } catch (error: any) {
       console.error('Erro no logout:', error);
       
+      // Mesmo com erro, forçar limpeza e redirecionamento
       localStorage.clear();
       sessionStorage.clear();
-      navigate('/login', { replace: true });
-      
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado.",
-      });
+      window.location.href = '/login';
     }
   };
 
@@ -115,6 +111,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                 variant="ghost"
                 size="icon"
                 className="w-9 h-9 transition-all duration-200 hover:scale-110"
+                disabled={isLoggingOut}
               >
                 <ThemeIcon className="h-4 w-4" />
               </Button>
@@ -141,7 +138,11 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
           {showAuth && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full transition-all duration-200 hover:scale-110">
+                <Button 
+                  variant="ghost" 
+                  className="relative h-9 w-9 rounded-full transition-all duration-200 hover:scale-110"
+                  disabled={isLoggingOut}
+                >
                   <Avatar className="h-9 w-9">
                     <AvatarImage 
                       src={getUserAvatar()} 
@@ -152,24 +153,32 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                       }}
                     />
                     <AvatarFallback>
-                      {getUserName().charAt(0).toUpperCase()}
+                      {isLoggingOut ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        getUserName().charAt(0).toUpperCase()
+                      )}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-background border border-border" align="end">
-                <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer" disabled={isLoggingOut}>
                   <User className="mr-2 h-4 w-4" />
                   Perfil
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer">
+                <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer" disabled={isLoggingOut}>
                   <Settings className="mr-2 h-4 w-4" />
                   Configurações
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sair
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer" disabled={isLoggingOut}>
+                  {isLoggingOut ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="mr-2 h-4 w-4" />
+                  )}
+                  {isLoggingOut ? 'Saindo...' : 'Sair'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
