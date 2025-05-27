@@ -118,16 +118,34 @@ if (!isFounder) {
           </TabsContent>
         </Tabs>
 
-        {/* Debug info em desenvolvimento */}
+         {/* Debug info em desenvolvimento */}
         {process.env.NODE_ENV === 'development' && cacheStats && (
           <Card className="p-4 bg-muted/50">
             <p className="text-sm text-muted-foreground">
-              Cache: {cacheStats.hits} hits, {cacheStats.misses} misses 
+               Cache: {cacheStats.hits} hits, {cacheStats.misses} misses 
               ({cacheStats.hitRate.toFixed(1)}% hit rate)
-            </p>
-          </Card>
+             </p>
+           </Card>
+        )}
+
+        {process.env.NODE_ENV === 'development' && (
+          <button
+             onClick={refetch}
+            style={{
+               marginTop: 16,
+               padding: '8px 16px',
+              borderRadius: 6,
+               background: '#2563eb',
+              color: '#fff',
+              fontWeight: 600,
+              border: 'none',
+             cursor: 'pointer'
+            }}
+          >
+            Limpar cache e atualizar dados
+          </button>
         )}
       </div>
-    </DashboardLayout>
-  );
-};
+     </DashboardLayout>
+   );
+ };
