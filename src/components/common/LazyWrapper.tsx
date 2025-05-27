@@ -37,33 +37,33 @@ export const LazyWrapper: React.FC<LazyWrapperProps> = ({
   );
 };
 
-// HOC para tornar componentes lazy
-export const withLazyLoading = <P extends object>(
+// HOC para tornar componentes lazy com tipos corretos
+export const withLazyLoading = <P extends Record<string, any>>(
   importFunc: () => Promise<{ default: React.ComponentType<P> }>,
   fallback?: React.ReactNode
 ) => {
   const LazyComponent = lazy(importFunc);
   
-  return (props: P) => (
+  return React.forwardRef<any, P>((props, ref) => (
     <LazyWrapper fallback={fallback}>
-      <LazyComponent {...props} />
+      <LazyComponent {...props} ref={ref} />
     </LazyWrapper>
-  );
+  ));
 };
 
-// Lazy load dos componentes de analytics
+// Lazy load dos componentes de analytics com tipos corretos
 export const LazyPredictiveAnalytics = withLazyLoading(
-  () => import('@/components/analytics/PredictiveAnalytics')
+  () => import('@/components/analytics/PredictiveAnalytics').then(module => ({ default: module.PredictiveAnalytics || module.default }))
 );
 
 export const LazyEngagementAnalytics = withLazyLoading(
-  () => import('@/components/analytics/EngagementAnalytics')
+  () => import('@/components/analytics/EngagementAnalytics').then(module => ({ default: module.EngagementAnalytics || module.default }))
 );
 
 export const LazyProductivityAnalytics = withLazyLoading(
-  () => import('@/components/analytics/ProductivityAnalytics')
+  () => import('@/components/analytics/ProductivityAnalytics').then(module => ({ default: module.ProductivityAnalytics || module.default }))
 );
 
 export const LazyMLInsights = withLazyLoading(
-  () => import('@/components/analytics/MLInsights')
+  () => import('@/components/analytics/MLInsights').then(module => ({ default: module.MLInsights || module.default }))
 );
