@@ -5,36 +5,61 @@ export interface Badge {
   description: string;
   icon: string;
   color: string;
-  category: 'milestone' | 'speed' | 'quality' | 'engagement';
+  category: 'milestone' | 'speed' | 'quality' | 'engagement' | 'goal' | 'training';
   criteria: {
-    type: 'steps_completed' | 'time_to_complete' | 'perfect_score' | 'help_others';
+    type: 'goals_completed' | 'training_finished' | 'feedback_received' | 'perfect_score' | 'help_others' | 'streak_days';
     value: number;
   };
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
 }
 
-export interface Achievement {
+export interface UserAchievement {
   id: string;
   badge_id: string;
   user_id: string;
   earned_at: string;
-  process_id?: string;
-}
-
-export interface OnboardingProgress {
-  id: string;
-  process_id: string;
-  total_steps: number;
-  completed_steps: number;
-  progress_percentage: number;
-  badges_earned: Badge[];
-  current_streak: number;
-  estimated_completion: string;
-  gamification_score: number;
+  progress?: number;
 }
 
 export interface GamificationStats {
+  totalPoints: number;
   totalBadges: number;
-  recentAchievements: Achievement[];
-  leaderboardPosition: number;
-  overallScore: number;
+  currentStreak: number;
+  longestStreak: number;
+  rank: number;
+  level: number;
+  nextLevelProgress: number;
+  recentAchievements: UserAchievement[];
+}
+
+export interface LeaderboardEntry {
+  user_id: string;
+  name: string;
+  avatar_url?: string;
+  points: number;
+  badges_count: number;
+  rank: number;
+  department?: string;
+}
+
+export interface GoalProgress {
+  id: string;
+  title: string;
+  description: string;
+  target_value: number;
+  current_value: number;
+  progress_percentage: number;
+  due_date: string;
+  status: 'not-started' | 'in-progress' | 'completed' | 'overdue';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  category: string;
+  milestones: GoalMilestone[];
+}
+
+export interface GoalMilestone {
+  id: string;
+  title: string;
+  target_value: number;
+  completed: boolean;
+  completed_at?: string;
 }
