@@ -1,22 +1,24 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { Landing } from '@/pages/Landing';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
+  const [showLanding, setShowLanding] = useState(false);
 
   useEffect(() => {
     const handleRedirection = async () => {
       // Wait for auth to load
       if (isLoading) return;
 
-      // If not authenticated, go to login
+      // If not authenticated, show landing page
       if (!user) {
-        navigate('/login', { replace: true });
+        setShowLanding(true);
         return;
       }
 
@@ -43,6 +45,12 @@ const Index = () => {
     handleRedirection();
   }, [user, isLoading, navigate]);
 
+  // Show landing page for non-authenticated users
+  if (showLanding) {
+    return <Landing />;
+  }
+
+  // Show loading for authenticated users while redirecting
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">

@@ -7,11 +7,13 @@ import { Loader2 } from 'lucide-react';
 const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
 const FounderDashboard = React.lazy(() => import('@/pages/FounderDashboard').then(module => ({ default: module.FounderDashboard })));
 const Login = React.lazy(() => import('@/pages/Login').then(module => ({ default: module.Login })));
+const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ default: module.Landing })));
 
 // Import optimized collaborators
 import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
 
 // Other imports stay synchronous for now
+import Index from '@/pages/Index';
 import { Onboarding } from '@/pages/Onboarding';
 import { Training } from '@/pages/Training';
 import { Feedback } from '@/pages/Feedback';
@@ -35,6 +37,12 @@ export const AppRouter = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
+        {/* Rota inicial - mostra landing page ou redireciona */}
+        <Route path="/" element={<Index />} />
+        
+        {/* Rota pública para landing page */}
+        <Route path="/home" element={<Landing />} />
+        
         <Route 
           path="/login" 
           element={
@@ -152,7 +160,8 @@ export const AppRouter = () => {
           } 
         />
         
-        <Route path="/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        {/* Fallback - redireciona para a página inicial */}
+        <Route path="/*" element={<Index />} />
       </Routes>
     </Suspense>
   );

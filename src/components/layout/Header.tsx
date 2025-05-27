@@ -11,8 +11,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Monitor, LogOut, Settings, User, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Moon, Sun, Monitor, LogOut, Settings, User, Loader2, Home } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
@@ -23,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const { theme, effectiveTheme, setTheme, companyLogo } = useTheme();
   const { user, signOut, isLoggingOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const getUserName = () => {
@@ -82,6 +83,9 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
 
   const ThemeIcon = getThemeIcon();
 
+  // Check if we're on authentication-related pages
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/';
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-colors duration-300">
       <div className="container flex h-16 items-center justify-between">
@@ -107,6 +111,20 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Home Button - only show on auth pages or when logged in */}
+          {(isAuthPage || user) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="transition-all duration-200 hover:scale-105"
+              disabled={isLoggingOut}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              Home
+            </Button>
+          )}
+
           {/* Theme Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
