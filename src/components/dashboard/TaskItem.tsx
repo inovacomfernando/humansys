@@ -3,20 +3,21 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-interface TaskItemProps {
+interface Task {
   id: number;
   title: string;
   priority: 'high' | 'medium' | 'low';
   deadline: string;
+}
+
+interface TaskItemProps {
+  task: Task;
   onView?: (id: number) => void;
   onMarkComplete?: (id: number) => void;
 }
 
 export const TaskItem: React.FC<TaskItemProps> = ({
-  id,
-  title,
-  priority,
-  deadline,
+  task,
   onView,
   onMarkComplete
 }) => {
@@ -42,17 +43,17 @@ export const TaskItem: React.FC<TaskItemProps> = ({
     <div className="flex items-center justify-between group">
       <div className="flex-1">
         <p className="text-sm font-medium hover:text-primary cursor-pointer">
-          {title}
+          {task.title}
         </p>
         <div className="flex items-center space-x-2 mt-1">
           <Badge 
-            variant={getPriorityVariant(priority)}
+            variant={getPriorityVariant(task.priority)}
             className="text-xs"
           >
-            {getPriorityText(priority)}
+            {getPriorityText(task.priority)}
           </Badge>
           <span className="text-xs text-muted-foreground">
-            {deadline}
+            {task.deadline}
           </span>
         </div>
       </div>
@@ -60,13 +61,13 @@ export const TaskItem: React.FC<TaskItemProps> = ({
         <Button 
           size="sm" 
           variant="outline"
-          onClick={() => onView?.(id)}
+          onClick={() => onView?.(task.id)}
         >
           Ver
         </Button>
         <Button 
           size="sm"
-          onClick={() => onMarkComplete?.(id)}
+          onClick={() => onMarkComplete?.(task.id)}
         >
           Concluir
         </Button>

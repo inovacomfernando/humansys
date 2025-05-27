@@ -6,9 +6,9 @@ import { useToast } from '@/hooks/use-toast';
 
 interface DashboardStats {
   totalCollaborators: number;
-  newHires: number;
-  pendingFeedbacks: number;
-  completedGoals: number;
+  activeProcesses: number;
+  completionRate: number;
+  gamificationPoints: number;
 }
 
 interface RecentActivity {
@@ -20,14 +20,37 @@ interface RecentActivity {
   entity_id?: string;
 }
 
+interface PendingTask {
+  id: number;
+  title: string;
+  priority: 'high' | 'medium' | 'low';
+  deadline: string;
+}
+
+interface TrendData {
+  name: string;
+  value: number;
+}
+
+interface DashboardData {
+  stats: DashboardStats;
+  recentActivities: RecentActivity[];
+  pendingTasks: PendingTask[];
+  trends: TrendData[];
+}
+
 export const useDashboardData = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalCollaborators: 0,
-    newHires: 0,
-    pendingFeedbacks: 0,
-    completedGoals: 0
+  const [data, setData] = useState<DashboardData>({
+    stats: {
+      totalCollaborators: 0,
+      activeProcesses: 0,
+      completionRate: 0,
+      gamificationPoints: 100
+    },
+    recentActivities: [],
+    pendingTasks: [],
+    trends: []
   });
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -44,36 +67,40 @@ export const useDashboardData = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      // Novos contratados (último mês)
-      const lastMonth = new Date();
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
-      
-      const { count: newHires } = await supabase
-        .from('collaborators')
+      // Processos ativos de onboarding
+      const { count: activeProcesses } = await supabase
+        .from('onboarding_processes')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .gte('created_at', lastMonth.toISOString());
+        .in('status', ['in_progress', 'pending']);
 
-      // Feedbacks pendentes
-      const { count: pendingFeedbacks } = await supabase
-        .from('feedbacks')
+      // Taxa de conclusão (usando training enrollments como proxy)
+      const { count: totalEnrollments } = await supabase
+        .from('training_enrollments')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'sent');
+        .eq('user_id', user.id);
 
-      // Metas concluídas (usando training enrollments como proxy)
-      const { count: completedGoals } = await supabase
+      const { count: completedEnrollments } = await supabase
         .from('training_enrollments')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'completed');
 
-      setStats({
-        totalCollaborators: totalCollaborators || 0,
-        newHires: newHires || 0,
-        pendingFeedbacks: pendingFeedbacks || 0,
-        completedGoals: completedGoals || 0
-      });
+      const completionRate = totalEnrollments ? Math.round((completedEnrollments || 0) / totalEnrollments * 100) : 0;
+
+      // Pontos de gamificação do localStorage
+      const gamificationData = localStorage.getItem(`@humansys:gamification-${user.id}`);
+      const gamificationPoints = gamificationData ? JSON.parse(gamificationData).totalPoints || 100 : 100;
+
+      setData(prev => ({
+        ...prev,
+        stats: {
+          totalCollaborators: totalCollaborators || 0,
+          activeProcesses: activeProcesses || 0,
+          completionRate,
+          gamificationPoints
+        }
+      }));
 
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
@@ -91,7 +118,7 @@ export const useDashboardData = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: activities, error } = await supabase
         .from('system_activities')
         .select('*')
         .eq('user_id', user.id)
@@ -99,10 +126,60 @@ export const useDashboardData = () => {
         .limit(10);
 
       if (error) throw error;
-      setRecentActivities(data || []);
+      
+      setData(prev => ({
+        ...prev,
+        recentActivities: activities || []
+      }));
     } catch (error) {
       console.error('Erro ao carregar atividades:', error);
     }
+  };
+
+  const fetchPendingTasks = async () => {
+    // Mock data para tarefas pendentes
+    const mockTasks: PendingTask[] = [
+      {
+        id: 1,
+        title: "Revisar feedback de João Silva",
+        priority: "high",
+        deadline: "Hoje"
+      },
+      {
+        id: 2,
+        title: "Aprovar certificado de Maria",
+        priority: "medium",
+        deadline: "Amanhã"
+      },
+      {
+        id: 3,
+        title: "Atualizar meta trimestral",
+        priority: "low",
+        deadline: "Esta semana"
+      }
+    ];
+
+    setData(prev => ({
+      ...prev,
+      pendingTasks: mockTasks
+    }));
+  };
+
+  const fetchTrends = async () => {
+    // Mock data para trends
+    const mockTrends: TrendData[] = [
+      { name: 'Jan', value: 65 },
+      { name: 'Fev', value: 70 },
+      { name: 'Mar', value: 68 },
+      { name: 'Abr', value: 75 },
+      { name: 'Mai', value: 80 },
+      { name: 'Jun', value: 85 }
+    ];
+
+    setData(prev => ({
+      ...prev,
+      trends: mockTrends
+    }));
   };
 
   const logActivity = async (type: string, description: string, entityType?: string, entityId?: string) => {
@@ -129,12 +206,13 @@ export const useDashboardData = () => {
     if (user) {
       fetchDashboardStats();
       fetchRecentActivities();
+      fetchPendingTasks();
+      fetchTrends();
     }
   }, [user]);
 
   return {
-    stats,
-    recentActivities,
+    data,
     isLoading,
     refetch: fetchDashboardStats,
     logActivity

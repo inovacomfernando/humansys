@@ -74,25 +74,25 @@ export const Dashboard = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title="Total de Colaboradores"
-            value={data?.stats?.totalCollaborators || 0}
+            value={data.stats.totalCollaborators}
             icon={Users}
             trend={12}
           />
           <StatsCard
             title="Processos Ativos"
-            value={data?.stats?.activeProcesses || 0}
+            value={data.stats.activeProcesses}
             icon={UserPlus}
             trend={8}
           />
           <StatsCard
             title="Taxa de Conclusão"
-            value={`${data?.stats?.completionRate || 0}%`}
+            value={`${data.stats.completionRate}%`}
             icon={TrendingUp}
             trend={15}
           />
           <StatsCard
             title="Pontos Gamificação"
-            value={data?.stats?.gamificationPoints || 100}
+            value={data.stats.gamificationPoints}
             icon={Trophy}
             trend={25}
             isNew={true}
@@ -153,20 +153,22 @@ export const Dashboard = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             <Widget
+              id="trends-widget"
               title="Tendências de Performance"
               description="Análise de performance dos últimos 6 meses"
             >
-              <TrendChart data={data?.trends || []} />
+              <TrendChart data={data.trends} />
             </Widget>
 
             <Widget
+              id="activities-widget"
               title="Atividades Recentes"
               description="Últimas ações realizadas no sistema"
             >
               <div className="space-y-4">
-                {data?.recentActivities?.map((activity, index) => (
+                {data.recentActivities.map((activity, index) => (
                   <ActivityItem key={index} activity={activity} />
-                )) || []}
+                ))}
               </div>
             </Widget>
           </div>
@@ -174,6 +176,7 @@ export const Dashboard = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             <Widget
+              id="goals-widget"
               title="Metas do Mês"
               description="Progresso das principais metas"
             >
@@ -203,17 +206,19 @@ export const Dashboard = () => {
             </Widget>
 
             <Widget
+              id="tasks-widget"
               title="Tarefas Pendentes"
               description="Itens que precisam da sua atenção"
             >
               <div className="space-y-3">
-                {data?.pendingTasks?.map((task, index) => (
+                {data.pendingTasks.map((task, index) => (
                   <TaskItem key={index} task={task} />
-                )) || []}
+                ))}
               </div>
             </Widget>
 
             <Widget
+              id="actions-widget"
               title="Ações Rápidas"
               description="Acesso rápido às principais funcionalidades"
             >

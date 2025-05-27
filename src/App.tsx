@@ -28,6 +28,7 @@ import { Careers } from "./pages/Careers";
 import { Blog } from "./pages/Blog";
 import { Documentation } from "./pages/Documentation";
 import { Privacy } from "./pages/Privacy";
+import { Changelog } from "./pages/Changelog";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
