@@ -8,8 +8,10 @@ const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({
 const FounderDashboard = React.lazy(() => import('@/pages/FounderDashboard').then(module => ({ default: module.FounderDashboard })));
 const Login = React.lazy(() => import('@/pages/Login').then(module => ({ default: module.Login })));
 
+// Import optimized collaborators
+import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
+
 // Other imports stay synchronous for now
-import { Collaborators } from '@/pages/Collaborators';
 import { Onboarding } from '@/pages/Onboarding';
 import { Training } from '@/pages/Training';
 import { Feedback } from '@/pages/Feedback';
@@ -64,7 +66,7 @@ export const AppRouter = () => {
           path="/collaborators" 
           element={
             <ProtectedRoute>
-              <Collaborators />
+              <OptimizedCollaborators />
             </ProtectedRoute>
           } 
         />
