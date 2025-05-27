@@ -1,16 +1,24 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthGuard } from '@/hooks/useAuthGuard';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isValidating, isAuthenticated, user } = useAuthGuard(false); // Não requer auth para esta página
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    const checkUserRole = async () => {
-      if (!isAuthenticated || !user || isValidating) return;
+    const handleRedirection = async () => {
+      // Wait for auth to load
+      if (isLoading) return;
+
+      // If not authenticated, go to login
+      if (!user) {
+        navigate('/login', { replace: true });
+        return;
+      }
 
       try {
         // Check if user has founder role
@@ -32,26 +40,14 @@ const Index = () => {
       }
     };
 
-    // Se não está autenticado e não está validando, ir para login
-    if (!isValidating && !isAuthenticated) {
-      navigate('/login', { replace: true });
-      return;
-    }
+    handleRedirection();
+  }, [user, isLoading, navigate]);
 
-    // Se está autenticado, verificar role
-    if (isAuthenticated && user) {
-      checkUserRole();
-    }
-  }, [user, isAuthenticated, isValidating, navigate]);
-
-  // Mostrar loading enquanto valida
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">
-          {isValidating ? 'Validando sessão...' : 'Carregando sistema...'}
-        </p>
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+        <p className="text-muted-foreground">Redirecionando...</p>
       </div>
     </div>
   );

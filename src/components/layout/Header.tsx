@@ -39,27 +39,38 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
     e.stopPropagation();
     
     try {
-      console.log('Iniciando logout...');
+      console.log('Starting aggressive logout...');
       
-      // Mostrar feedback imediato
+      // Clear everything immediately (before API call)
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Clear query cache
+      if (window.queryCache) {
+        window.queryCache.clear();
+      }
+      
+      // Show immediate feedback
       toast({
         title: "Saindo...",
-        description: "Aguarde enquanto fazemos o logout.",
+        description: "Redirecionando para login.",
       });
       
+      // Call logout API
       await signOut();
       
-      console.log('Logout realizado com sucesso');
-      
-      // Forçar redirecionamento
+      // Force navigation immediately
       window.location.href = '/login';
       
     } catch (error: any) {
-      console.error('Erro no logout:', error);
+      console.error('Logout error:', error);
       
-      // Mesmo com erro, forçar limpeza e redirecionamento
+      // Even with error, force cleanup and redirect
       localStorage.clear();
       sessionStorage.clear();
+      if (window.queryCache) {
+        window.queryCache.clear();
+      }
       window.location.href = '/login';
     }
   };
@@ -67,14 +78,6 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const getThemeIcon = () => {
     if (theme === 'auto') return Monitor;
     return effectiveTheme === 'light' ? Moon : Sun;
-  };
-
-  const getThemeLabel = () => {
-    switch (theme) {
-      case 'light': return 'Claro';
-      case 'dark': return 'Escuro';
-      case 'auto': return 'Automático';
-    }
   };
 
   const ThemeIcon = getThemeIcon();

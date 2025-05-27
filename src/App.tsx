@@ -3,29 +3,37 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import Index from "./pages/Index";
+import { AppRouter } from "@/components/auth/AppRouter";
 
-// Auth pages
-import { Login } from "./pages/Login";
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: (failureCount, error: any) => {
+        // Don't retry auth errors
+        if (error?.message?.includes('JWT') || error?.message?.includes('auth')) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: 'always'
+    }
+  }
+});
 
-// Main app pages
-import { Dashboard } from "./pages/Dashboard";
-import { FounderDashboard } from "./pages/FounderDashboard";
-import { Collaborators } from "./pages/Collaborators";
-import { Onboarding } from "./pages/Onboarding";
-import { Training } from "./pages/Training";
-import { Feedback } from "./pages/Feedback";
-import { Goals } from "./pages/Goals";
-import { Analytics } from "./pages/Analytics";
-import { Changelog } from "./pages/Changelog";
-import { Settings } from "./pages/Settings";
-import { Certificates } from "./pages/Certificates";
-import { Documents } from "./pages/Documents";
+// Make query cache available globally for clearing
+declare global {
+  interface Window {
+    queryCache: Map<any, any>;
+  }
+}
 
-const queryClient = new QueryClient();
+window.queryCache = queryClient.getQueryCache() as any;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -35,23 +43,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/founder-dashboard" element={<FounderDashboard />} />
-              
-              <Route path="/collaborators" element={<Collaborators />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/training" element={<Training />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/changelog" element={<Changelog />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/certificates" element={<Certificates />} />
-              <Route path="/documents" element={<Documents />} />
-            </Routes>
+            <AppRouter />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
