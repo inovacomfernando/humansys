@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 interface ThemeContextData {
   theme: 'light' | 'dark' | 'auto';
@@ -19,70 +19,79 @@ interface ThemeContextData {
 const ThemeContext = createContext<ThemeContextData>({} as ThemeContextData);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<'light' | 'dark' | 'auto'>('light');
-  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
-  const [brandColors, setBrandColors] = useState({
-    primary: '#22c55e',
-    secondary: '#16a34a'
+  const [theme, setThemeState] = useState<'light' | 'dark' | 'auto'>(() => {
+    const saved = localStorage.getItem('@humansys:theme') as 'light' | 'dark' | 'auto';
+    return saved || 'light';
   });
-  const [companyLogo, setCompanyLogo] = useState<string>('https://i.imgur.com/xXvzC69.png');
+  
+  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
+  const [brandColors, setBrandColors] = useState(() => {
+    const saved = localStorage.getItem('@humansys:brand-colors');
+    return saved ? JSON.parse(saved) : {
+      primary: '#22c55e',
+      secondary: '#16a34a'
+    };
+  });
+  const [companyLogo, setCompanyLogo] = useState<string>(() => {
+    return localStorage.getItem('@humansys:company-logo') || 'https://i.imgur.com/xXvzC69.png';
+  });
 
   // Detectar preferência do sistema
-  const getSystemTheme = (): 'light' | 'dark' => {
+  const getSystemTheme = useCallback((): 'light' | 'dark' => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  };
+  }, []);
 
   // Calcular tema efetivo
-  const calculateEffectiveTheme = (currentTheme: 'light' | 'dark' | 'auto'): 'light' | 'dark' => {
+  const calculateEffectiveTheme = useCallback((currentTheme: 'light' | 'dark' | 'auto'): 'light' | 'dark' => {
     if (currentTheme === 'auto') {
       return getSystemTheme();
     }
     return currentTheme;
-  };
+  }, [getSystemTheme]);
 
+  // Aplicar tema ao DOM
+  const applyThemeToDOM = useCallback((newEffectiveTheme: 'light' | 'dark') => {
+    document.documentElement.classList.toggle('dark', newEffectiveTheme === 'dark');
+  }, []);
+
+  // Handler para mudanças no sistema
+  const handleSystemThemeChange = useCallback(() => {
+    if (theme === 'auto') {
+      const newEffectiveTheme = getSystemTheme();
+      setEffectiveTheme(newEffectiveTheme);
+      applyThemeToDOM(newEffectiveTheme);
+    }
+  }, [theme, getSystemTheme, applyThemeToDOM]);
+
+  // Effect para configurar listener do sistema
   useEffect(() => {
-    const savedTheme = localStorage.getItem('@humansys:theme') as 'light' | 'dark' | 'auto';
-    if (savedTheme) {
-      setThemeState(savedTheme);
-    }
-    
-    const savedColors = localStorage.getItem('@humansys:brand-colors');
-    if (savedColors) {
-      setBrandColors(JSON.parse(savedColors));
-    }
-
-    const savedLogo = localStorage.getItem('@humansys:company-logo');
-    if (savedLogo) {
-      setCompanyLogo(savedLogo);
-    }
-
-    // Listener para mudanças na preferência do sistema
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = () => {
-      if (theme === 'auto') {
-        const newEffectiveTheme = getSystemTheme();
-        setEffectiveTheme(newEffectiveTheme);
-      }
-    };
-
     mediaQuery.addEventListener('change', handleSystemThemeChange);
+    
     return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
-  }, [theme]);
+  }, [handleSystemThemeChange]);
 
+  // Effect para mudanças no tema
   useEffect(() => {
     const newEffectiveTheme = calculateEffectiveTheme(theme);
     setEffectiveTheme(newEffectiveTheme);
-    
-    document.documentElement.classList.toggle('dark', newEffectiveTheme === 'dark');
+    applyThemeToDOM(newEffectiveTheme);
     localStorage.setItem('@humansys:theme', theme);
-  }, [theme]);
+  }, [theme, calculateEffectiveTheme, applyThemeToDOM]);
 
-  const applyBrandColors = () => {
+  const applyBrandColors = useCallback(() => {
     const root = document.documentElement;
     root.style.setProperty('--primary-color', brandColors.primary);
     root.style.setProperty('--secondary-color', brandColors.secondary);
     
+    // Remove existing style element
+    const existingStyle = document.getElementById('brand-colors-style');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
     const style = document.createElement('style');
+    style.id = 'brand-colors-style';
     style.innerHTML = `
       :root {
         --primary: ${hexToHsl(brandColors.primary)};
@@ -93,7 +102,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .border-primary { border-color: ${brandColors.primary} !important; }
     `;
     document.head.appendChild(style);
-  };
+  }, [brandColors]);
 
   const hexToHsl = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -118,26 +127,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
   };
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     const themes: ('light' | 'dark' | 'auto')[] = ['light', 'dark', 'auto'];
     const currentIndex = themes.indexOf(theme);
     const nextTheme = themes[(currentIndex + 1) % themes.length];
     setThemeState(nextTheme);
-  };
+  }, [theme]);
 
-  const setTheme = (newTheme: 'light' | 'dark' | 'auto') => {
+  const setTheme = useCallback((newTheme: 'light' | 'dark' | 'auto') => {
     setThemeState(newTheme);
-  };
+  }, []);
 
-  const handleSetBrandColors = (colors: { primary: string; secondary: string }) => {
+  const handleSetBrandColors = useCallback((colors: { primary: string; secondary: string }) => {
     setBrandColors(colors);
     localStorage.setItem('@humansys:brand-colors', JSON.stringify(colors));
-  };
+  }, []);
 
-  const handleSetCompanyLogo = (logo: string) => {
+  const handleSetCompanyLogo = useCallback((logo: string) => {
     setCompanyLogo(logo);
     localStorage.setItem('@humansys:company-logo', logo);
-  };
+  }, []);
 
   return (
     <ThemeContext.Provider value={{
