@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { GamificationStats, Badge, UserAchievement, LeaderboardEntry } from '@/types/gamification';
+import { GamificationStats, Badge, UserAchievement, LeaderboardEntry, Achievement, OnboardingProgress } from '@/types/gamification';
 
 export const useGamification = () => {
   const { user } = useAuth();
@@ -18,6 +18,7 @@ export const useGamification = () => {
   
   const [badges, setBadges] = useState<Badge[]>([]);
   const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,7 +36,7 @@ export const useGamification = () => {
           id: '1',
           name: 'Primeira Meta',
           description: 'Complete sua primeira meta',
-          icon: 'target',
+          icon: '🎯',
           color: 'bg-blue-500',
           category: 'milestone',
           criteria: { type: 'goals_completed', value: 1 },
@@ -45,7 +46,7 @@ export const useGamification = () => {
           id: '2',
           name: 'Velocista',
           description: 'Complete um treinamento em menos de 2 horas',
-          icon: 'zap',
+          icon: '⚡',
           color: 'bg-yellow-500',
           category: 'speed',
           criteria: { type: 'training_finished', value: 1 },
@@ -55,7 +56,7 @@ export const useGamification = () => {
           id: '3',
           name: 'Perfeccionista',
           description: 'Obtenha nota máxima em 3 treinamentos',
-          icon: 'star',
+          icon: '⭐',
           color: 'bg-purple-500',
           category: 'quality',
           criteria: { type: 'perfect_score', value: 3 },
@@ -65,7 +66,7 @@ export const useGamification = () => {
           id: '4',
           name: 'Mentor',
           description: 'Ajude 5 colegas com feedback positivo',
-          icon: 'users',
+          icon: '👥',
           color: 'bg-green-500',
           category: 'engagement',
           criteria: { type: 'help_others', value: 5 },
@@ -74,12 +75,13 @@ export const useGamification = () => {
       ];
       
       // Mock user achievements
-      const mockAchievements: UserAchievement[] = [
+      const mockAchievements: Achievement[] = [
         {
           id: '1',
           badge_id: '1',
           user_id: user?.id || '',
-          earned_at: new Date().toISOString()
+          earned_at: new Date().toISOString(),
+          badge: mockBadges[0]
         }
       ];
       
@@ -141,6 +143,7 @@ export const useGamification = () => {
       
       setBadges(mockBadges);
       setUserAchievements(mockAchievements);
+      setAchievements(mockAchievements);
       setStats(mockStats);
       setLeaderboard(mockLeaderboard);
       setIsLoading(false);
@@ -169,13 +172,36 @@ export const useGamification = () => {
     }));
   };
 
+  const checkBadgeEligibility = (progress: OnboardingProgress, process: any) => {
+    console.log('Checking badge eligibility for progress:', progress);
+    // Mock implementation for checking if user earned new badges
+  };
+
+  const calculateProgress = (process: any, steps: any[]): OnboardingProgress => {
+    const completedSteps = steps.filter(s => s.completed).length;
+    const progressPercentage = Math.round((completedSteps / steps.length) * 100);
+    
+    return {
+      progress_percentage: progressPercentage,
+      completed_steps: completedSteps,
+      total_steps: steps.length,
+      badges_earned: badges.filter(b => achievements.some(a => a.badge_id === b.id)),
+      gamification_score: stats.totalPoints,
+      current_streak: stats.currentStreak,
+      estimated_completion: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    };
+  };
+
   return {
     stats,
     badges,
     userAchievements,
+    achievements,
     leaderboard,
     isLoading,
     checkForNewAchievements,
-    awardPoints
+    awardPoints,
+    checkBadgeEligibility,
+    calculateProgress
   };
 };

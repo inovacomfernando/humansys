@@ -7,6 +7,7 @@ import { useOnboarding, OnboardingStep } from '@/hooks/useOnboarding';
 import { useGamification } from '@/hooks/useGamification';
 import { GamificationPanel } from './GamificationPanel';
 import { OnboardingSteps } from './OnboardingSteps';
+import { OnboardingProgress } from '@/types/gamification';
 
 interface OnboardingDetailsProps {
   process: any;
@@ -19,7 +20,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   const { badges, achievements, checkBadgeEligibility, calculateProgress } = useGamification();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [gamificationProgress, setGamificationProgress] = useState(null);
+  const [gamificationProgress, setGamificationProgress] = useState<OnboardingProgress | null>(null);
 
   useEffect(() => {
     if (process?.id && open) {

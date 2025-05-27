@@ -21,6 +21,24 @@ export interface UserAchievement {
   progress?: number;
 }
 
+export interface Achievement {
+  id: string;
+  badge_id: string;
+  user_id: string;
+  earned_at: string;
+  badge?: Badge;
+}
+
+export interface OnboardingProgress {
+  progress_percentage: number;
+  completed_steps: number;
+  total_steps: number;
+  badges_earned: Badge[];
+  gamification_score: number;
+  current_streak: number;
+  estimated_completion: string;
+}
+
 export interface GamificationStats {
   totalPoints: number;
   totalBadges: number;
