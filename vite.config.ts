@@ -72,13 +72,7 @@ export default defineConfig(({ mode }) => ({
           'vendor-router': ['react-router-dom'],
           'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
           'vendor-query': ['@tanstack/react-query'],
-          'vendor-charts': ['recharts'],
-          'analytics': [
-            'src/components/analytics/PredictiveAnalytics',
-            'src/components/analytics/EngagementAnalytics',
-            'src/components/analytics/ProductivityAnalytics',
-            'src/components/analytics/MLInsights'
-          ]
+          'vendor-charts': ['recharts']
         }
       }
     },
