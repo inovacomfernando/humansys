@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { supabase, checkSupabaseConnection } from '@/integrations/supabase/client';
+import { supabase, checkSupabaseConnection, queryCache } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -9,6 +9,7 @@ interface QueryOptions {
   retryDelay?: number;
   requireAuth?: boolean;
   timeout?: number;
+  useCache?: boolean;
 }
 
 export const useSupabaseQuery = () => {
@@ -24,7 +25,8 @@ export const useSupabaseQuery = () => {
       maxRetries = 3, 
       retryDelay = 1000, 
       requireAuth = true,
-      timeout = 10000 
+      timeout = 10000,
+      useCache = false
     } = options;
 
     // Verificar autenticação se necessário
@@ -38,10 +40,17 @@ export const useSupabaseQuery = () => {
       return null;
     }
 
+    // Gerar chave de cache
+    const cacheKey = useCache ? JSON.stringify(queryFn.toString()) : null;
+    if (cacheKey && queryCache.has(cacheKey)) {
+      console.log('useSupabaseQuery: Retornando dados do cache');
+      return queryCache.get(cacheKey);
+    }
+
     setIsLoading(true);
     let lastError: any = null;
 
-    // Verificar conectividade básica primeiro
+    // Verificar conectividade melhorada
     console.log('useSupabaseQuery: Verificando conectividade...');
     const isConnected = await checkSupabaseConnection();
     if (!isConnected) {
@@ -99,6 +108,12 @@ export const useSupabaseQuery = () => {
           }
         } else {
           console.log(`useSupabaseQuery: Sucesso na tentativa ${attempt}`);
+          
+          // Armazenar no cache se solicitado
+          if (cacheKey && result.data) {
+            queryCache.set(cacheKey, result.data);
+          }
+          
           setIsLoading(false);
           return result.data;
         }

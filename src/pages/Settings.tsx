@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, Bell, Shield, Palette, Award } from 'lucide-react';
+import { Building, Bell, Shield, Palette, Award, Settings as SettingsIcon, RefreshCw } from 'lucide-react';
 import { CertificateTemplates } from '@/components/settings/CertificateTemplates';
+import { SystemDebugPanel } from '@/components/settings/SystemDebugPanel';
 
 export const Settings = () => {
   return (
@@ -22,12 +23,13 @@ export const Settings = () => {
         </div>
 
         <Tabs defaultValue="company" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="company">Empresa</TabsTrigger>
             <TabsTrigger value="notifications">Notificações</TabsTrigger>
             <TabsTrigger value="security">Segurança</TabsTrigger>
             <TabsTrigger value="appearance">Aparência</TabsTrigger>
             <TabsTrigger value="certificates">Certificados</TabsTrigger>
+            <TabsTrigger value="system">Sistema</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company">
@@ -203,6 +205,10 @@ export const Settings = () => {
 
           <TabsContent value="certificates">
             <CertificateTemplates />
+          </TabsContent>
+
+          <TabsContent value="system">
+            <SystemDebugPanel />
           </TabsContent>
         </Tabs>
       </div>

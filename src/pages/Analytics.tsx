@@ -10,12 +10,14 @@ import {
   AlertTriangle,
   FileText
 } from 'lucide-react';
-import { PredictiveAnalytics } from '@/components/analytics/PredictiveAnalytics';
-import { EngagementAnalytics } from '@/components/analytics/EngagementAnalytics';
-import { ProductivityAnalytics } from '@/components/analytics/ProductivityAnalytics';
 import { SmartAlerts } from '@/components/analytics/SmartAlerts';
 import { AutoReportGenerator } from '@/components/analytics/AutoReportGenerator';
-import { MLInsights } from '@/components/analytics/MLInsights';
+import { 
+  LazyPredictiveAnalytics,
+  LazyEngagementAnalytics,
+  LazyProductivityAnalytics,
+  LazyMLInsights
+} from '@/components/common/LazyWrapper';
 
 export const Analytics = () => {
   return (
@@ -59,15 +61,15 @@ export const Analytics = () => {
           </TabsList>
 
           <TabsContent value="predictive">
-            <PredictiveAnalytics />
+            <LazyPredictiveAnalytics />
           </TabsContent>
 
           <TabsContent value="engagement">
-            <EngagementAnalytics />
+            <LazyEngagementAnalytics />
           </TabsContent>
 
           <TabsContent value="productivity">
-            <ProductivityAnalytics />
+            <LazyProductivityAnalytics />
           </TabsContent>
 
           <TabsContent value="alerts">
@@ -79,7 +81,7 @@ export const Analytics = () => {
           </TabsContent>
 
           <TabsContent value="ml">
-            <MLInsights />
+            <LazyMLInsights />
           </TabsContent>
         </Tabs>
       </div>

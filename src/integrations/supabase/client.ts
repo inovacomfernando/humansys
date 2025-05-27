@@ -30,12 +30,66 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
-// Função auxiliar para verificar conectividade
+// Função auxiliar para verificar conectividade - versão corrigida
 export const checkSupabaseConnection = async (): Promise<boolean> => {
   try {
-    const { error } = await supabase.from('profiles').select('id').limit(1);
-    return !error;
-  } catch {
+    // Verificar conectividade básica primeiro
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+      method: 'HEAD',
+      headers: {
+        'apikey': SUPABASE_PUBLISHABLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+      }
+    });
+    
+    if (!response.ok) {
+      console.warn('Supabase HEAD request failed:', response.status);
+      return false;
+    }
+
+    // Verificar se conseguimos fazer uma query simples
+    const { error } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.warn('Supabase query test failed:', error.message);
+      // Se o erro é de autenticação, ainda consideramos conectado
+      if (error.message.includes('JWT') || error.message.includes('auth')) {
+        return true;
+      }
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Connection check failed:', error);
+    return false;
+  }
+};
+
+// Cache para melhorar performance
+export const queryCache = new Map();
+
+// Função para limpar cache
+export const clearQueryCache = () => {
+  queryCache.clear();
+  console.log('Query cache cleared');
+};
+
+// Função para refresh completo do sistema
+export const refreshSystemData = async () => {
+  try {
+    clearQueryCache();
+    localStorage.removeItem('supabase.auth.token');
+    
+    // Recarregar a página para garantir estado limpo
+    window.location.reload();
+    
+    return true;
+  } catch (error) {
+    console.error('System refresh failed:', error);
     return false;
   }
 };
