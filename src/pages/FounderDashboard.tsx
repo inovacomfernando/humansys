@@ -11,6 +11,7 @@ import { FounderOverviewTab } from '@/components/founder/FounderOverviewTab';
 import { FounderRevenueTab } from '@/components/founder/FounderRevenueTab';
 import { FounderEngagementTab } from '@/components/founder/FounderEngagementTab';
 import { FounderReportsTab } from '@/components/founder/FounderReportsTab';
+import { FounderDocumentationTab } from '@/components/founder/FounderDocumentationTab';
 import { Crown } from 'lucide-react';
 
 export const FounderDashboard = () => {
@@ -69,12 +70,13 @@ export const FounderDashboard = () => {
         <FounderKPICards analytics={analytics} />
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="revenue">Receita</TabsTrigger>
             <TabsTrigger value="customers">Clientes</TabsTrigger>
             <TabsTrigger value="engagement">Engajamento</TabsTrigger>
             <TabsTrigger value="reports">Relatórios</TabsTrigger>
+            <TabsTrigger value="documentation">Documentação</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -107,6 +109,10 @@ export const FounderDashboard = () => {
               churnAnalysis={churnAnalysis}
               exportToCSV={exportToCSV}
             />
+          </TabsContent>
+
+          <TabsContent value="documentation" className="space-y-6">
+            <FounderDocumentationTab />
           </TabsContent>
         </Tabs>
       </div>
