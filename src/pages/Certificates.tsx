@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react'; // Adicione Suspense e lazy aqui
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,9 @@ import { Award, Download, Eye, Calendar, Plus, Edit, Trash2, ExternalLink } from
 import { useToast } from '@/hooks/use-toast';
 import { useCertificateTemplates } from '@/hooks/useCertificateTemplates';
 import { useCollaborators } from '@/hooks/useCollaborators';
-import { CertificateTemplateDialog } from '@/components/certificates/CertificateTemplateDialog';
+
+// Substitua a importação direta por lazy loading
+const CertificateTemplateDialog = lazy(() => import('@/components/certificates/CertificateTemplateDialog'));
 
 export const Certificates = () => {
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
@@ -71,7 +72,9 @@ export const Certificates = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <CertificateTemplateDialog />
+            <Suspense fallback={<div>Loading...</div>}>
+              <CertificateTemplateDialog />
+            </Suspense>
             <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -213,7 +216,9 @@ export const Certificates = () => {
                 <p className="text-muted-foreground text-center mb-4">
                   Crie seu primeiro template de certificado para começar.
                 </p>
-                <CertificateTemplateDialog />
+                <Suspense fallback={<div>Loading...</div>}>
+                  <CertificateTemplateDialog />
+                </Suspense>
               </CardContent>
             </Card>
           ) : (
