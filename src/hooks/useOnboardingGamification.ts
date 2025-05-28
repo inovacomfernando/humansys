@@ -1,3 +1,4 @@
+
 const onboardingBadges: Badge[] = [
   {
     id: 'first-step',
@@ -51,7 +52,7 @@ const onboardingBadges: Badge[] = [
   }
 ];
 
-import { cacheTTLs } from '@/config/cacheConfig';
+import { cacheTTLs } from '@/cacheConfig';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { OnboardingProgress, Badge, Achievement } from '@/types/gamification';
@@ -196,7 +197,7 @@ export const useOnboardingGamification = (processId: string, steps: OnboardingSt
         id: `${processId}-${badge.id}-${Date.now()}`,
         badge_id: badge.id,
         user_id: user?.id || '',
-        process_id,
+        process_id: processId,
         earned_at: new Date().toISOString(),
         badge
       }));
