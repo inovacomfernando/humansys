@@ -17,16 +17,9 @@ import { csvExporter } from '@/utils/csvExporter';
 export const useOptimizedFounderAnalytics = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const cache = useOptimizedCache();
+  
   const founderRoleTTL = process.env.NODE_ENV === "development" ? 15 * 1000 : 60 * 1000;
-);
-// Ajuste recomendado: TTL curto para role founder (ex: 15 segundos em DEV, 1 minuto em PROD)
-
-useEffect(() => {
-  if (user?.id) {
-    cache.clear();
-    localStorage.removeItem(`@humansys:founder-role-${user.id}`);
-  }
-}, [user?.id]);
   
   const [analytics, setAnalytics] = useState<FounderAnalytics>({
     revenue: { total_mrr: 0, total_arr: 0, mrr_growth: 0, churn_rate: 0, ltv: 0, cac: 0 },
@@ -41,6 +34,14 @@ useEffect(() => {
   const [churnAnalysis, setChurnAnalysis] = useState<ChurnAnalysis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFounder, setIsFounder] = useState(false);
+
+  // Clear cache when user changes
+  useEffect(() => {
+    if (user?.id) {
+      cache.clear();
+      localStorage.removeItem(`@humansys:founder-role-${user.id}`);
+    }
+  }, [user?.id, cache]);
 
   // Verificar role de founder de forma otimizada
   const checkFounderRole = useCallback(async () => {
@@ -147,23 +148,22 @@ useEffect(() => {
 
   // Inicialização otimizada
   useEffect(() => {
-   const hasFounderRole = await checkFounderRole();
-       setIsFounder(hasFounderRole);
-       setIsLoading(false); // Libera painel logo após identificar founder
-       if (hasFounderRole) {
-          // Carrega dados em background, não trava o painel
-           loadAnalyticsData(); // Não precisa de await
-       }		
-        setIsLoading(true);
-        
-        // Verificar role primeiro
-       const hasFounderRole = await checkFounderRole();
+    const initializeFounderDashboard = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      
+      // Verificar role primeiro
+      const hasFounderRole = await checkFounderRole();
       setIsFounder(hasFounderRole);
       setIsLoading(false); // Libera painel logo após identificar founder
+      
       if (hasFounderRole) {
-         // Carrega dados em background, não trava o painel
-          loadAnalyticsData(); // Não precisa de await
-         }
+        // Carrega dados em background, não trava o painel
+        loadAnalyticsData(); // Não precisa de await
       }
     };
 
