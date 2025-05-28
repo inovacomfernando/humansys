@@ -9,8 +9,9 @@ const FounderDashboard = React.lazy(() => import('@/pages/FounderDashboard').the
 const Login = React.lazy(() => import('@/pages/Login').then(module => ({ default: module.Login })));
 const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ default: module.Landing })));
 
-// Import optimized collaborators
+// Import optimized components
 import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
+import { OptimizedRecruitment } from '@/pages/OptimizedRecruitment';
 
 // Other imports stay synchronous for now
 import Index from '@/pages/Index';
@@ -52,8 +53,9 @@ export const AppRouter = () => {
           } 
         />
         
+        {/* Rotas do App Principal */}
         <Route 
-          path="/dashboard" 
+          path="/app/dashboard" 
           element={
             <ProtectedRoute>
               <Dashboard />
@@ -62,16 +64,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/founder-dashboard" 
-          element={
-            <ProtectedRoute requiredRole="founder">
-              <FounderDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/collaborators" 
+          path="/app/collaborators" 
           element={
             <ProtectedRoute>
               <OptimizedCollaborators />
@@ -80,7 +73,16 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/onboarding" 
+          path="/app/recruitment" 
+          element={
+            <ProtectedRoute>
+              <OptimizedRecruitment />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/app/onboarding" 
           element={
             <ProtectedRoute>
               <Onboarding />
@@ -89,7 +91,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/training" 
+          path="/app/training" 
           element={
             <ProtectedRoute>
               <Training />
@@ -98,7 +100,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/feedback" 
+          path="/app/feedback" 
           element={
             <ProtectedRoute>
               <Feedback />
@@ -107,7 +109,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/goals" 
+          path="/app/goals" 
           element={
             <ProtectedRoute>
               <Goals />
@@ -116,7 +118,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/analytics" 
+          path="/app/analytics" 
           element={
             <ProtectedRoute>
               <Analytics />
@@ -125,7 +127,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/changelog" 
+          path="/app/changelog" 
           element={
             <ProtectedRoute>
               <Changelog />
@@ -134,7 +136,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/settings" 
+          path="/app/settings" 
           element={
             <ProtectedRoute>
               <Settings />
@@ -143,7 +145,7 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/certificates" 
+          path="/app/certificates" 
           element={
             <ProtectedRoute>
               <Certificates />
@@ -152,13 +154,38 @@ export const AppRouter = () => {
         />
         
         <Route 
-          path="/documents" 
+          path="/app/documents" 
           element={
             <ProtectedRoute>
               <Documents />
             </ProtectedRoute>
           } 
         />
+
+        {/* Rotas do Founder */}
+        <Route 
+          path="/founder/dashboard" 
+          element={
+            <ProtectedRoute requiredRole="founder">
+              <FounderDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Redirects para manter compatibilidade */}
+        <Route path="/dashboard" element={<Index />} />
+        <Route path="/founder-dashboard" element={<Index />} />
+        <Route path="/collaborators" element={<Index />} />
+        <Route path="/recruitment" element={<Index />} />
+        <Route path="/onboarding" element={<Index />} />
+        <Route path="/training" element={<Index />} />
+        <Route path="/feedback" element={<Index />} />
+        <Route path="/goals" element={<Index />} />
+        <Route path="/analytics" element={<Index />} />
+        <Route path="/changelog" element={<Index />} />
+        <Route path="/settings" element={<Index />} />
+        <Route path="/certificates" element={<Index />} />
+        <Route path="/documents" element={<Index />} />
         
         {/* Fallback - redireciona para a página inicial */}
         <Route path="/*" element={<Index />} />

@@ -32,13 +32,13 @@ const Index = () => {
           .maybeSingle();
         
         if (founderRole) {
-          navigate('/founder-dashboard', { replace: true });
+          navigate('/founder/dashboard', { replace: true });
         } else {
-          navigate('/dashboard', { replace: true });
+          navigate('/app/dashboard', { replace: true });
         }
       } catch (error) {
         console.error('Error checking user role:', error);
-        navigate('/dashboard', { replace: true });
+        navigate('/app/dashboard', { replace: true });
       }
     };
 

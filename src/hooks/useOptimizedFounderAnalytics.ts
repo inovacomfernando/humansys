@@ -41,7 +41,7 @@ export const useOptimizedFounderAnalytics = () => {
   const [revenueChart, setRevenueChart] = useState<RevenueChartData[]>([]);
   const [churnAnalysis, setChurnAnalysis] = useState<ChurnAnalysis[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFounder, setIsFounder] = useState(false);
+  const [isFounder, setIsFounder] = useState<boolean | null>(null);
 
   // Clear cache when user changes
   useEffect(() => {
@@ -159,19 +159,26 @@ export const useOptimizedFounderAnalytics = () => {
     const initializeFounderDashboard = async () => {
       if (!user?.id) {
         setIsLoading(false);
+        setIsFounder(false);
         return;
       }
       
       setIsLoading(true);
       
-      // Verificar role primeiro
-      const hasFounderRole = await checkFounderRole();
-      setIsFounder(hasFounderRole);
-      setIsLoading(false); // Libera painel logo após identificar founder
-      
-      if (hasFounderRole) {
-        // Carrega dados em background, não trava o painel
-        loadAnalyticsData(); // Não precisa de await
+      try {
+        // Verificar role primeiro
+        const hasFounderRole = await checkFounderRole();
+        setIsFounder(hasFounderRole);
+        setIsLoading(false); // Libera painel logo após identificar founder
+        
+        if (hasFounderRole) {
+          // Carrega dados em background, não trava o painel
+          loadAnalyticsData(); // Não precisa de await
+        }
+      } catch (error) {
+        console.error('Error initializing founder dashboard:', error);
+        setIsFounder(false);
+        setIsLoading(false);
       }
     };
 
@@ -195,7 +202,7 @@ export const useOptimizedFounderAnalytics = () => {
     revenueChart,
     churnAnalysis,
     isLoading,
-    isFounder,
+    isFounder: isFounder ?? false,
     refetch,
     exportToCSV: csvExporter.exportToCSV,
     cacheStats: cache.stats

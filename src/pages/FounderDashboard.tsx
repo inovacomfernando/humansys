@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/card';
@@ -12,7 +13,9 @@ import { FounderEngagementTab } from '@/components/founder/FounderEngagementTab'
 import { FounderReportsTab } from '@/components/founder/FounderReportsTab';
 import { FounderDocumentationTab } from '@/components/founder/FounderDocumentationTab';
 import { KPICardsSkeleton, TabsContentSkeleton } from '@/components/common/SkeletonCards';
-import { Crown } from 'lucide-react';
+import { Crown, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export const FounderDashboard = () => {
   const { 
@@ -29,9 +32,10 @@ export const FounderDashboard = () => {
   } = useOptimizedFounderAnalytics();
   
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const navigate = useNavigate();
 
-  // Mostra skeleton enquanto não foi possível determinar se é founder
-  if (typeof isFounder === "undefined" || isFounder === null) {
+  // Mostra skeleton enquanto carrega
+  if (isLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-6">
@@ -47,12 +51,15 @@ export const FounderDashboard = () => {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
-          <Card className="p-8 text-center">
-            <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <Card className="p-8 text-center max-w-md">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-            <p className="text-muted-foreground">
-              Este dashboard é exclusivo para usuários Founder.
+            <p className="text-muted-foreground mb-4">
+              Este dashboard é exclusivo para usuários com role de Founder.
             </p>
+            <Button onClick={() => navigate('/app/dashboard')} className="w-full">
+              Ir para Dashboard Principal
+            </Button>
           </Card>
         </div>
       </DashboardLayout>
@@ -125,24 +132,6 @@ export const FounderDashboard = () => {
               ({cacheStats.hitRate.toFixed(1)}% hit rate)
             </p>
           </Card>
-        )}
-
-        {process.env.NODE_ENV === 'development' && (
-          <button
-            onClick={refetch}
-            style={{
-              marginTop: 16,
-              padding: '8px 16px',
-              borderRadius: 6,
-              background: '#2563eb',
-              color: '#fff',
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            Limpar cache e atualizar dados
-          </button>
         )}
       </div>
     </DashboardLayout>
