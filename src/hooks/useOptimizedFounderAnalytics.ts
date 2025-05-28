@@ -14,6 +14,14 @@ import { founderAnalyticsService } from '@/services/founderAnalyticsService';
 import { analyticsCalculators } from '@/utils/founderAnalyticsCalculators';
 import { csvExporter } from '@/utils/csvExporter';
 
+interface CachedAnalyticsData {
+  companies: Company[];
+  healthScores: CustomerHealthScore[];
+  analytics: FounderAnalytics;
+  revenueChart: RevenueChartData[];
+  churnAnalysis: ChurnAnalysis[];
+}
+
 export const useOptimizedFounderAnalytics = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,7 +59,7 @@ export const useOptimizedFounderAnalytics = () => {
     const cacheKey = `founder-role-${user.id}`;
     const cachedRole = cache.get(cacheKey);
     if (cachedRole !== null) {
-      return cachedRole;
+      return cachedRole as boolean;
     }
 
     // Verificar localStorage como fallback rápido
@@ -78,7 +86,7 @@ export const useOptimizedFounderAnalytics = () => {
     if (!user?.id) return;
     
     const cacheKey = `analytics-${user.id}`;
-    const cachedData = cache.get(cacheKey);
+    const cachedData = cache.get(cacheKey) as CachedAnalyticsData | null;
     
     if (cachedData) {
       console.log('Analytics: Usando dados do cache');
@@ -118,7 +126,7 @@ export const useOptimizedFounderAnalytics = () => {
         founderAnalyticsService.calculateChurnAnalysis()
       ]);
 
-      const result = {
+      const result: CachedAnalyticsData = {
         companies: companiesData,
         healthScores: healthData,
         analytics: calculatedAnalytics,

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -6,7 +7,7 @@ import { DashboardData } from '@/types/dashboard';
 import { fetchDashboardStats } from '@/services/dashboardStatsService';
 import { fetchRecentActivities, logActivity as logActivityService } from '@/services/dashboardActivitiesService';
 import { fetchPendingTasks, fetchTrends } from '@/services/dashboardDataService';
-import { cacheTTLs } from '@/config/cacheConfig';
+import { cacheTTLs } from '@/cacheConfig';
 
 export const useOptimizedDashboardData = () => {
   const { user } = useAuth();

@@ -1,4 +1,5 @@
-import React, { useState, Suspense, lazy } from 'react'; // Adicione Suspense e lazy aqui
+
+import React, { useState, Suspense, lazy } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useCertificateTemplates } from '@/hooks/useCertificateTemplates';
 import { useCollaborators } from '@/hooks/useCollaborators';
 
-// Substitua a importação direta por lazy loading
-const CertificateTemplateDialog = lazy(() => import('@/components/certificates/CertificateTemplateDialog'));
+// Fix lazy loading import to use proper default export syntax
+const CertificateTemplateDialog = lazy(() => import('@/components/certificates/CertificateTemplateDialog').then(module => ({ default: module.CertificateTemplateDialog })));
 
 export const Certificates = () => {
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
