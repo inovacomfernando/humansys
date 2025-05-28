@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          badge: Json | null
+          badge_id: string
+          earned_at: string
+          id: string
+          process_id: string
+          user_id: string
+        }
+        Insert: {
+          badge?: Json | null
+          badge_id: string
+          earned_at?: string
+          id?: string
+          process_id: string
+          user_id: string
+        }
+        Update: {
+          badge?: Json | null
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          process_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       certificate_templates: {
         Row: {
           active: boolean
@@ -291,6 +318,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gamification: {
+        Row: {
+          current_streak: number
+          level: number
+          longest_streak: number
+          next_level_progress: number
+          rank: number
+          recent_achievements: Json | null
+          total_badges: number
+          total_points: number
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          level?: number
+          longest_streak?: number
+          next_level_progress?: number
+          rank?: number
+          recent_achievements?: Json | null
+          total_badges?: number
+          total_points?: number
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          level?: number
+          longest_streak?: number
+          next_level_progress?: number
+          rank?: number
+          recent_achievements?: Json | null
+          total_badges?: number
+          total_points?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       generated_certificates: {
         Row: {

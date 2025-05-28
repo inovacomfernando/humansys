@@ -2,6 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import { User } from '@supabase/supabase-js';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseInterceptor } from '@/hooks/useSupabaseInterceptor';
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +19,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const auth = useSupabaseAuth();
+  
+  // Configurar interceptador para lidar com erros de auth automaticamente
+  useSupabaseInterceptor();
 
   // Criar aliases para manter compatibilidade
   const contextValue: AuthContextType = {

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface CacheEntry<T> {
   data: T;
@@ -21,6 +21,9 @@ class IntelligentCacheManager {
   private cache = new Map<string, CacheEntry<any>>();
   private maxEntries = 1000;
   private cleanupInterval: NodeJS.Timeout | null = null;
+  private isDestroyed = false;
+  private hitCount = 0;
+  private missCount = 0;
 
   constructor() {
     this.startCleanupTimer();
@@ -30,11 +33,15 @@ class IntelligentCacheManager {
   private startCleanupTimer() {
     // Limpeza automática a cada 5 minutos
     this.cleanupInterval = setInterval(() => {
-      this.cleanup();
+      if (!this.isDestroyed) {
+        this.cleanup();
+      }
     }, 5 * 60 * 1000);
   }
 
   private async loadFromIndexedDB() {
+    if (this.isDestroyed) return;
+    
     try {
       const request = indexedDB.open('HumansysCache', 1);
       
@@ -46,12 +53,16 @@ class IntelligentCacheManager {
       };
 
       request.onsuccess = (event) => {
+        if (this.isDestroyed) return;
+        
         const db = (event.target as IDBOpenDBRequest).result;
         const transaction = db.transaction(['cache'], 'readonly');
         const store = transaction.objectStore('cache');
         const getAllRequest = store.getAll();
 
         getAllRequest.onsuccess = () => {
+          if (this.isDestroyed) return;
+          
           const items = getAllRequest.result;
           items.forEach((item: any) => {
             if (this.isValidEntry(item.value)) {
@@ -67,9 +78,13 @@ class IntelligentCacheManager {
   }
 
   private async saveToIndexedDB(key: string, entry: CacheEntry<any>) {
+    if (this.isDestroyed) return;
+    
     try {
       const request = indexedDB.open('HumansysCache', 1);
       request.onsuccess = (event) => {
+        if (this.isDestroyed) return;
+        
         const db = (event.target as IDBOpenDBRequest).result;
         const transaction = db.transaction(['cache'], 'readwrite');
         const store = transaction.objectStore('cache');
@@ -89,6 +104,8 @@ class IntelligentCacheManager {
     ttl?: number;
     priority?: 'high' | 'medium' | 'low';
   } = {}) {
+    if (this.isDestroyed) return;
+    
     const entry: CacheEntry<T> = {
       data,
       timestamp: Date.now(),
@@ -108,10 +125,13 @@ class IntelligentCacheManager {
   }
 
   get<T>(key: string): T | null {
+    if (this.isDestroyed) return null;
+    
     const entry = this.cache.get(key);
     
     if (!entry || !this.isValidEntry(entry)) {
       this.cache.delete(key);
+      this.missCount++;
       return null;
     }
 
@@ -119,11 +139,14 @@ class IntelligentCacheManager {
     entry.accessCount++;
     entry.lastAccess = Date.now();
     this.cache.set(key, entry);
+    this.hitCount++;
 
     return entry.data;
   }
 
   private evictLeastUsed() {
+    if (this.isDestroyed) return;
+    
     const entries = Array.from(this.cache.entries());
     
     // Ordenar por prioridade e frequência de acesso
@@ -144,6 +167,8 @@ class IntelligentCacheManager {
   }
 
   private cleanup() {
+    if (this.isDestroyed) return;
+    
     const now = Date.now();
     const beforeSize = this.cache.size;
     
@@ -160,12 +185,18 @@ class IntelligentCacheManager {
   }
 
   clear() {
+    if (this.isDestroyed) return;
+    
     this.cache.clear();
+    this.hitCount = 0;
+    this.missCount = 0;
     
     // Limpar IndexedDB também
     try {
       const request = indexedDB.open('HumansysCache', 1);
       request.onsuccess = (event) => {
+        if (this.isDestroyed) return;
+        
         const db = (event.target as IDBOpenDBRequest).result;
         const transaction = db.transaction(['cache'], 'readwrite');
         const store = transaction.objectStore('cache');
@@ -177,57 +208,89 @@ class IntelligentCacheManager {
   }
 
   getStats(): CacheStats {
-    const entries = Array.from(this.cache.values());
-    const totalRequests = entries.reduce((sum, entry) => sum + entry.accessCount, 0);
+    if (this.isDestroyed) {
+      return {
+        totalEntries: 0,
+        hitRate: 0,
+        memoryUsage: 0,
+        lastCleanup: Date.now()
+      };
+    }
+    
+    const totalRequests = this.hitCount + this.missCount;
     const estimatedMemory = JSON.stringify(Array.from(this.cache.entries())).length;
     
     return {
       totalEntries: this.cache.size,
-      hitRate: totalRequests > 0 ? (entries.length / totalRequests) * 100 : 0,
+      hitRate: totalRequests > 0 ? (this.hitCount / totalRequests) * 100 : 0,
       memoryUsage: estimatedMemory,
       lastCleanup: Date.now()
     };
   }
 
   destroy() {
+    this.isDestroyed = true;
+    
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
     }
+    
     this.cache.clear();
+    this.hitCount = 0;
+    this.missCount = 0;
   }
 }
 
-// Singleton instance
-const cacheManager = new IntelligentCacheManager();
+// Singleton instance com destruição adequada
+let cacheManager: IntelligentCacheManager | null = null;
+
+const getCacheManager = () => {
+  if (!cacheManager) {
+    cacheManager = new IntelligentCacheManager();
+  }
+  return cacheManager;
+};
 
 export const useIntelligentCache = () => {
-  const [stats, setStats] = useState<CacheStats>(cacheManager.getStats());
+  const [stats, setStats] = useState<CacheStats>(() => getCacheManager().getStats());
+  const updateStatsRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateStats = useCallback(() => {
-    setStats(cacheManager.getStats());
+    const manager = getCacheManager();
+    setStats(manager.getStats());
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(updateStats, 10000); // Update stats every 10s
-    return () => clearInterval(interval);
+    updateStatsRef.current = setInterval(updateStats, 10000); // Update stats every 10s
+    
+    return () => {
+      if (updateStatsRef.current) {
+        clearInterval(updateStatsRef.current);
+        updateStatsRef.current = null;
+      }
+    };
   }, [updateStats]);
 
   const set = useCallback(<T>(key: string, data: T, options?: {
     ttl?: number;
     priority?: 'high' | 'medium' | 'low';
   }) => {
-    cacheManager.set(key, data, options);
+    const manager = getCacheManager();
+    manager.set(key, data, options);
     updateStats();
   }, [updateStats]);
 
   const get = useCallback(<T>(key: string): T | null => {
-    const result = cacheManager.get<T>(key);
+    const manager = getCacheManager();
+    const result = manager.get<T>(key);
     updateStats();
     return result;
   }, [updateStats]);
 
   const clear = useCallback(() => {
-    cacheManager.clear();
+    const manager = getCacheManager();
+    manager.clear();
     updateStats();
   }, [updateStats]);
 
@@ -239,7 +302,10 @@ export const useIntelligentCache = () => {
   };
 };
 
-// Limpar quando usuário sair
+// Limpar quando usuário sair - com verificação de existência
 window.addEventListener('beforeunload', () => {
-  cacheManager.destroy();
+  if (cacheManager) {
+    cacheManager.destroy();
+    cacheManager = null;
+  }
 });

@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +18,11 @@ export const useOptimizedAuth = () => {
     isValidated: false
   });
 
+  // Refs para controlar race conditions
+  const isValidatingRef = useRef(false);
+  const lastValidationRef = useRef(0);
+  const authMutexRef = useRef(false);
+
   // Mobile detection
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -29,7 +34,7 @@ export const useOptimizedAuth = () => {
     const now = Date.now();
     const expiresAt = session.expires_at * 1000;
     
-    // Add buffer for mobile (30 seconds)
+    // Add buffer for mobile (30 seconds), desktop (5 seconds)
     const buffer = isMobile ? 30000 : 5000;
     
     return expiresAt > (now + buffer);
@@ -54,25 +59,66 @@ export const useOptimizedAuth = () => {
   }, []);
 
   const updateAuthState = useCallback(async (session: Session | null) => {
-    const isValid = await validateSession(session);
-    
-    if (!isValid && session) {
-      console.log('Session expired, clearing auth state');
-      clearAuthState();
-      return;
+    // Mutex para evitar updates simultâneos
+    if (authMutexRef.current) return;
+    authMutexRef.current = true;
+
+    try {
+      const isValid = await validateSession(session);
+      
+      if (!isValid && session) {
+        console.log('Session expired, clearing auth state');
+        clearAuthState();
+        return;
+      }
+      
+      setAuthState({
+        user: session?.user || null,
+        session,
+        isLoading: false,
+        isValidated: true
+      });
+    } finally {
+      authMutexRef.current = false;
     }
-    
-    setAuthState({
-      user: session?.user || null,
-      session,
-      isLoading: false,
-      isValidated: true
-    });
   }, [validateSession, clearAuthState]);
+
+  const debouncedSessionValidation = useCallback(async (session: Session | null) => {
+    // Debounce validações para evitar calls excessivos
+    const now = Date.now();
+    if (now - lastValidationRef.current < 5000) return; // 5s debounce
+    
+    lastValidationRef.current = now;
+    
+    if (isValidatingRef.current) return;
+    isValidatingRef.current = true;
+
+    try {
+      if (session?.user) {
+        // Verificar se consegue fazer uma query básica
+        const { error } = await supabase
+          .from('profiles')
+          .select('id')
+          .limit(1)
+          .maybeSingle();
+        
+        // Se der erro de auth, session está inválida
+        if (error && (error.message.includes('JWT') || error.message.includes('auth'))) {
+          console.log('Session validation failed, clearing state');
+          clearAuthState();
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn('Session validation error:', error);
+    } finally {
+      isValidatingRef.current = false;
+    }
+  }, [clearAuthState]);
 
   useEffect(() => {
     let mounted = true;
-    let sessionCheckInterval: NodeJS.Timeout;
+    let sessionCheckInterval: NodeJS.Timeout | null = null;
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -85,7 +131,10 @@ export const useOptimizedAuth = () => {
         return;
       }
       
-      await updateAuthState(session);
+      // Para outros eventos, atualizar estado sem validação adicional
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        await updateAuthState(session);
+      }
     });
 
     // Get initial session
@@ -105,17 +154,13 @@ export const useOptimizedAuth = () => {
 
     getInitialSession();
 
-    // Set up periodic session validation for mobile
+    // Set up periodic session validation apenas para mobile e com interval maior
     if (isMobile) {
       sessionCheckInterval = setInterval(async () => {
         if (!mounted || !authState.session) return;
         
-        const isValid = await validateSession(authState.session);
-        if (!isValid) {
-          console.log('Mobile session check failed, clearing state');
-          clearAuthState();
-        }
-      }, 30000); // Check every 30 seconds on mobile
+        await debouncedSessionValidation(authState.session);
+      }, 60000); // Check every minute on mobile
     }
 
     return () => {
@@ -125,7 +170,7 @@ export const useOptimizedAuth = () => {
         clearInterval(sessionCheckInterval);
       }
     };
-  }, [isMobile, validateSession, updateAuthState, clearAuthState]);
+  }, [isMobile, updateAuthState, clearAuthState, debouncedSessionValidation]);
 
   return authState;
 };
