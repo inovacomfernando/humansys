@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppRouter } from "@/components/auth/AppRouter";
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
+import { useSupabaseInterceptor } from "@/hooks/useSupabaseInterceptor";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,13 @@ declare global {
 
 window.queryCache = queryClient.getQueryCache() as any;
 
+const AppWithInterceptor = () => {
+  // Configurar interceptador aqui, após AuthProvider estar disponível
+  useSupabaseInterceptor();
+  
+  return <AppRouter />;
+};
+
 const App = () => (
   <GlobalErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -45,7 +53,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <AppRouter />
+              <AppWithInterceptor />
             </BrowserRouter>
           </TooltipProvider>
         </AuthProvider>
