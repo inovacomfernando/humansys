@@ -55,7 +55,7 @@ export const Dashboard = () => {
               Bem-vindo ao seu painel de controle otimizado
             </p>
           </div>
-          <Button onClick={() => navigate('/changelog')} variant="outline">
+          <Button onClick={() => navigate('/app/changelog')} variant="outline">
             <Trophy className="h-4 w-4 mr-2" />
             Ver Novidades
           </Button>
