@@ -6,7 +6,6 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  isLoggingOut: boolean;
   signUp: (email: string, password: string, name: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<any>;

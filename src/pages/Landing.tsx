@@ -4,7 +4,30 @@ import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Users, Target, BookOpen, MessageSquare, BarChart3, Award } from 'lucide-react';
+import {
+  Users,
+  UserPlus,
+  MessageSquare,
+  Target,
+  BookOpen,
+  Award,
+  FileText,
+  BarChart3,
+  Check,
+  Star,
+  Zap,
+  Shield,
+  Sparkles,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Github,
+  Brain,
+  Trophy,
+  Smartphone,
+  TrendingUp,
+  Video
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Landing = () => {
@@ -12,162 +35,243 @@ export const Landing = () => {
 
   const features = [
     {
+      icon: Brain,
+      title: 'Analytics com IA',
+      description: 'Machine Learning para prever turnover e identificar talentos em risco.',
+      path: '/analytics',
+      isNew: true
+    },
+    {
+      icon: Trophy,
+      title: 'Gamificação Completa',
+      description: 'Sistema de badges, conquistas e ranking para engajar colaboradores.',
+      path: '/dashboard',
+      isNew: true
+    },
+    {
+      icon: UserPlus,
+      title: 'Onboarding Inteligente',
+      description: 'Processo estruturado de integração com acompanhamento automático.',
+      path: '/onboarding'
+    },
+    {
       icon: Users,
       title: 'Gestão de Colaboradores',
-      description: 'Centralize informações e gerencie todo o ciclo de vida dos seus colaboradores',
-      color: 'bg-blue-500'
-    },
-    {
-      icon: Target,
-      title: 'Metas & PDI',
-      description: 'Defina objetivos claros e acompanhe o desenvolvimento individual',
-      color: 'bg-green-500'
-    },
-    {
-      icon: BookOpen,
-      title: 'Treinamentos',
-      description: 'Crie e gerencie programas de capacitação personalizados',
-      color: 'bg-purple-500'
+      description: 'Controle completo do quadro de funcionários, estagiários e terceiros.',
+      path: '/collaborators'
     },
     {
       icon: MessageSquare,
       title: 'Feedback 360°',
-      description: 'Feedback estruturado e contínuo para desenvolvimento profissional',
-      color: 'bg-orange-500'
+      description: 'Sistema completo de feedbacks e avaliações de performance.',
+      path: '/feedback'
     },
     {
-      icon: BarChart3,
-      title: 'Analytics Avançado',
-      description: 'Insights inteligentes para tomada de decisão estratégica',
-      color: 'bg-red-500'
+      icon: Target,
+      title: 'Metas & PDI',
+      description: 'Plano de Desenvolvimento Individual com controle de metas e indicadores.',
+      path: '/goals'
     },
     {
-      icon: Award,
-      title: 'Certificações',
-      description: 'Emita certificados automaticamente e reconheça conquistas',
-      color: 'bg-yellow-500'
+      icon: Video,
+      title: 'Treinamentos Interativos',
+      description: 'Plataforma de cursos com player de vídeo integrado e certificação.',
+      path: '/training'
+    },
+    {
+      icon: Smartphone,
+      title: 'Progressive Web App',
+      description: 'Funciona offline e pode ser instalado como aplicativo nativo.',
+      path: '/dashboard',
+      isNew: true
     }
+  ];
+
+  const benefits = [
+    'Redução de 70% no tempo de onboarding',
+    'Aumento de 45% na retenção de talentos',
+    'Melhoria de 60% na comunicação interna',
+    'Economia de 50% em processos manuais',
+    'IA prevê turnover com 85% de precisão',
+    'Gamificação aumenta engajamento em 40%'
   ];
 
   const plans = [
     {
-      name: 'Starter',
-      price: 'R$ 49',
-      period: '/mês',
-      description: 'Perfeito para pequenas empresas',
+      name: 'Inicial',
+      description: 'Perfeito para empresas iniciantes',
+      monthlyPrice: 'R$ 49',
+      yearlyPrice: 'R$ 490',
+      popular: false,
+      features: [
+        'Até 10 colaboradores',
+        'Onboarding básico',
+        'Gestão de documentos',
+        'Analytics básicas',
+        'Gamificação simples',
+        'Suporte por email',
+        '1 GB de armazenamento'
+      ]
+    },
+    {
+      name: 'Em Crescimento',
+      description: 'Ideal para empresas em expansão',
+      monthlyPrice: 'R$ 99',
+      yearlyPrice: 'R$ 990',
+      popular: true,
       features: [
         'Até 50 colaboradores',
-        'Gestão básica de RH',
-        'Relatórios essenciais',
-        'Suporte por email'
-      ],
-      recommended: false
+        'Onboarding completo com vídeos',
+        'Sistema de feedback 360°',
+        'Treinamentos interativos',
+        'Gamificação completa',
+        'Analytics avançadas',
+        'PWA móvel',
+        'Pesquisas de clima',
+        'Suporte prioritário',
+        '10 GB de armazenamento'
+      ]
     },
     {
-      name: 'Professional',
-      price: 'R$ 99',
-      period: '/mês',
-      description: 'Ideal para empresas em crescimento',
-      features: [
-        'Até 200 colaboradores',
-        'Módulos avançados',
-        'Analytics completo',
-        'Integrações API',
-        'Suporte prioritário'
-      ],
-      recommended: true
-    },
-    {
-      name: 'Enterprise',
-      price: 'R$ 199',
-      period: '/mês',
-      description: 'Para grandes organizações',
+      name: 'Profissional',
+      description: 'Para empresas estabelecidas',
+      monthlyPrice: 'R$ 199',
+      yearlyPrice: 'R$ 1990',
+      popular: false,
       features: [
         'Colaboradores ilimitados',
-        'Customizações avançadas',
-        'AI & Machine Learning',
-        'Suporte dedicado',
+        'Todas as funcionalidades',
+        'IA preditiva para turnover',
+        'ML insights avançados',
+        'Relatórios executivos',
+        'API personalizada',
+        'Suporte 24/7',
+        'Armazenamento ilimitado',
+        'White label',
         'Consultoria estratégica'
-      ],
-      recommended: false
+      ]
     }
   ];
+
+  const testimonials = [
+    {
+      name: 'Maria Silva',
+      role: 'Diretora de RH',
+      company: 'TechCorp',
+      content: 'A IA da Humansys nos ajudou a reduzir o turnover em 60%. Incrível!',
+      rating: 5
+    },
+    {
+      name: 'João Santos',
+      role: 'CEO',
+      company: 'StartupXYZ',
+      content: 'O sistema de gamificação transformou o engajamento da nossa equipe.',
+      rating: 5
+    }
+  ];
+
+  const socialLinks = [
+    { icon: Linkedin, href: '#', label: 'LinkedIn' },
+    { icon: Instagram, href: '#', label: 'Instagram' },
+    { icon: Facebook, href: '#', label: 'Facebook' },
+    { icon: Github, href: '#', label: 'GitHub' }
+  ];
+
+  const handleFeatureClick = (path: string) => {
+    navigate(path);
+  };
+
+  const handlePlanSelection = (planName: string, price: string, billing: 'monthly' | 'yearly') => {
+    navigate('/checkout', { 
+      state: { 
+        plan: planName, 
+        price: price.replace('R$ ', ''),
+        billing 
+      } 
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
       
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="container">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1 text-center lg:text-left">
-              <Badge variant="secondary" className="mb-4">
-                🚀 Nova versão com IA disponível
-              </Badge>
-              <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-                Transforme seu
-                <span className="text-primary"> RH </span>
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 py-20 md:py-32">
+        <div className="container relative z-10">
+          <div className="mx-auto max-w-4xl text-center animate-fade-in">
+            <Badge variant="secondary" className="mb-4">
+              <Sparkles className="mr-1 h-3 w-3" />
+              Agora com IA e Gamificação
+            </Badge>
+            <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
+              Transforme sua
+              <span className="text-primary"> Gestão de Pessoas</span>
+              <span className="block text-3xl md:text-4xl lg:text-5xl mt-2 text-muted-foreground">
                 com Inteligência Artificial
-              </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
-                A plataforma completa para gestão de pessoas que usa IA para otimizar processos, 
-                aumentar engajamento e impulsionar resultados.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button size="lg" onClick={() => navigate('/checkout')}>
-                  Teste Grátis por 14 dias
-                </Button>
-                <Button size="lg" variant="outline" onClick={() => navigate('/app/changelog')}>
-                  Ver Novidades
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-3xl blur-3xl"></div>
-                <img 
-                  src="/lovable-uploads/hero-dashboard.png" 
-                  alt="Dashboard Humansys" 
-                  className="relative rounded-2xl shadow-2xl border"
-                />
-              </div>
+              </span>
+            </h1>
+            <p className="mt-6 text-xl text-muted-foreground md:text-2xl">
+              A Humansys é uma plataforma completa com IA preditiva, gamificação e PWA. 
+              Preveja turnover, engaje colaboradores e transforme seu RH.
+            </p>
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <Button 
+                size="lg" 
+                className="text-lg px-8 py-6"
+                onClick={() => navigate('/trial')}
+              >
+                <Zap className="mr-2 h-5 w-5" />
+                Começar Teste Grátis
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-lg px-8 py-6"
+                onClick={() => navigate('/changelog')}
+              >
+                <TrendingUp className="mr-2 h-5 w-5" />
+                Ver Novidades
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-muted/50">
+      <section className="py-20 md:py-32">
         <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Funcionalidades que Fazem a Diferença
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Funcionalidades Completas
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Descubra como nossa plataforma pode revolucionar a gestão de RH da sua empresa
+            <p className="mt-4 text-lg text-muted-foreground">
+              Todas as ferramentas que você precisa para uma gestão de RH eficiente
             </p>
           </div>
           
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
                 <Card 
                   key={index} 
-                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur"
+                  className="relative group hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  onClick={() => handleFeatureClick(feature.path)}
                 >
+                  {feature.isNew && (
+                    <Badge className="absolute -top-2 -right-2 bg-green-500 text-white">
+                      Novo
+                    </Badge>
+                  )}
                   <CardHeader>
-                    <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <Icon className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                      <Icon className="h-6 w-6" />
                     </div>
-                    <CardTitle className="group-hover:text-primary transition-colors">
-                      {feature.title}
-                    </CardTitle>
-                    <CardDescription className="text-base">
-                      {feature.description}
-                    </CardDescription>
+                    <CardTitle className="text-lg">{feature.title}</CardTitle>
                   </CardHeader>
+                  <CardContent>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardContent>
                 </Card>
               );
             })}
@@ -176,49 +280,68 @@ export const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20">
+      <section className="py-20 md:py-32 bg-muted/50">
         <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Planos que Crescem com sua Empresa
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Planos Atualizados
             </h2>
-            <p className="text-xl text-muted-foreground">
-              Escolha o plano ideal para suas necessidades
+            <p className="mt-4 text-lg text-muted-foreground">
+              Agora com IA, gamificação e funcionalidades premium
             </p>
           </div>
-          
-          <div className="grid gap-8 lg:grid-cols-3 max-w-6xl mx-auto">
+
+          <div className="grid gap-8 md:grid-cols-3 mb-16">
             {plans.map((plan, index) => (
-              <Card key={index} className={`relative ${plan.recommended ? 'border-primary shadow-xl scale-105' : ''}`}>
-                {plan.recommended && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
+                {plan.popular && (
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+                    <Star className="mr-1 h-3 w-3" />
                     Mais Popular
                   </Badge>
                 )}
-                <CardHeader className="text-center">
+                
+                <CardHeader className="text-center pb-2">
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">{plan.period}</span>
-                  </div>
-                  <CardDescription>{plan.description}</CardDescription>
+                  <CardDescription className="text-base">{plan.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-3">
+                
+                <CardContent className="text-center">
+                  <div className="mb-6">
+                    <div className="text-4xl font-bold text-primary mb-2">
+                      {plan.monthlyPrice}
+                      <span className="text-base text-muted-foreground font-normal">/mês</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      ou {plan.yearlyPrice}/ano (2 meses grátis)
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mb-8">
                     {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center gap-3">
-                        <Check className="h-5 w-5 text-primary" />
-                        <span>{feature}</span>
-                      </li>
+                      <div key={featureIndex} className="flex items-center text-left">
+                        <Check className="h-4 w-4 text-primary mr-3 flex-shrink-0" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
                     ))}
-                  </ul>
-                  <Button 
-                    className="w-full" 
-                    variant={plan.recommended ? 'default' : 'outline'}
-                    onClick={() => navigate('/checkout', { state: { plan: plan.name } })}
-                  >
-                    {plan.recommended ? 'Começar Agora' : 'Escolher Plano'}
-                  </Button>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Button 
+                      className="w-full" 
+                      variant={plan.popular ? "default" : "outline"}
+                      onClick={() => handlePlanSelection(plan.name, plan.monthlyPrice, 'monthly')}
+                    >
+                      Contratar Mensal
+                    </Button>
+                    <Button 
+                      className="w-full" 
+                      variant="secondary"
+                      onClick={() => handlePlanSelection(plan.name, plan.yearlyPrice, 'yearly')}
+                    >
+                      Contratar Anual
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -226,92 +349,99 @@ export const Landing = () => {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-20 bg-muted/50">
+      {/* Benefits Section */}
+      <section className="py-20 md:py-32">
         <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Mais de 500 Empresas Confiam na Humansys
-            </h2>
-            <div className="flex items-center justify-center gap-2 mb-8">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />
+          <div className="mx-auto max-w-4xl">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold md:text-4xl">
+                Resultados Comprovados
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Empresas que usam nossa solução veem resultados imediatos
+              </p>
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+              {benefits.map((benefit, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <Check className="h-4 w-4 text-white" />
+                  </div>
+                  <span className="text-lg">{benefit}</span>
+                </div>
               ))}
-              <span className="ml-2 text-lg font-medium">4.9/5 (127 avaliações)</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 md:py-32 bg-muted/50">
+        <div className="container">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Cases de Sucesso
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Veja o que nossos clientes estão dizendo
+            </p>
+          </div>
           
-          <div className="grid gap-8 md:grid-cols-3">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                    M
+          <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="relative">
+                <CardHeader>
+                  <div className="flex items-center space-x-1 mb-2">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
                   </div>
+                  <CardDescription className="text-base italic">
+                    "{testimonial.content}"
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <div>
-                    <h4 className="font-semibold">Maria Silva</h4>
-                    <p className="text-sm text-muted-foreground">Diretora de RH, TechCorp</p>
+                    <p className="font-semibold">{testimonial.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {testimonial.role} - {testimonial.company}
+                    </p>
                   </div>
-                </div>
-                <p className="text-muted-foreground">
-                  "A Humansys revolucionou nossos processos de RH. Conseguimos reduzir o turnover em 40% e aumentar o engajamento da equipe significativamente."
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                    J
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">João Santos</h4>
-                    <p className="text-sm text-muted-foreground">CEO, StartupX</p>
-                  </div>
-                </div>
-                <p className="text-muted-foreground">
-                  "Interface intuitiva e recursos poderosos. Em 6 meses, nossa produtividade aumentou 60% e os colaboradores estão mais satisfeitos."
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                    A
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Ana Costa</h4>
-                    <p className="text-sm text-muted-foreground">Gerente de Pessoas, InnovaCorp</p>
-                  </div>
-                </div>
-                <p className="text-muted-foreground">
-                  "O suporte é excepcional e as funcionalidades atendem todas nossas necessidades. Recomendo para qualquer empresa que busca excelência em RH."
-                </p>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-20 md:py-32 bg-primary">
         <div className="container">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-              Pronto para Transformar seu RH?
+          <div className="mx-auto max-w-2xl text-center text-white">
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Pronto para Revolucionar seu RH?
             </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Junte-se a centenas de empresas que já transformaram sua gestão de pessoas
+            <p className="mt-4 text-lg opacity-90">
+              Junte-se a centenas de empresas que já transformaram sua gestão de RH com IA
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate('/checkout')}>
-                Começar Teste Gratuito
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <Button 
+                size="lg" 
+                variant="secondary"
+                className="text-lg px-8 py-6"
+                onClick={() => navigate('/trial')}
+              >
+                <Shield className="mr-2 h-5 w-5" />
+                Teste Grátis por 30 Dias
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/contact')}>
-                Falar com Especialista
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary"
+                onClick={() => navigate('/plans')}
+              >
+                Ver Planos
               </Button>
             </div>
           </div>
@@ -319,48 +449,62 @@ export const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-muted py-12">
+      <footer className="border-t py-12">
         <div className="container">
-          <div className="grid gap-8 md:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
-              <h3 className="font-bold text-lg mb-4">Humansys</h3>
-              <p className="text-muted-foreground mb-4">
-                Transformando a gestão de RH com inteligência artificial e inovação.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Produto</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="/app/collaborators" className="hover:text-primary transition-colors">Funcionalidades</a></li>
-                <li><a href="/app/analytics" className="hover:text-primary transition-colors">Analytics</a></li>
-                <li><a href="/app/training" className="hover:text-primary transition-colors">Treinamentos</a></li>
-                <li><a href="/app/certificates" className="hover:text-primary transition-colors">Certificações</a></li>
+              <h3 className="font-semibold mb-4">Produto</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/features" className="hover:text-primary">Funcionalidades</a></li>
+                <li><a href="/pricing" className="hover:text-primary">Preços</a></li>
+                <li><a href="/changelog" className="hover:text-primary">Novidades</a></li>
+                <li><a href="/integrations" className="hover:text-primary">Integrações</a></li>
               </ul>
             </div>
-            
             <div>
-              <h4 className="font-semibold mb-4">Empresa</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="/about" className="hover:text-primary transition-colors">Sobre</a></li>
-                <li><a href="/contact" className="hover:text-primary transition-colors">Contato</a></li>
-                <li><a href="/help" className="hover:text-primary transition-colors">Suporte</a></li>
-                <li><a href="/app/changelog" className="hover:text-primary transition-colors">Novidades</a></li>
+              <h3 className="font-semibold mb-4">Empresa</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/about" className="hover:text-primary">Sobre</a></li>
+                <li><a href="/careers" className="hover:text-primary">Carreiras</a></li>
+                <li><a href="/blog" className="hover:text-primary">Blog</a></li>
               </ul>
             </div>
-            
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="/privacy" className="hover:text-primary transition-colors">Privacidade</a></li>
-                <li><a href="/terms" className="hover:text-primary transition-colors">Termos</a></li>
-                <li><a href="/security" className="hover:text-primary transition-colors">Segurança</a></li>
+              <h3 className="font-semibold mb-4">Suporte</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/documentation" className="hover:text-primary">Documentação</a></li>
+                <li><a href="/help" className="hover:text-primary">Ajuda</a></li>
+                <li><a href="/contact" className="hover:text-primary">Contato</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="/privacy" className="hover:text-primary">Política de Privacidade</a></li>
+                <li><a href="/terms" className="hover:text-primary">Termos de Uso</a></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t mt-12 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 Humansys. Todos os direitos reservados.</p>
+          <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-muted-foreground text-sm">
+              &copy; 2024 Humansys. Todos os direitos reservados.
+            </p>
+            <div className="flex space-x-4 mt-4 md:mt-0">
+              {socialLinks.map((social, index) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={index}
+                    href={social.href}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    aria-label={social.label}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </a>
+                );
+              })}
+            </div>
           </div>
         </div>
       </footer>

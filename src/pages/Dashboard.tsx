@@ -11,9 +11,8 @@ import { Widget } from '@/components/dashboard/Widget';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import { ActivityItem } from '@/components/dashboard/ActivityItem';
 import { TaskItem } from '@/components/dashboard/TaskItem';
-import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import { useUserMigration } from '@/hooks/useUserMigration';
-import { DashboardStatsSkeleton } from '@/components/common/SkeletonCards';
 import {
   Users,
   UserPlus,
@@ -29,20 +28,30 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
-  const { data, isLoading, cacheStats } = useOptimizedDashboardData();
+  const { data, isLoading } = useDashboardData();
   const { migrationStatus, runFullMigration } = useUserMigration();
   const navigate = useNavigate();
 
-  // Executar migração apenas se necessário e não durante loading inicial
   React.useEffect(() => {
-    if (!migrationStatus.isComplete && !isLoading && data.stats.totalCollaborators >= 0) {
-      // Executar migração em background sem bloquear UI
-      setTimeout(() => {
-        runFullMigration();
-      }, 1000);
+    // Executar migração automaticamente para usuários existentes
+    if (!migrationStatus.isComplete && !isLoading) {
+      runFullMigration();
     }
-  }, [migrationStatus.isComplete, isLoading, data.stats.totalCollaborators]);
-  
+  }, [migrationStatus.isComplete, isLoading]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Carregando dashboard...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -52,10 +61,10 @@ export const Dashboard = () => {
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">
-              Bem-vindo ao seu painel de controle otimizado
+              Bem-vindo ao seu painel de controle atualizado
             </p>
           </div>
-          <Button onClick={() => navigate('/app/changelog')} variant="outline">
+          <Button onClick={() => navigate('/changelog')} variant="outline">
             <Trophy className="h-4 w-4 mr-2" />
             Ver Novidades
           </Button>
@@ -157,13 +166,9 @@ export const Dashboard = () => {
               description="Últimas ações realizadas no sistema"
             >
               <div className="space-y-4">
-                {data.recentActivities.length > 0 ? (
-                  data.recentActivities.map((activity, index) => (
-                    <ActivityItem key={index} activity={activity} />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">Nenhuma atividade recente</p>
-                )}
+                {data.recentActivities.map((activity, index) => (
+                  <ActivityItem key={index} activity={activity} />
+                ))}
               </div>
             </Widget>
           </div>
@@ -206,13 +211,9 @@ export const Dashboard = () => {
               description="Itens que precisam da sua atenção"
             >
               <div className="space-y-3">
-                {data.pendingTasks.length > 0 ? (
-                  data.pendingTasks.map((task, index) => (
-                    <TaskItem key={index} task={task} />
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">Nenhuma tarefa pendente</p>
-                )}
+                {data.pendingTasks.map((task, index) => (
+                  <TaskItem key={index} task={task} />
+                ))}
               </div>
             </Widget>
 
@@ -222,19 +223,19 @@ export const Dashboard = () => {
               description="Acesso rápido às principais funcionalidades"
             >
               <div className="grid gap-2">
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/collaborators')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/collaborators')}>
                   <Users className="h-4 w-4 mr-2" />
                   Adicionar Colaborador
                 </Button>
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/onboarding')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/onboarding')}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Novo Onboarding
                 </Button>
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/feedback')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/feedback')}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Enviar Feedback
                 </Button>
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/goals')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/goals')}>
                   <Target className="h-4 w-4 mr-2" />
                   Definir Meta
                 </Button>
@@ -242,16 +243,6 @@ export const Dashboard = () => {
             </Widget>
           </div>
         </div>
-
-        {/* Debug info em desenvolvimento */}
-        {process.env.NODE_ENV === 'development' && cacheStats && (
-          <Card className="p-4 bg-muted/50">
-            <p className="text-sm text-muted-foreground">
-              Cache Dashboard: {cacheStats.hits} hits, {cacheStats.misses} misses 
-              ({cacheStats.hitRate.toFixed(1)}% hit rate)
-            </p>
-          </Card>
-        )}
       </div>
     </DashboardLayout>
   );

@@ -61,25 +61,3 @@ export interface OnboardingProgress {
   performance_rating: 'excellent' | 'good' | 'average' | 'needs_improvement';
   time_spent_minutes: number;
 }
-
-export interface GoalMilestone {
-  id: string;
-  title: string;
-  target_value: number;
-  completed: boolean;
-  completed_at?: string;
-}
-
-export interface GoalProgress {
-  id: string;
-  title: string;
-  description: string;
-  target_value: number;
-  current_value: number;
-  progress_percentage: number;
-  due_date: string;
-  status: 'not-started' | 'in-progress' | 'completed' | 'overdue';
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  category: string;
-  milestones: GoalMilestone[];
-}

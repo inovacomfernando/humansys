@@ -3,8 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { RecentActivity } from '@/types/dashboard';
 
 export const fetchRecentActivities = async (userId: string): Promise<RecentActivity[]> => {
-  console.log("Supabase type:", typeof supabase.from); // <-- ADICIONE AQUI
-
   const { data: activities, error } = await supabase
     .from('system_activities')
     .select('*')
@@ -13,10 +11,9 @@ export const fetchRecentActivities = async (userId: string): Promise<RecentActiv
     .limit(10);
 
   if (error) throw error;
-
+  
   return activities || [];
 };
-
 
 export const logActivity = async (
   userId: string,

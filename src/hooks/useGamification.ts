@@ -181,13 +181,6 @@ export const useGamification = () => {
     const completedSteps = steps.filter(s => s.completed).length;
     const progressPercentage = Math.round((completedSteps / steps.length) * 100);
     
-    // Determine performance rating
-    let performanceRating: 'excellent' | 'good' | 'average' | 'needs_improvement';
-    if (progressPercentage >= 90) performanceRating = 'excellent';
-    else if (progressPercentage >= 70) performanceRating = 'good';
-    else if (progressPercentage >= 50) performanceRating = 'average';
-    else performanceRating = 'needs_improvement';
-    
     return {
       progress_percentage: progressPercentage,
       completed_steps: completedSteps,
@@ -195,9 +188,7 @@ export const useGamification = () => {
       badges_earned: badges.filter(b => achievements.some(a => a.badge_id === b.id)),
       gamification_score: stats.totalPoints,
       current_streak: stats.currentStreak,
-      estimated_completion: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      performance_rating: performanceRating,
-      time_spent_minutes: completedSteps * 15 // Estimated 15 minutes per step
+      estimated_completion: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     };
   };
 

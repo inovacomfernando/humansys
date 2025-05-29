@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,6 @@ import { useSystemManagement } from '@/hooks/useSystemManagement';
 import { AuthDebugPanel } from '@/components/debug/AuthDebugPanel';
 import { SystemLogsViewer } from '@/components/debug/SystemLogsViewer';
 import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
-import { supabase } from '@/integrations/supabase/client';
 
 const StatusIcon = ({ status }: { status: boolean }) => {
   return status ? (
@@ -32,8 +32,6 @@ const StatusIcon = ({ status }: { status: boolean }) => {
 };
 
 export const SystemDebugPanel = () => {
-  console.log("DEBUG PANEL ATUALIZADO ATIVO");
-
   const {
     systemStatus,
     isRefreshing,
@@ -43,38 +41,8 @@ export const SystemDebugPanel = () => {
     runDiagnostics
   } = useSystemManagement();
 
-
-  const [ttl, setTtl] = useState("5");
-  const [loading, setLoading] = useState(false);
-
-  const fetchSettings = async () => {
-    const { data, error } = await supabase
-      .from("system_settings")
-      .select("cache_ttl_minutes")
-      .eq("id", "00000000-0000-0000-0000-000000000001")
-      .single();
-
-    if (!error && data) setTtl(String(data.cache_ttl_minutes));
-  };
-
-  const updateTTL = async () => {
-    setLoading(true);
-    await supabase
-      .from("system_settings")
-      .update({ cache_ttl_minutes: Number(ttl) })
-      .eq("id", "00000000-0000-0000-0000-000000000001");
-    setLoading(false);
-  };
-
-  const clearCacheVersion = async () => {
-    setLoading(true);
-    await supabase.rpc("increment_cache_version");
-    setLoading(false);
-  };
-
   useEffect(() => {
     checkSystemStatus();
-    fetchSettings();
   }, []);
 
   const handleFullRefresh = async () => {
@@ -216,22 +184,6 @@ export const SystemDebugPanel = () => {
             </Button>
           </div>
 
-          <div className="mt-6 grid gap-2 max-w-xs">
-            <Label htmlFor="ttl">Tempo de cache (minutos)</Label>
-            <Input
-              id="ttl"
-              type="number"
-              value={ttl}
-              onChange={(e) => setTtl(e.target.value)}
-            />
-            <Button onClick={updateTTL} disabled={loading}>
-              Atualizar TTL
-            </Button>
-            <Button variant="destructive" onClick={clearCacheVersion} disabled={loading}>
-              Limpar Cache Global
-            </Button>
-          </div>
-
           {isRefreshing && (
             <div className="mt-4 space-y-2">
               <div className="flex items-center space-x-2">
@@ -244,9 +196,13 @@ export const SystemDebugPanel = () => {
         </CardContent>
       </Card>
 
+      {/* Panel de Debug de Autenticação */}
       <AuthDebugPanel />
+
+      {/* Visualizador de Logs */}
       <SystemLogsViewer />
 
+      {/* Informações Técnicas */}
       <Card>
         <CardHeader>
           <CardTitle>Informações Técnicas</CardTitle>
@@ -260,14 +216,17 @@ export const SystemDebugPanel = () => {
               <Label>Versão do Sistema</Label>
               <Input value="v2.1.0" readOnly />
             </div>
+            
             <div className="space-y-2">
               <Label>Ambiente</Label>
               <Input value="Produção" readOnly />
             </div>
+            
             <div className="space-y-2">
               <Label>Build</Label>
               <Input value={new Date().toISOString().split('T')[0]} readOnly />
             </div>
+            
             <div className="space-y-2">
               <Label>Navegador</Label>
               <Input value={navigator.userAgent.split(' ')[0]} readOnly />
@@ -278,4 +237,3 @@ export const SystemDebugPanel = () => {
     </div>
   );
 };
-

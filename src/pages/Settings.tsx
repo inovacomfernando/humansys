@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Building, Bell, Shield, Palette, Award, Settings as SettingsIcon, RefreshCw } from 'lucide-react';
 import { CertificateTemplates } from '@/components/settings/CertificateTemplates';
-import { SystemSettingsPanel } from '@/components/settings/SystemDebugPanel';
+import { SystemDebugPanel } from '@/components/settings/SystemDebugPanel';
 
 export const Settings = () => {
   return (
@@ -207,9 +207,9 @@ export const Settings = () => {
             <CertificateTemplates />
           </TabsContent>
 
-<TabsContent value="system">
-  <SystemSettingsPanel />
-</TabsContent>
+          <TabsContent value="system">
+            <SystemDebugPanel />
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
