@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -11,7 +10,7 @@ const Login = React.lazy(() => import('@/pages/Login').then(module => ({ default
 const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ default: module.Landing })));
 
 // Import optimized components
-import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
+import { OptimizedCollaboratorsFixed } from '@/pages/OptimizedCollaboratorsFixed';
 import { OptimizedRecruitment } from '@/pages/OptimizedRecruitment';
 
 // Other imports stay synchronous for now
@@ -74,7 +73,7 @@ export const AppRouter = () => {
           path="/app/collaborators" 
           element={
             <ProtectedRoute>
-              <OptimizedCollaborators />
+              <OptimizedCollaboratorsFixed />
             </ProtectedRoute>
           } 
         />
@@ -196,12 +195,14 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
+
+        {/* Rota pública para checkout */}
+        <Route path="/checkout" element={<Checkout />} />
         
         {/* Rotas Públicas Institucionais */}
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<Help />} />
-        <Route path="/checkout" element={<Checkout />} />
         
         {/* Redirects para manter compatibilidade */}
         <Route path="/dashboard" element={<Index />} />
