@@ -15,42 +15,36 @@ export const Landing = () => {
       icon: Users,
       title: 'Gestão de Colaboradores',
       description: 'Centralize informações e gerencie todo o ciclo de vida dos seus colaboradores',
-      path: '/app/collaborators',
       color: 'bg-blue-500'
     },
     {
       icon: Target,
       title: 'Metas & PDI',
       description: 'Defina objetivos claros e acompanhe o desenvolvimento individual',
-      path: '/app/goals',
       color: 'bg-green-500'
     },
     {
       icon: BookOpen,
       title: 'Treinamentos',
       description: 'Crie e gerencie programas de capacitação personalizados',
-      path: '/app/training',
       color: 'bg-purple-500'
     },
     {
       icon: MessageSquare,
       title: 'Feedback 360°',
       description: 'Feedback estruturado e contínuo para desenvolvimento profissional',
-      path: '/app/feedback',
       color: 'bg-orange-500'
     },
     {
       icon: BarChart3,
       title: 'Analytics Avançado',
       description: 'Insights inteligentes para tomada de decisão estratégica',
-      path: '/app/analytics',
       color: 'bg-red-500'
     },
     {
       icon: Award,
       title: 'Certificações',
       description: 'Emita certificados automaticamente e reconheça conquistas',
-      path: '/app/certificates',
       color: 'bg-yellow-500'
     }
   ];
@@ -161,8 +155,7 @@ export const Landing = () => {
               return (
                 <Card 
                   key={index} 
-                  className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-card/50 backdrop-blur"
-                  onClick={() => navigate(feature.path)}
+                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-card/50 backdrop-blur"
                 >
                   <CardHeader>
                     <div className={`w-12 h-12 rounded-lg ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
