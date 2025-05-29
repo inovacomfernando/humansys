@@ -222,19 +222,19 @@ export const Dashboard = () => {
               description="Acesso rápido às principais funcionalidades"
             >
               <div className="grid gap-2">
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/collaborators')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/collaborators')}>
                   <Users className="h-4 w-4 mr-2" />
                   Adicionar Colaborador
                 </Button>
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/onboarding')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/onboarding')}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Novo Onboarding
                 </Button>
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/feedback')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/feedback')}>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Enviar Feedback
                 </Button>
-                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/goals')}>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/goals')}>
                   <Target className="h-4 w-4 mr-2" />
                   Definir Meta
                 </Button>
