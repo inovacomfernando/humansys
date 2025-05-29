@@ -38,51 +38,51 @@ export const Landing = () => {
       icon: Brain,
       title: 'Analytics com IA',
       description: 'Machine Learning para prever turnover e identificar talentos em risco.',
-      path: '/analytics',
+      path: '/app/analytics',
       isNew: true
     },
     {
       icon: Trophy,
       title: 'Gamificação Completa',
       description: 'Sistema de badges, conquistas e ranking para engajar colaboradores.',
-      path: '/dashboard',
+      path: '/app/dashboard',
       isNew: true
     },
     {
       icon: UserPlus,
       title: 'Onboarding Inteligente',
       description: 'Processo estruturado de integração com acompanhamento automático.',
-      path: '/onboarding'
+      path: '/app/onboarding'
     },
     {
       icon: Users,
       title: 'Gestão de Colaboradores',
       description: 'Controle completo do quadro de funcionários, estagiários e terceiros.',
-      path: '/collaborators'
+      path: '/app/collaborators'
     },
     {
       icon: MessageSquare,
       title: 'Feedback 360°',
       description: 'Sistema completo de feedbacks e avaliações de performance.',
-      path: '/feedback'
+      path: '/app/feedback'
     },
     {
       icon: Target,
       title: 'Metas & PDI',
       description: 'Plano de Desenvolvimento Individual com controle de metas e indicadores.',
-      path: '/goals'
+      path: '/app/goals'
     },
     {
       icon: Video,
       title: 'Treinamentos Interativos',
       description: 'Plataforma de cursos com player de vídeo integrado e certificação.',
-      path: '/training'
+      path: '/app/training'
     },
     {
       icon: Smartphone,
       title: 'Progressive Web App',
       description: 'Funciona offline e pode ser instalado como aplicativo nativo.',
-      path: '/dashboard',
+      path: '/app/dashboard',
       isNew: true
     }
   ];
@@ -100,8 +100,8 @@ export const Landing = () => {
     {
       name: 'Inicial',
       description: 'Perfeito para empresas iniciantes',
-      monthlyPrice: 'R$ 49',
-      yearlyPrice: 'R$ 490',
+      monthlyPrice: 'R$ 79',
+      yearlyPrice: 'R$ 790',
       popular: false,
       features: [
         'Até 10 colaboradores',
@@ -116,8 +116,8 @@ export const Landing = () => {
     {
       name: 'Em Crescimento',
       description: 'Ideal para empresas em expansão',
-      monthlyPrice: 'R$ 99',
-      yearlyPrice: 'R$ 990',
+      monthlyPrice: 'R$ 129',
+      yearlyPrice: 'R$ 1290',
       popular: true,
       features: [
         'Até 50 colaboradores',
@@ -135,8 +135,8 @@ export const Landing = () => {
     {
       name: 'Profissional',
       description: 'Para empresas estabelecidas',
-      monthlyPrice: 'R$ 199',
-      yearlyPrice: 'R$ 1990',
+      monthlyPrice: 'R$ 299',
+      yearlyPrice: 'R$ 2990',
       popular: false,
       features: [
         'Colaboradores ilimitados',
@@ -218,7 +218,7 @@ export const Landing = () => {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/trial')}
+                onClick={() => navigate('/checkout')}
               >
                 <Zap className="mr-2 h-5 w-5" />
                 Começar Teste Grátis
@@ -227,7 +227,7 @@ export const Landing = () => {
                 variant="outline" 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/changelog')}
+                onClick={() => navigate('/app/changelog')}
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 Ver Novidades
@@ -455,33 +455,33 @@ export const Landing = () => {
             <div>
               <h3 className="font-semibold mb-4">Produto</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="/features" className="hover:text-primary">Funcionalidades</a></li>
-                <li><a href="/pricing" className="hover:text-primary">Preços</a></li>
-                <li><a href="/changelog" className="hover:text-primary">Novidades</a></li>
-                <li><a href="/integrations" className="hover:text-primary">Integrações</a></li>
+                <li><button onClick={() => navigate('/app/dashboard')} className="hover:text-primary text-left">Funcionalidades</button></li>
+                <li><button onClick={() => navigate('/checkout')} className="hover:text-primary text-left">Preços</button></li>
+                <li><button onClick={() => navigate('/app/changelog')} className="hover:text-primary text-left">Novidades</button></li>
+                <li><button onClick={() => navigate('/app/settings')} className="hover:text-primary text-left">Integrações</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Empresa</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="/about" className="hover:text-primary">Sobre</a></li>
-                <li><a href="/careers" className="hover:text-primary">Carreiras</a></li>
-                <li><a href="/blog" className="hover:text-primary">Blog</a></li>
+                <li><button onClick={() => navigate('/about')} className="hover:text-primary text-left">Sobre</button></li>
+                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Carreiras</button></li>
+                <li><button onClick={() => navigate('/app/changelog')} className="hover:text-primary text-left">Blog</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Suporte</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="/documentation" className="hover:text-primary">Documentação</a></li>
-                <li><a href="/help" className="hover:text-primary">Ajuda</a></li>
-                <li><a href="/contact" className="hover:text-primary">Contato</a></li>
+                <li><button onClick={() => navigate('/app/documents')} className="hover:text-primary text-left">Documentação</button></li>
+                <li><button onClick={() => navigate('/help')} className="hover:text-primary text-left">Ajuda</button></li>
+                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Contato</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="/privacy" className="hover:text-primary">Política de Privacidade</a></li>
-                <li><a href="/terms" className="hover:text-primary">Termos de Uso</a></li>
+                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Política de Privacidade</button></li>
+                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Termos de Uso</button></li>
               </ul>
             </div>
           </div>

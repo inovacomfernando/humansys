@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Users,
   UserPlus,
@@ -16,7 +17,9 @@ import {
   Menu,
   Home,
   Calendar,
-  Briefcase
+  Briefcase,
+  Crown,
+  ClipboardList
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -26,25 +29,62 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [isFounder, setIsFounder] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = [
-    { icon: Home, label: 'Dashboard', path: '/dashboard' },
-    { icon: Users, label: 'Colaboradores', path: '/collaborators' },
-    { icon: UserPlus, label: 'Recrutamento', path: '/recruitment' },
-    { icon: Briefcase, label: 'Onboarding', path: '/onboarding' },
-    { icon: MessageSquare, label: 'Feedback', path: '/feedback' },
-    { icon: Calendar, label: '1:1 Meetings', path: '/meetings' },
-    { icon: Target, label: 'Metas & PDI', path: '/goals' },
-    { icon: BookOpen, label: 'Treinamentos', path: '/training' },
-    { icon: Award, label: 'Certificados', path: '/certificates' },
-    { icon: BarChart3, label: 'Pesquisas', path: '/surveys' },
-    { icon: FileText, label: 'Documentos', path: '/documents' },
-    { icon: Settings, label: 'Configurações', path: '/settings' },
-  ];
+  // Check founder role
+  useEffect(() => {
+    const checkFounderRole = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'founder')
+          .maybeSingle();
+        
+        setIsFounder(!!data);
+      } catch (error) {
+        console.error('Error checking founder role:', error);
+      }
+    };
 
+    checkFounderRole();
+  }, [user?.id]);
+
+  const getMenuItems = () => {
+    const isFounderPath = location.pathname.startsWith('/founder');
+    
+    if (isFounderPath && isFounder) {
+      return [
+        { icon: Crown, label: 'Dashboard Founder', path: '/founder/dashboard' },
+        { icon: Home, label: 'Dashboard Principal', path: '/app/dashboard' },
+      ];
+    }
+    
+    return [
+      { icon: Home, label: 'Dashboard', path: '/app/dashboard' },
+      ...(isFounder ? [{ icon: Crown, label: 'Dashboard Founder', path: '/founder/dashboard' }] : []),
+      { icon: Users, label: 'Colaboradores', path: '/app/collaborators' },
+      { icon: UserPlus, label: 'Recrutamento', path: '/app/recruitment' },
+      { icon: Briefcase, label: 'Onboarding', path: '/app/onboarding' },
+      { icon: MessageSquare, label: 'Feedback', path: '/app/feedback' },
+      { icon: Calendar, label: 'Reuniões 1:1', path: '/app/meetings' },
+      { icon: Target, label: 'Metas & PDI', path: '/app/goals' },
+      { icon: BookOpen, label: 'Treinamentos', path: '/app/training' },
+      { icon: Award, label: 'Certificados', path: '/app/certificates' },
+      { icon: ClipboardList, label: 'Pesquisas', path: '/app/surveys' },
+      { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
+      { icon: FileText, label: 'Documentos', path: '/app/documents' },
+      { icon: Settings, label: 'Configurações', path: '/app/settings' },
+    ];
+  };
+
+  const menuItems = getMenuItems();
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -56,7 +96,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       {/* Toggle Button */}
       <div className="flex items-center justify-between p-4 border-b">
         {!collapsed && (
-          <h2 className="text-lg font-semibold">Menu</h2>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            {location.pathname.startsWith('/founder') && isFounder && (
+              <Crown className="h-5 w-5 text-yellow-500" />
+            )}
+            Menu
+          </h2>
         )}
         <Button
           variant="ghost"

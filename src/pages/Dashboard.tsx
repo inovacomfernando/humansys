@@ -11,8 +11,9 @@ import { Widget } from '@/components/dashboard/Widget';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import { ActivityItem } from '@/components/dashboard/ActivityItem';
 import { TaskItem } from '@/components/dashboard/TaskItem';
-import { useDashboardData } from '@/hooks/useDashboardData';
+import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
 import { useUserMigration } from '@/hooks/useUserMigration';
+import { DashboardStatsSkeleton } from '@/components/common/SkeletonCards';
 import {
   Users,
   UserPlus,
@@ -28,30 +29,20 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
-  const { data, isLoading } = useDashboardData();
+  const { data, isLoading, cacheStats } = useOptimizedDashboardData();
   const { migrationStatus, runFullMigration } = useUserMigration();
   const navigate = useNavigate();
 
+  // Executar migração apenas se necessário e não durante loading inicial
   React.useEffect(() => {
-    // Executar migração automaticamente para usuários existentes
-    if (!migrationStatus.isComplete && !isLoading) {
-      runFullMigration();
+    if (!migrationStatus.isComplete && !isLoading && data.stats.totalCollaborators >= 0) {
+      // Executar migração em background sem bloquear UI
+      setTimeout(() => {
+        runFullMigration();
+      }, 1000);
     }
-  }, [migrationStatus.isComplete, isLoading]);
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Carregando dashboard...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
+  }, [migrationStatus.isComplete, isLoading, data.stats.totalCollaborators]);
+  
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -61,7 +52,7 @@ export const Dashboard = () => {
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">
-              Bem-vindo ao seu painel de controle atualizado
+              Bem-vindo ao seu painel de controle otimizado
             </p>
           </div>
           <Button onClick={() => navigate('/changelog')} variant="outline">
@@ -166,9 +157,13 @@ export const Dashboard = () => {
               description="Últimas ações realizadas no sistema"
             >
               <div className="space-y-4">
-                {data.recentActivities.map((activity, index) => (
-                  <ActivityItem key={index} activity={activity} />
-                ))}
+                {data.recentActivities.length > 0 ? (
+                  data.recentActivities.map((activity, index) => (
+                    <ActivityItem key={index} activity={activity} />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Nenhuma atividade recente</p>
+                )}
               </div>
             </Widget>
           </div>
@@ -211,9 +206,13 @@ export const Dashboard = () => {
               description="Itens que precisam da sua atenção"
             >
               <div className="space-y-3">
-                {data.pendingTasks.map((task, index) => (
-                  <TaskItem key={index} task={task} />
-                ))}
+                {data.pendingTasks.length > 0 ? (
+                  data.pendingTasks.map((task, index) => (
+                    <TaskItem key={index} task={task} />
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Nenhuma tarefa pendente</p>
+                )}
               </div>
             </Widget>
 
@@ -243,6 +242,16 @@ export const Dashboard = () => {
             </Widget>
           </div>
         </div>
+
+        {/* Debug info em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && cacheStats && (
+          <Card className="p-4 bg-muted/50">
+            <p className="text-sm text-muted-foreground">
+              Cache Dashboard: {cacheStats.hits} hits, {cacheStats.misses} misses 
+              ({cacheStats.hitRate.toFixed(1)}% hit rate)
+            </p>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

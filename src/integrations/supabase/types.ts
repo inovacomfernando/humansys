@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          badge: Json | null
+          badge_id: string
+          earned_at: string
+          id: string
+          process_id: string
+          user_id: string
+        }
+        Insert: {
+          badge?: Json | null
+          badge_id: string
+          earned_at?: string
+          id?: string
+          process_id: string
+          user_id: string
+        }
+        Update: {
+          badge?: Json | null
+          badge_id?: string
+          earned_at?: string
+          id?: string
+          process_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       certificate_templates: {
         Row: {
           active: boolean
@@ -92,6 +119,92 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      companies: {
+        Row: {
+          arr: number | null
+          created_at: string
+          domain: string | null
+          id: string
+          mrr: number | null
+          name: string
+          plan_type: string
+          status: string
+          subscription_started_at: string | null
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          arr?: number | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          mrr?: number | null
+          name: string
+          plan_type?: string
+          status?: string
+          subscription_started_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arr?: number | null
+          created_at?: string
+          domain?: string | null
+          id?: string
+          mrr?: number | null
+          name?: string
+          plan_type?: string
+          status?: string
+          subscription_started_at?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_health_scores: {
+        Row: {
+          adoption_score: number | null
+          calculated_at: string
+          churn_risk: string | null
+          company_id: string
+          engagement_score: number | null
+          health_score: number
+          id: string
+          last_activity_at: string | null
+          satisfaction_score: number | null
+        }
+        Insert: {
+          adoption_score?: number | null
+          calculated_at?: string
+          churn_risk?: string | null
+          company_id: string
+          engagement_score?: number | null
+          health_score?: number
+          id?: string
+          last_activity_at?: string | null
+          satisfaction_score?: number | null
+        }
+        Update: {
+          adoption_score?: number | null
+          calculated_at?: string
+          churn_risk?: string | null
+          company_id?: string
+          engagement_score?: number | null
+          health_score?: number
+          id?: string
+          last_activity_at?: string | null
+          satisfaction_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_health_scores_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -205,6 +318,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gamification: {
+        Row: {
+          current_streak: number
+          level: number
+          longest_streak: number
+          next_level_progress: number
+          rank: number
+          recent_achievements: Json | null
+          total_badges: number
+          total_points: number
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          level?: number
+          longest_streak?: number
+          next_level_progress?: number
+          rank?: number
+          recent_achievements?: Json | null
+          total_badges?: number
+          total_points?: number
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          level?: number
+          longest_streak?: number
+          next_level_progress?: number
+          rank?: number
+          recent_achievements?: Json | null
+          total_badges?: number
+          total_points?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       generated_certificates: {
         Row: {
@@ -358,6 +507,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          company_id: string | null
           created_at: string
           email: string
           id: string
@@ -366,6 +516,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
           email: string
           id: string
@@ -374,13 +525,63 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          company_id?: string | null
           created_at?: string
           email?: string
           id?: string
           name?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revenue_events: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          event_type: string
+          id: string
+          mrr_change: number
+          plan_from: string | null
+          plan_to: string | null
+        }
+        Insert: {
+          amount?: number
+          company_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          mrr_change?: number
+          plan_from?: string | null
+          plan_to?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          mrr_change?: number
+          plan_from?: string | null
+          plan_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_activities: {
         Row: {
@@ -535,18 +736,95 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_logs: {
+        Row: {
+          activity_type: string
+          company_id: string
+          created_at: string
+          feature_name: string | null
+          id: string
+          session_duration: number | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          company_id: string
+          created_at?: string
+          feature_name?: string | null
+          id?: string
+          session_duration?: number | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          company_id?: string
+          created_at?: string
+          feature_name?: string | null
+          id?: string
+          session_duration?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      calculate_mrr: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month: string
+          total_mrr: number
+        }[]
+      }
       create_default_onboarding_steps: {
         Args: { process_id: string }
         Returns: undefined
       }
+      get_churn_rate: {
+        Args: { period_months?: number }
+        Returns: number
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "founder" | "admin" | "manager" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -661,6 +939,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["founder", "admin", "manager", "user"],
+    },
   },
 } as const
