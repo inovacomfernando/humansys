@@ -32,6 +32,8 @@ const StatusIcon = ({ status }: { status: boolean }) => {
 };
 
 export const SystemDebugPanel = () => {
+  console.log("DEBUG PANEL ATUALIZADO ATIVO");
+
   const {
     systemStatus,
     isRefreshing,
@@ -40,6 +42,7 @@ export const SystemDebugPanel = () => {
     clearSystemCache,
     runDiagnostics
   } = useSystemManagement();
+
 
   const [ttl, setTtl] = useState("5");
   const [loading, setLoading] = useState(false);
