@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -24,6 +25,12 @@ import { Changelog } from '@/pages/Changelog';
 import { Settings } from '@/pages/Settings';
 import { Certificates } from '@/pages/Certificates';
 import { Documents } from '@/pages/Documents';
+import { Meetings } from '@/pages/Meetings';
+import { ModernSurveys } from '@/pages/ModernSurveys';
+import { Checkout } from '@/pages/Checkout';
+import { About } from '@/pages/About';
+import { Contact } from '@/pages/Contact';
+import { Help } from '@/pages/Help';
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -109,10 +116,28 @@ export const AppRouter = () => {
         />
         
         <Route 
+          path="/app/meetings" 
+          element={
+            <ProtectedRoute>
+              <Meetings />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
           path="/app/goals" 
           element={
             <ProtectedRoute>
               <Goals />
+            </ProtectedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/app/surveys" 
+          element={
+            <ProtectedRoute>
+              <ModernSurveys />
             </ProtectedRoute>
           } 
         />
@@ -172,6 +197,12 @@ export const AppRouter = () => {
           } 
         />
         
+        {/* Rotas Públicas Institucionais */}
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/help" element={<Help />} />
+        <Route path="/checkout" element={<Checkout />} />
+        
         {/* Redirects para manter compatibilidade */}
         <Route path="/dashboard" element={<Index />} />
         <Route path="/founder-dashboard" element={<Index />} />
@@ -186,6 +217,8 @@ export const AppRouter = () => {
         <Route path="/settings" element={<Index />} />
         <Route path="/certificates" element={<Index />} />
         <Route path="/documents" element={<Index />} />
+        <Route path="/meetings" element={<Index />} />
+        <Route path="/surveys" element={<Index />} />
         
         {/* Fallback - redireciona para a página inicial */}
         <Route path="/*" element={<Index />} />

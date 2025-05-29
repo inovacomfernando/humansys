@@ -18,7 +18,8 @@ import {
   Home,
   Calendar,
   Briefcase,
-  Crown
+  Crown,
+  ClipboardList
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -72,11 +73,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
       { icon: UserPlus, label: 'Recrutamento', path: '/app/recruitment' },
       { icon: Briefcase, label: 'Onboarding', path: '/app/onboarding' },
       { icon: MessageSquare, label: 'Feedback', path: '/app/feedback' },
-      { icon: Calendar, label: '1:1 Meetings', path: '/app/meetings' },
+      { icon: Calendar, label: 'Reuniões 1:1', path: '/app/meetings' },
       { icon: Target, label: 'Metas & PDI', path: '/app/goals' },
       { icon: BookOpen, label: 'Treinamentos', path: '/app/training' },
       { icon: Award, label: 'Certificados', path: '/app/certificates' },
-      { icon: BarChart3, label: 'Pesquisas', path: '/app/surveys' },
+      { icon: ClipboardList, label: 'Pesquisas', path: '/app/surveys' },
+      { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
       { icon: FileText, label: 'Documentos', path: '/app/documents' },
       { icon: Settings, label: 'Configurações', path: '/app/settings' },
     ];

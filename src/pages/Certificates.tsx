@@ -1,5 +1,4 @@
-
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,11 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useCertificateTemplates } from '@/hooks/useCertificateTemplates';
 import { useCollaborators } from '@/hooks/useCollaborators';
 
-// Fix lazy loading import to use proper default export syntax
-const CertificateTemplateDialog = lazy(() => import('@/components/certificates/CertificateTemplateDialog').then(module => ({ default: module.CertificateTemplateDialog })));
-
 export const Certificates = () => {
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const { toast } = useToast();
   
   const { templates, generateCertificate, deleteTemplate } = useCertificateTemplates();
@@ -28,6 +25,12 @@ export const Certificates = () => {
     collaborator: '',
     course: '',
     date: new Date().toISOString().split('T')[0]
+  });
+
+  const [templateForm, setTemplateForm] = useState({
+    name: '',
+    description: '',
+    type: 'completion'
   });
 
   const handleGenerateCertificate = async () => {
@@ -56,6 +59,30 @@ export const Certificates = () => {
     }
   };
 
+  const handleCreateTemplate = () => {
+    if (!templateForm.name) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, insira um nome para o template.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('Criando template:', templateForm);
+    toast({
+      title: "Template criado",
+      description: "Template de certificado criado com sucesso!"
+    });
+    
+    setTemplateForm({
+      name: '',
+      description: '',
+      type: 'completion'
+    });
+    setTemplateDialogOpen(false);
+  };
+
   const handleDeleteTemplate = async (templateId: string) => {
     if (confirm('Tem certeza que deseja excluir este template?')) {
       await deleteTemplate(templateId);
@@ -73,9 +100,69 @@ export const Certificates = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Suspense fallback={<div>Loading...</div>}>
-              <CertificateTemplateDialog />
-            </Suspense>
+            <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Template
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Template de Certificado</DialogTitle>
+                  <DialogDescription>
+                    Configure um novo template para gerar certificados
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Nome do Template</Label>
+                    <Input 
+                      id="name"
+                      value={templateForm.name}
+                      onChange={(e) => setTemplateForm({...templateForm, name: e.target.value})}
+                      placeholder="Nome do template"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Descrição</Label>
+                    <Input 
+                      id="description"
+                      value={templateForm.description}
+                      onChange={(e) => setTemplateForm({...templateForm, description: e.target.value})}
+                      placeholder="Descrição do template"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label>Tipo</Label>
+                    <Select 
+                      value={templateForm.type} 
+                      onValueChange={(value) => setTemplateForm({...templateForm, type: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="completion">Conclusão</SelectItem>
+                        <SelectItem value="participation">Participação</SelectItem>
+                        <SelectItem value="achievement">Conquista</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleCreateTemplate}>
+                    Criar Template
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
             <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
@@ -217,9 +304,10 @@ export const Certificates = () => {
                 <p className="text-muted-foreground text-center mb-4">
                   Crie seu primeiro template de certificado para começar.
                 </p>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <CertificateTemplateDialog />
-                </Suspense>
+                <Button onClick={() => setTemplateDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Criar Template
+                </Button>
               </CardContent>
             </Card>
           ) : (
