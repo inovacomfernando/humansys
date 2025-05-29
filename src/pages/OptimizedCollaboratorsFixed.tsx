@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Users, UserPlus, Search, Mail, Phone, MapPin, 
   AlertCircle, RefreshCw, Wifi, WifiOff, Clock, 
-  CloudOff, Sync 
+  CloudOff
 } from 'lucide-react';
 import { useCollaboratorsFixed } from '@/hooks/useCollaboratorsFixed';
 import { useToast } from '@/hooks/use-toast';
@@ -64,7 +63,7 @@ export const OptimizedCollaboratorsFixed = () => {
 
   const getNetworkStatusIcon = () => {
     if (!isOnline) return <WifiOff className="h-4 w-4 text-red-500" />;
-    if (pendingSync > 0) return <Sync className="h-4 w-4 text-yellow-500 animate-spin" />;
+    if (pendingSync > 0) return <RefreshCw className="h-4 w-4 text-yellow-500 animate-spin" />;
     return <Wifi className="h-4 w-4 text-green-500" />;
   };
 
@@ -240,7 +239,7 @@ export const OptimizedCollaboratorsFixed = () => {
 
         {pendingSync > 0 && (
           <Alert>
-            <Sync className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             <AlertDescription>
               {pendingSync} operação(ões) aguardando sincronização...
             </AlertDescription>
