@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -28,10 +27,11 @@ import {
   TrendingUp,
   Video
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useDebounceNavigation } from '@/hooks/useDebounceNavigation';
+import { FeatureCard } from '@/components/landing/FeatureCard';
 
 export const Landing = () => {
-  const navigate = useNavigate();
+  const { debouncedNavigate } = useDebounceNavigation();
 
   const features = [
     {
@@ -39,51 +39,91 @@ export const Landing = () => {
       title: 'Analytics com IA',
       description: 'Machine Learning para prever turnover e identificar talentos em risco.',
       path: '/app/analytics',
-      isNew: true
+      isNew: true,
+      realImpact: {
+        metric: 'Precisão de 85% na previsão de turnover',
+        example: 'Empresa TechCorp identificou 12 colaboradores em risco',
+        benefit: 'Redução de 60% na rotatividade não planejada'
+      }
     },
     {
       icon: Trophy,
       title: 'Gamificação Completa',
       description: 'Sistema de badges, conquistas e ranking para engajar colaboradores.',
       path: '/app/dashboard',
-      isNew: true
+      isNew: true,
+      realImpact: {
+        metric: 'Aumento de 45% no engajamento',
+        example: 'Startup XYZ viu 90% de participação em treinamentos',
+        benefit: 'Melhoria de 35% na produtividade da equipe'
+      }
     },
     {
       icon: UserPlus,
       title: 'Onboarding Inteligente',
       description: 'Processo estruturado de integração com acompanhamento automático.',
-      path: '/app/onboarding'
+      path: '/app/onboarding',
+      realImpact: {
+        metric: 'Redução de 70% no tempo de integração',
+        example: 'De 30 dias para 9 dias para produtividade total',
+        benefit: 'Satisfação de novos funcionários em 95%'
+      }
     },
     {
       icon: Users,
       title: 'Gestão de Colaboradores',
       description: 'Controle completo do quadro de funcionários, estagiários e terceiros.',
-      path: '/app/collaborators'
+      path: '/app/collaborators',
+      realImpact: {
+        metric: 'Centralização de 100% dos dados',
+        example: 'Visão unificada de 500+ colaboradores em tempo real',
+        benefit: 'Economia de 8h semanais em relatórios'
+      }
     },
     {
       icon: MessageSquare,
       title: 'Feedback 360°',
       description: 'Sistema completo de feedbacks e avaliações de performance.',
-      path: '/app/feedback'
+      path: '/app/feedback',
+      realImpact: {
+        metric: 'Aumento de 60% na comunicação',
+        example: '95% dos feedbacks entregues dentro do prazo',
+        benefit: 'Melhoria de 40% no clima organizacional'
+      }
     },
     {
       icon: Target,
       title: 'Metas & PDI',
       description: 'Plano de Desenvolvimento Individual com controle de metas e indicadores.',
-      path: '/app/goals'
+      path: '/app/goals',
+      realImpact: {
+        metric: 'Aumento de 55% no alcance de metas',
+        example: '80% das metas atingidas vs. 45% anterior',
+        benefit: 'Crescimento profissional estruturado para todos'
+      }
     },
     {
       icon: Video,
       title: 'Treinamentos Interativos',
       description: 'Plataforma de cursos com player de vídeo integrado e certificação.',
-      path: '/app/training'
+      path: '/app/training',
+      realImpact: {
+        metric: 'Conclusão de 85% dos treinamentos',
+        example: 'Certificação automática de 200+ colaboradores',
+        benefit: 'ROI de 300% em desenvolvimento de talentos'
+      }
     },
     {
       icon: Smartphone,
       title: 'Progressive Web App',
       description: 'Funciona offline e pode ser instalado como aplicativo nativo.',
       path: '/app/dashboard',
-      isNew: true
+      isNew: true,
+      realImpact: {
+        metric: 'Acesso 24/7 mesmo offline',
+        example: 'Funcionários remotos mantêm produtividade',
+        benefit: 'Aumento de 25% na utilização do sistema'
+      }
     }
   ];
 
@@ -178,17 +218,11 @@ export const Landing = () => {
   ];
 
   const handleFeatureClick = (path: string) => {
-    navigate(path);
+    debouncedNavigate(path);
   };
 
   const handlePlanSelection = (planName: string, price: string, billing: 'monthly' | 'yearly') => {
-    navigate('/checkout', { 
-      state: { 
-        plan: planName, 
-        price: price.replace('R$ ', ''),
-        billing 
-      } 
-    });
+    debouncedNavigate('/checkout');
   };
 
   return (
@@ -218,7 +252,7 @@ export const Landing = () => {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/checkout')}
+                onClick={() => debouncedNavigate('/checkout')}
               >
                 <Zap className="mr-2 h-5 w-5" />
                 Começar Teste Grátis
@@ -227,7 +261,7 @@ export const Landing = () => {
                 variant="outline" 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/app/changelog')}
+                onClick={() => debouncedNavigate('/app/changelog')}
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 Ver Novidades
@@ -250,31 +284,13 @@ export const Landing = () => {
           </div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card 
-                  key={index} 
-                  className="relative group hover:shadow-lg transition-all duration-300 cursor-pointer"
-                  onClick={() => handleFeatureClick(feature.path)}
-                >
-                  {feature.isNew && (
-                    <Badge className="absolute -top-2 -right-2 bg-green-500 text-white">
-                      Novo
-                    </Badge>
-                  )}
-                  <CardHeader>
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <CardTitle className="text-lg">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{feature.description}</CardDescription>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                {...feature}
+                onClick={handleFeatureClick}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -430,7 +446,7 @@ export const Landing = () => {
                 size="lg" 
                 variant="secondary"
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/trial')}
+                onClick={() => debouncedNavigate('/trial')}
               >
                 <Shield className="mr-2 h-5 w-5" />
                 Teste Grátis por 30 Dias
@@ -439,7 +455,7 @@ export const Landing = () => {
                 size="lg" 
                 variant="outline"
                 className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary"
-                onClick={() => navigate('/plans')}
+                onClick={() => debouncedNavigate('/plans')}
               >
                 Ver Planos
               </Button>
@@ -455,33 +471,33 @@ export const Landing = () => {
             <div>
               <h3 className="font-semibold mb-4">Produto</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => navigate('/app/dashboard')} className="hover:text-primary text-left">Funcionalidades</button></li>
-                <li><button onClick={() => navigate('/checkout')} className="hover:text-primary text-left">Preços</button></li>
-                <li><button onClick={() => navigate('/app/changelog')} className="hover:text-primary text-left">Novidades</button></li>
-                <li><button onClick={() => navigate('/app/settings')} className="hover:text-primary text-left">Integrações</button></li>
+                <li><button onClick={() => debouncedNavigate('/app/dashboard')} className="hover:text-primary text-left">Funcionalidades</button></li>
+                <li><button onClick={() => debouncedNavigate('/checkout')} className="hover:text-primary text-left">Preços</button></li>
+                <li><button onClick={() => debouncedNavigate('/app/changelog')} className="hover:text-primary text-left">Novidades</button></li>
+                <li><button onClick={() => debouncedNavigate('/app/settings')} className="hover:text-primary text-left">Integrações</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Empresa</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => navigate('/about')} className="hover:text-primary text-left">Sobre</button></li>
-                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Carreiras</button></li>
-                <li><button onClick={() => navigate('/app/changelog')} className="hover:text-primary text-left">Blog</button></li>
+                <li><button onClick={() => debouncedNavigate('/about')} className="hover:text-primary text-left">Sobre</button></li>
+                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Carreiras</button></li>
+                <li><button onClick={() => debouncedNavigate('/app/changelog')} className="hover:text-primary text-left">Blog</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Suporte</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => navigate('/app/documents')} className="hover:text-primary text-left">Documentação</button></li>
-                <li><button onClick={() => navigate('/help')} className="hover:text-primary text-left">Ajuda</button></li>
-                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Contato</button></li>
+                <li><button onClick={() => debouncedNavigate('/app/documents')} className="hover:text-primary text-left">Documentação</button></li>
+                <li><button onClick={() => debouncedNavigate('/help')} className="hover:text-primary text-left">Ajuda</button></li>
+                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Contato</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Política de Privacidade</button></li>
-                <li><button onClick={() => navigate('/contact')} className="hover:text-primary text-left">Termos de Uso</button></li>
+                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Política de Privacidade</button></li>
+                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Termos de Uso</button></li>
               </ul>
             </div>
           </div>

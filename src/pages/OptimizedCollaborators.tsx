@@ -3,23 +3,31 @@ import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin, AlertCircle, RefreshCw, Wifi, WifiOff, Clock } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { 
+  Users, 
+  UserPlus, 
+  Search, 
+  Filter,
+  TrendingUp,
+  TrendingDown,
+  AlertCircle,
+  CheckCircle,
+  Pause,
+  RefreshCw
+} from 'lucide-react';
 import { useOptimizedCollaborators } from '@/hooks/useOptimizedCollaborators';
-import { useSessionHealthCheck } from '@/hooks/useSessionHealthCheck';
+import { CollaboratorCard } from '@/components/collaborators/CollaboratorCard';
+import { NewCollaboratorDialog } from '@/components/dashboard/NewCollaboratorDialog';
 import { SmartLoadingIndicator } from '@/components/common/SmartLoadingIndicator';
-import { useToast } from '@/hooks/use-toast';
+import { SkeletonCards } from '@/components/common/SkeletonCards';
 
 export const OptimizedCollaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
-  const { toast } = useToast();
-  
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'vacation'>('all');
+  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
+
   const {
     collaborators,
     stats,
@@ -29,374 +37,251 @@ export const OptimizedCollaborators = () => {
     refresh,
     isUsingCache
   } = useOptimizedCollaborators();
-  
-  const { sessionHealth } = useSessionHealthCheck();
 
-  const [newCollaborator, setNewCollaborator] = useState({
-    name: '',
-    email: '',
-    role: '',
-    department: '',
-    phone: '',
-    location: ''
+  const filteredCollaborators = collaborators.filter(collaborator => {
+    const matchesSearch = collaborator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         collaborator.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         collaborator.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         collaborator.department.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || collaborator.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
 
-  const handleAddCollaborator = async () => {
-    if (!newCollaborator.name || !newCollaborator.email || !newCollaborator.role || !newCollaborator.department) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const result = await createCollaborator({
-      ...newCollaborator,
-      status: 'active' as const
-    });
-
-    if (result) {
-      setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
-      setIsAddingCollaborator(false);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'inactive': return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case 'vacation': return <Pause className="h-4 w-4 text-yellow-500" />;
+      default: return null;
     }
   };
-
-  const getNetworkStatusIcon = () => {
-    switch (sessionHealth.networkStatus) {
-      case 'offline':
-        return <WifiOff className="h-4 w-4 text-red-500" />;
-      case 'slow':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      default:
-        return <Wifi className="h-4 w-4 text-green-500" />;
-    }
-  };
-
-  const getNetworkStatusText = () => {
-    switch (sessionHealth.networkStatus) {
-      case 'offline':
-        return 'Offline - Dados em Cache';
-      case 'slow':
-        return 'Conexão Lenta';
-      default:
-        return 'Conectado';
-    }
-  };
-
-  const filteredCollaborators = collaborators.filter(collaborator =>
-    collaborator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    collaborator.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    collaborator.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    collaborator.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-500';
-      case 'inactive': return 'bg-red-500';
-      case 'vacation': return 'bg-yellow-500';
-      default: return 'bg-gray-500';
+      case 'active': return 'bg-green-100 text-green-800 border-green-200';
+      case 'inactive': return 'bg-red-100 text-red-800 border-red-200';
+      case 'vacation': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'active': return 'Ativo';
-      case 'inactive': return 'Inativo';
-      case 'vacation': return 'Férias';
-      default: return 'Desconhecido';
-    }
-  };
-
-  // Mostrar loading inteligente durante carregamento inicial
-  if (loadingState.isLoading && loadingState.stage !== 'complete') {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <SmartLoadingIndicator
-            progress={loadingState.progress}
-            stage={loadingState.stage}
-            networkStatus={sessionHealth.networkStatus}
-            showDetails={true}
-          />
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header com Status de Conexão */}
-        <div className="flex justify-between items-center">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold">Colaboradores</h1>
             <p className="text-muted-foreground">
-              Gerencie todos os colaboradores da empresa
+              Gerencie sua equipe de forma inteligente e eficiente
             </p>
+            {isUsingCache && (
+              <Badge variant="outline" className="mt-2">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Modo offline - dados em cache
+              </Badge>
+            )}
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* Status de conectividade inteligente */}
-            <div className="flex items-center space-x-2">
-              {getNetworkStatusIcon()}
-              <span className="text-sm text-muted-foreground">
-                {getNetworkStatusText()}
-              </span>
-            </div>
-            
-            <Dialog open={isAddingCollaborator} onOpenChange={setIsAddingCollaborator}>
-              <DialogTrigger asChild>
-                <Button disabled={loadingState.isLoading}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Novo Colaborador
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Adicionar Novo Colaborador</DialogTitle>
-                  <DialogDescription>
-                    Preencha as informações do novo colaborador
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Nome Completo *</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="Digite o nome completo"
-                      value={newCollaborator.name}
-                      onChange={(e) => setNewCollaborator({...newCollaborator, name: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      placeholder="Digite o email"
-                      value={newCollaborator.email}
-                      onChange={(e) => setNewCollaborator({...newCollaborator, email: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Cargo *</Label>
-                    <Input 
-                      id="role" 
-                      placeholder="Digite o cargo"
-                      value={newCollaborator.role}
-                      onChange={(e) => setNewCollaborator({...newCollaborator, role: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="department">Departamento *</Label>
-                    <Input 
-                      id="department" 
-                      placeholder="Digite o departamento"
-                      value={newCollaborator.department}
-                      onChange={(e) => setNewCollaborator({...newCollaborator, department: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input 
-                      id="phone" 
-                      placeholder="Digite o telefone"
-                      value={newCollaborator.phone}
-                      onChange={(e) => setNewCollaborator({...newCollaborator, phone: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="location">Localização</Label>
-                    <Input 
-                      id="location" 
-                      placeholder="Digite a localização"
-                      value={newCollaborator.location}
-                      onChange={(e) => setNewCollaborator({...newCollaborator, location: e.target.value})}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsAddingCollaborator(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleAddCollaborator}>
-                    Adicionar
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+          <div className="flex gap-2">
+            <Button onClick={refresh} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
+            <Button onClick={() => setIsNewDialogOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Novo Colaborador
+            </Button>
           </div>
         </div>
 
-        {/* Alert de Cache/Erro */}
-        {isUsingCache && (
-          <Alert>
-            <WifiOff className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>Exibindo dados salvos localmente. Alguns dados podem estar desatualizados.</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={refresh}
-                disabled={loadingState.isLoading}
-              >
-                <RefreshCw className={`h-3 w-3 mr-1 ${loadingState.isLoading ? 'animate-spin' : ''}`} />
-                Tentar Novamente
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Loading Indicator */}
+        <SmartLoadingIndicator 
+          stage={loadingState.currentStage}
+          progress={loadingState.progress}
+          isLoading={loadingState.isLoading}
+        />
 
-        {error && !isUsingCache && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>{error}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={refresh}
-                disabled={loadingState.isLoading}
-              >
-                <RefreshCw className={`h-3 w-3 mr-1 ${loadingState.isLoading ? 'animate-spin' : ''}`} />
-                Tentar Novamente
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Stats Otimizadas */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="hover:shadow-lg transition-shadow">
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
+              <p className="text-xs text-muted-foreground">colaboradores</p>
             </CardContent>
           </Card>
-          
-          <Card className="hover:shadow-lg transition-shadow">
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Ativos</CardTitle>
-              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+              <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.active}</div>
+              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% do total
+              </p>
             </CardContent>
           </Card>
-          
-          <Card className="hover:shadow-lg transition-shadow">
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Em Férias</CardTitle>
-              <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
+              <CardTitle className="text-sm font-medium">Inativos</CardTitle>
+              <AlertCircle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.vacation}</div>
+              <div className="text-2xl font-bold text-red-600">{stats.inactive}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.total > 0 ? Math.round((stats.inactive / stats.total) * 100) : 0}% do total
+              </p>
             </CardContent>
           </Card>
-          
-          <Card className="hover:shadow-lg transition-shadow">
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Férias</CardTitle>
+              <Pause className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-600">{stats.vacation}</div>
+              <p className="text-xs text-muted-foreground">em período de férias</p>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Departamentos</CardTitle>
-              <Filter className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.departments}</div>
+              <p className="text-xs text-muted-foreground">áreas ativas</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search and Filters */}
+        {/* Filters and Search */}
         <Card>
           <CardHeader>
-            <CardTitle>Buscar Colaboradores</CardTitle>
+            <CardTitle className="text-lg">Filtros e Busca</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome, email, cargo ou departamento..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
-              />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                  <Input
+                    placeholder="Buscar por nome, email, cargo ou departamento..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {['all', 'active', 'inactive', 'vacation'].map((status) => (
+                  <Button
+                    key={status}
+                    variant={statusFilter === status ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setStatusFilter(status as any)}
+                    className="flex items-center gap-1"
+                  >
+                    {status !== 'all' && getStatusIcon(status)}
+                    {status === 'all' ? 'Todos' : 
+                     status === 'active' ? 'Ativos' :
+                     status === 'inactive' ? 'Inativos' : 'Férias'}
+                  </Button>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Lista de Colaboradores Otimizada */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCollaborators.map((collaborator) => (
-            <Card key={collaborator.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Avatar>
-                      <AvatarFallback>
-                        {collaborator.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold">{collaborator.name}</h3>
-                      <p className="text-sm text-muted-foreground">{collaborator.role}</p>
-                    </div>
-                  </div>
-                  <div className={`h-3 w-3 rounded-full ${getStatusColor(collaborator.status)}`} />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <Badge variant="secondary">{collaborator.department}</Badge>
-                  <Badge variant="outline">{getStatusText(collaborator.status)}</Badge>
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <Mail className="mr-2 h-3 w-3" />
-                    {collaborator.email}
-                  </div>
-                  {collaborator.phone && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Phone className="mr-2 h-3 w-3" />
-                      {collaborator.phone}
-                    </div>
-                  )}
-                  {collaborator.location && (
-                    <div className="flex items-center text-muted-foreground">
-                      <MapPin className="mr-2 h-3 w-3" />
-                      {collaborator.location}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredCollaborators.length === 0 && !error && loadingState.stage === 'complete' && (
-          <Card>
-            <CardContent className="py-8">
-              <div className="text-center">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhum colaborador encontrado</h3>
-                <p className="text-muted-foreground mb-4">
-                  {searchTerm ? 'Tente ajustar sua busca' : 'Comece adicionando seu primeiro colaborador'}
-                </p>
-                {!searchTerm && (
-                  <Button onClick={() => setIsAddingCollaborator(true)}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Adicionar Primeiro Colaborador
-                  </Button>
-                )}
+        {/* Error State */}
+        {error && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="h-5 w-5" />
+                <span className="font-medium">Erro ao carregar colaboradores</span>
               </div>
+              <p className="text-red-600 mt-1">{error}</p>
+              <Button onClick={refresh} variant="outline" size="sm" className="mt-3">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Tentar novamente
+              </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* Collaborators List */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Lista de Colaboradores</CardTitle>
+                <CardDescription>
+                  {filteredCollaborators.length} de {collaborators.length} colaboradores
+                </CardDescription>
+              </div>
+              <Badge variant="outline">
+                <Filter className="h-3 w-3 mr-1" />
+                {filteredCollaborators.length}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loadingState.isLoading && loadingState.currentStage === 'collaborators' ? (
+              <SkeletonCards count={6} />
+            ) : filteredCollaborators.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  {searchTerm || statusFilter !== 'all' 
+                    ? 'Nenhum colaborador encontrado' 
+                    : 'Nenhum colaborador cadastrado'
+                  }
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchTerm || statusFilter !== 'all'
+                    ? 'Tente ajustar os filtros de busca'
+                    : 'Comece adicionando seu primeiro colaborador'
+                  }
+                </p>
+                {!searchTerm && statusFilter === 'all' && (
+                  <Button onClick={() => setIsNewDialogOpen(true)}>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Adicionar Colaborador
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredCollaborators.map((collaborator) => (
+                  <CollaboratorCard
+                    key={collaborator.id}
+                    collaborator={collaborator}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* New Collaborator Dialog */}
+        <NewCollaboratorDialog
+          isOpen={isNewDialogOpen}
+          onClose={() => setIsNewDialogOpen(false)}
+          onSubmit={createCollaborator}
+        />
       </div>
     </DashboardLayout>
   );
