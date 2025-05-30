@@ -643,6 +643,27 @@ export type Database = {
         }
         Relationships: []
       }
+      system_settings: {
+        Row: {
+          cache_ttl_minutes: number | null
+          cache_version: number | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          cache_ttl_minutes?: number | null
+          cache_version?: number | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          cache_ttl_minutes?: number | null
+          cache_version?: number | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       training_enrollments: {
         Row: {
           collaborator_id: string
@@ -821,6 +842,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      increment_cache_version: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

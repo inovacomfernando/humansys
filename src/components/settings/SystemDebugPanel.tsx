@@ -21,6 +21,7 @@ import {
 import { useSystemManagement } from '@/hooks/useSystemManagement';
 import { AuthDebugPanel } from '@/components/debug/AuthDebugPanel';
 import { SystemLogsViewer } from '@/components/debug/SystemLogsViewer';
+import { CacheManagementPanel } from '@/components/debug/CacheManagementPanel';
 import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
 
 const StatusIcon = ({ status }: { status: boolean }) => {
@@ -195,6 +196,9 @@ export const SystemDebugPanel = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Panel de Gerenciamento de Cache */}
+      <CacheManagementPanel />
 
       {/* Panel de Debug de Autenticação */}
       <AuthDebugPanel />
