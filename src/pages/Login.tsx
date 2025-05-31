@@ -36,7 +36,7 @@ export const Login = () => {
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao RH System",
       });
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "Erro no login",
@@ -63,7 +63,7 @@ export const Login = () => {
         title: "Cadastro realizado com sucesso!",
         description: "Seu teste grátis de 30 dias foi ativado. Bem-vindo ao RH System!",
       });
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "Erro no cadastro",
