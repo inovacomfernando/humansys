@@ -25,9 +25,19 @@ export const CreditsCard = () => {
     );
   }
 
-  if (!credits) return null;
+  // Fallback data se não houver créditos
+  const defaultCredits = {
+    plan_type: 'trial' as const,
+    total_credits: 999999,
+    used_credits: 0,
+    remaining_credits: 999999
+  };
 
-  const progressPercentage = ((credits.total_credits - credits.remaining_credits) / credits.total_credits) * 100;
+  const creditsData = credits || defaultCredits;
+
+  const progressPercentage = creditsData.total_credits > 0 
+    ? ((creditsData.total_credits - creditsData.remaining_credits) / creditsData.total_credits) * 100
+    : 0;
   
   const planLabels = {
     trial: 'Teste Grátis',
@@ -53,30 +63,42 @@ export const CreditsCard = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">{credits.remaining_credits}</div>
+              <div className="text-2xl font-bold">
+                {creditsData.plan_type === 'trial' ? '∞' : creditsData.remaining_credits}
+              </div>
               <p className="text-xs text-muted-foreground">
-                de {credits.total_credits} créditos
+                {creditsData.plan_type === 'trial' 
+                  ? 'Ilimitado (Teste Grátis)' 
+                  : `de ${creditsData.total_credits} créditos`
+                }
               </p>
             </div>
-            <Badge variant="secondary" className={planColors[credits.plan_type]}>
-              {planLabels[credits.plan_type]}
+            <Badge variant="secondary" className={planColors[creditsData.plan_type]}>
+              {planLabels[creditsData.plan_type]}
             </Badge>
           </div>
           
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs">
-              <span>Utilizados: {credits.used_credits}</span>
-              <span>Restantes: {credits.remaining_credits}</span>
+          {creditsData.plan_type !== 'trial' && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <span>Utilizados: {creditsData.used_credits}</span>
+                <span>Restantes: {creditsData.remaining_credits}</span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
             </div>
-            <Progress value={progressPercentage} className="h-2" />
-          </div>
+          )}
 
           <div className="flex items-center space-x-2 text-xs text-muted-foreground">
             <Users className="h-3 w-3" />
-            <span>Cada colaborador usa 1 crédito</span>
+            <span>
+              {creditsData.plan_type === 'trial' 
+                ? 'Cadastros ilimitados durante o teste' 
+                : 'Cada colaborador usa 1 crédito'
+              }
+            </span>
           </div>
 
-          {credits.remaining_credits <= 5 && credits.plan_type !== 'trial' && (
+          {creditsData.remaining_credits <= 5 && creditsData.plan_type !== 'trial' && (
             <div className="flex items-center space-x-2 text-xs text-orange-600 bg-orange-50 p-2 rounded">
               <TrendingUp className="h-3 w-3" />
               <span>Poucos créditos restantes! Considere fazer upgrade.</span>

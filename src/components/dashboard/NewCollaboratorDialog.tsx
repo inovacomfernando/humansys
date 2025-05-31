@@ -12,9 +12,8 @@ import { useCredits } from '@/hooks/useCredits';
 
 export const NewCollaboratorDialog = () => {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
   const { toast } = useToast();
-  const { useCredit, credits } = useCredits();
+  const { credits, useCredit } = useCredits();
   const navigate = useNavigate();
 
   const handleNavigate = () => {
