@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -7,21 +6,23 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CreditCard, Lock, Shield, Gift } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useCredits } from '@/hooks/useCredits';
 
 export const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+  const { updateCredits } = useCredits();
+
   // Get data from state, with fallbacks
   const planData = location.state || {};
   const { plan = 'Em Crescimento', price = '149', billing = 'monthly' } = planData;
-  
+
   const [formData, setFormData] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -59,33 +60,51 @@ export const Checkout = () => {
     }
 
     setIsProcessing(true);
-    
+
     try {
-      // Simular ativação do teste grátis
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Teste grátis ativado para:', { user: user.email, plan });
-      
-      toast({
-        title: "Teste grátis ativado!",
-        description: "Você tem 30 dias para explorar todas as funcionalidades do sistema.",
-      });
-      
-      // Redirect to appropriate dashboard
-      const response = await fetch('/api/check-user-role', {
-        headers: { 'Authorization': `Bearer ${user.id}` }
-      }).catch(() => null);
-      
-      if (response?.ok) {
-        const { isFounder } = await response.json();
-        navigate(isFounder ? '/founder/dashboard' : '/app/dashboard');
-      } else {
-        navigate('/app/dashboard');
+      // Determinar o tipo de plano baseado no nome
+      let planType: 'inicial' | 'crescimento' | 'profissional' | 'trial' = 'trial';
+
+      if (billing !== 'trial') {
+        switch (plan.toLowerCase()) {
+          case 'inicial':
+            planType = 'inicial';
+            break;
+          case 'em crescimento':
+            planType = 'crescimento';
+            break;
+          case 'profissional':
+            planType = 'profissional';
+            break;
+          default:
+            planType = 'trial';
+        }
       }
-    } catch (error) {
-      console.error('Error starting trial:', error);
+
+      // Simular ativação do plano
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Atualizar créditos se não for teste grátis
+      if (planType !== 'trial') {
+        await updateCredits(planType);
+      }
+
+      console.log('Plano ativado para:', { user: user.email, plan, planType });
+
+      const isTrialMessage = billing === 'trial';
+
       toast({
-        title: "Erro ao ativar teste",
+        title: isTrialMessage ? "Teste grátis ativado!" : "Plano ativado!",
+        description: isTrialMessage 
+          ? "Você tem 30 dias para explorar todas as funcionalidades do sistema."
+          : `Plano ${plan} ativado com sucesso. Seus créditos foram atualizados.`,
+      });
+
+      navigate('/app/dashboard');
+    } catch (error) {
+      console.error('Error starting plan:', error);
+      toast({
+        title: "Erro ao ativar plano",
         description: "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
@@ -97,23 +116,23 @@ export const Checkout = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    
+
     try {
       // Simular processamento do pagamento
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       console.log('Dados do pagamento:', { plan, price, billing, ...formData });
-      
+
       toast({
         title: "Pagamento processado!",
         description: "Sua assinatura foi ativada com sucesso.",
       });
-      
+
       // Redirect to appropriate dashboard
       const response = await fetch('/api/check-user-role', {
         headers: { 'Authorization': `Bearer ${user?.id}` }
       }).catch(() => null);
-      
+
       if (response?.ok) {
         const { isFounder } = await response.json();
         navigate(isFounder ? '/founder/dashboard' : '/app/dashboard');
@@ -142,7 +161,7 @@ export const Checkout = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth={false} />
-      
+
       <div className="container py-12">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-8">
@@ -173,7 +192,7 @@ export const Checkout = () => {
                       ✅ Cancele a qualquer momento<br/>
                       ✅ Sem cobrança automática
                     </div>
-                    
+
                     <Button 
                       onClick={handleStartTrial}
                       className="w-full bg-green-600 hover:bg-green-700" 
@@ -330,7 +349,7 @@ export const Checkout = () => {
                       {billing === 'yearly' ? 'Anual' : 'Mensal'}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex justify-between items-center text-lg font-semibold">
                     <span>Total</span>
                     <span>{formatPrice(price)}</span>

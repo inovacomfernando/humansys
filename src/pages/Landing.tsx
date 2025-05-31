@@ -259,7 +259,13 @@ export const Landing = () => {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => debouncedNavigate('/plans')}
+                onClick={() => debouncedNavigate('/checkout', { 
+                  state: { 
+                    plan: 'Teste Grátis', 
+                    price: '0',
+                    billing: 'trial' 
+                  } 
+                })}
               >
                 <Zap className="mr-2 h-5 w-5" />
                 Começar Teste Grátis
@@ -453,7 +459,13 @@ export const Landing = () => {
                 size="lg" 
                 variant="secondary"
                 className="text-lg px-8 py-6"
-                onClick={() => debouncedNavigate('/plans')}
+                onClick={() => debouncedNavigate('/checkout', { 
+                  state: { 
+                    plan: 'Teste Grátis', 
+                    price: '0',
+                    billing: 'trial' 
+                  } 
+                })}
               >
                 <Shield className="mr-2 h-5 w-5" />
                 Teste Grátis por 30 Dias

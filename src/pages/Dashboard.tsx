@@ -10,6 +10,7 @@ import { Widget } from '@/components/dashboard/Widget';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import { ActivityItem } from '@/components/dashboard/ActivityItem';
 import { TaskItem } from '@/components/dashboard/TaskItem';
+import { CreditsCard } from '@/components/dashboard/CreditsCard';
 import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,7 +71,7 @@ export const Dashboard = () => {
           </div>
           <div className="flex space-x-2">
             {isFounder && (
-              <Button onClick={() => navigate('/founder/dashboard')} variant="outline">
+              <Button onClick={() => navigate('/app/founder/dashboard')} variant="outline">
                 <Crown className="h-4 w-4 mr-2" />
                 Founder Dashboard
               </Button>
@@ -83,7 +84,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
           <StatsCard
             title="Total de Colaboradores"
             value={data.stats.totalCollaborators}
@@ -109,6 +110,7 @@ export const Dashboard = () => {
             trend={25}
             isNew={true}
           />
+          <CreditsCard />
         </div>
 
         {/* New Features Highlight */}

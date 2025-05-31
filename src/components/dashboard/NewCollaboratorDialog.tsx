@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,11 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useCredits } from '@/hooks/useCredits';
 
 export const NewCollaboratorDialog = () => {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
+  const { useCredit, credits } = useCredits();
   const navigate = useNavigate();
 
   const handleNavigate = () => {

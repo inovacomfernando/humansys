@@ -29,7 +29,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
 }) => {
   return (
     <Card 
-      className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 relative overflow-hidden"
+      className="group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 relative overflow-hidden feature-card-glow"
       onClick={() => onClick(path)}
     >
       {isNew && (

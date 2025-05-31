@@ -77,6 +77,31 @@
 }
 
 @layer base {
+
+
+/* Glowing border animation for feature cards */
+@keyframes glow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.feature-card-glow {
+  position: relative;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(45deg, transparent 30%, #3b82f6, #8b5cf6, #06b6d4, transparent 70%) border-box;
+  border: 2px solid transparent;
+  animation: glow 3s ease-in-out infinite;
+  background-size: 300% 300%;
+}
+
+.feature-card-glow:hover {
+  animation-duration: 1.5s;
+}
+
   * {
     @apply border-border;
   }

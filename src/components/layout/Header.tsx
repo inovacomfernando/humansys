@@ -11,7 +11,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Monitor, LogOut, Settings, User, Loader2, Home } from 'lucide-react';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
+import { Moon, Sun, Monitor, LogOut, Settings, User, Loader2, Home, ChevronDown } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -89,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-colors duration-300">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center space-x-8">
           {companyLogo ? (
             <img 
               src={companyLogo} 
@@ -107,6 +115,77 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
               </div>
               <span className="font-bold text-xl transition-colors duration-200">Humansys</span>
             </div>
+          )}
+
+          {/* Product Navigation - only show on landing page */}
+          {location.pathname === '/' && !user && (
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent">
+                    Produto
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
+                      <li className="row-span-3">
+                        <NavigationMenuLink asChild>
+                          <a
+                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
+                            href="/app/dashboard"
+                          >
+                            <div className="mb-2 mt-4 text-lg font-medium">
+                              Humansys
+                            </div>
+                            <p className="text-sm leading-tight text-muted-foreground">
+                              Plataforma completa de gestão de RH com IA
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <a
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            href="/app/dashboard"
+                          >
+                            <div className="text-sm font-medium leading-none">Funcionalidades</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Explore todas as funcionalidades do sistema
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <a
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            href="/plans"
+                          >
+                            <div className="text-sm font-medium leading-none">Preços</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Conheça nossos planos e preços
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <a
+                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            href="/changelog"
+                          >
+                            <div className="text-sm font-medium leading-none">Novidades</div>
+                            <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                              Veja as últimas atualizações
+                            </p>
+                          </a>
+                        </NavigationMenuLink>
+                      </li>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
           )}
         </div>
 
