@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,11 +23,13 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useRouter();
 
   const [settings, setSettings] = useState({
     notifications: {
@@ -54,7 +55,7 @@ export const Settings = () => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       toast({
         title: "Configurações salvas",
         description: "Suas preferências foram atualizadas com sucesso.",
@@ -92,7 +93,7 @@ export const Settings = () => {
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
+            <TabsTrigger value="profile" className="flex items-center gap-2" onClick={() => navigate('/app/profile')}>
               <User className="h-4 w-4" />
               Perfil
             </TabsTrigger>
@@ -201,7 +202,7 @@ export const Settings = () => {
                       onCheckedChange={(checked) => updateSetting('notifications', 'email', checked)}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-medium">Push Notifications</h4>

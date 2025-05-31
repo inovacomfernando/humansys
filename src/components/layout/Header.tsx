@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -46,34 +45,34 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     try {
       console.log('Starting aggressive logout...');
-      
+
       // Clear everything immediately (before API call)
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Clear query cache
       if (window.queryCache) {
         window.queryCache.clear();
       }
-      
+
       // Show immediate feedback
       toast({
         title: "Saindo...",
         description: "Redirecionando para login.",
       });
-      
+
       // Call logout API
       await signOut();
-      
+
       // Force navigation immediately
       window.location.href = '/login';
-      
+
     } catch (error: any) {
       console.error('Logout error:', error);
-      
+
       // Even with error, force cleanup and redirect
       localStorage.clear();
       sessionStorage.clear();
@@ -263,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-background border border-border" align="end">
-                <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer" disabled={isLoggingOut}>
+                <DropdownMenuItem onClick={() => navigate('/app/settings?tab=profile')} className="cursor-pointer" disabled={isLoggingOut}>
                   <User className="mr-2 h-4 w-4" />
                   Perfil
                 </DropdownMenuItem>

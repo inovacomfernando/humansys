@@ -260,7 +260,7 @@ export const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
-      
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 py-20 md:py-32">
         <div className="container relative z-10">
@@ -286,9 +286,9 @@ export const Landing = () => {
                 className="text-lg px-8 py-6"
                 onClick={() => debouncedNavigate('/checkout', { 
                   state: { 
-                    plan: 'Teste Grátis', 
-                    price: '0',
-                    billing: 'trial' 
+                    selectedPlan: 'Teste Grátis', 
+                    selectedPrice: 'Grátis',
+                    selectedBilling: 'trial' 
                   } 
                 })}
               >
@@ -325,7 +325,7 @@ export const Landing = () => {
               Tome decisões estratégicas com métricas de negócio em tempo real e IA preditiva
             </p>
           </div>
-          
+
           <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
             <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -439,7 +439,7 @@ export const Landing = () => {
               Todas as ferramentas que você precisa para uma gestão de RH eficiente
             </p>
           </div>
-          
+
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => (
               <FeatureCard
@@ -473,12 +473,12 @@ export const Landing = () => {
                     Mais Popular
                   </DynamicBadge>
                 )}
-                
+
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <CardDescription className="text-base">{plan.description}</CardDescription>
                 </CardHeader>
-                
+
                 <CardContent className="text-center">
                   <div className="mb-6">
                     <div className="text-4xl font-bold text-primary mb-2">
@@ -489,7 +489,7 @@ export const Landing = () => {
                       ou {plan.yearlyPrice}/ano (2 meses grátis)
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4 mb-8">
                     {plan.features.map((feature, featureIndex) => (
                       <div key={featureIndex} className="flex items-center text-left">
@@ -498,7 +498,7 @@ export const Landing = () => {
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Button 
                       className="w-full" 
@@ -534,7 +534,7 @@ export const Landing = () => {
                 Empresas que usam nossa solução veem resultados imediatos
               </p>
             </div>
-            
+
             <div className="grid gap-6 md:grid-cols-2">
               {benefits.map((benefit, index) => (
                 <div key={index} className="flex items-center space-x-3">
@@ -560,7 +560,7 @@ export const Landing = () => {
               Veja o que nossos clientes estão dizendo
             </p>
           </div>
-          
+
           <div className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="relative">
@@ -605,9 +605,9 @@ export const Landing = () => {
                 className="text-lg px-8 py-6"
                 onClick={() => debouncedNavigate('/checkout', { 
                   state: { 
-                    plan: 'Teste Grátis', 
-                    price: '0',
-                    billing: 'trial' 
+                    selectedPlan: 'Teste Grátis', 
+                    selectedPrice: 'Grátis',
+                    selectedBilling: 'trial' 
                   } 
                 })}
               >
@@ -664,7 +664,7 @@ export const Landing = () => {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-muted-foreground text-sm">
               &copy; 2024 Humansys. Todos os direitos reservados.

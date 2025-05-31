@@ -6,77 +6,90 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CreditsCard } from '@/components/dashboard/CreditsCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { User, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  User,
+  Mail,
+  Building,
+  Briefcase,
+  Camera,
+  Save,
+  Crown,
+  Users,
+  CreditCard,
+  Settings
+} from 'lucide-react';
+
+interface UserProfile {
+  id: string;
+  full_name: string;
+  email: string;
+  company_name?: string;
+  company_cnpj?: string;
+  position?: string;
+  avatar_url?: string;
+  is_company_owner: boolean;
+}
 
 export const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    avatar_url: ''
-  });
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isCompanyOwner, setIsCompanyOwner] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      setProfile({
-        name: user.user_metadata?.name || user.user_metadata?.full_name || '',
-        email: user.email || '',
-        avatar_url: user.user_metadata?.avatar_url || ''
-      });
-    }
-  }, [user]);
+    loadProfile();
+  }, [user?.id]);
 
-  const handleSave = async () => {
-    if (!user) return;
+  const loadProfile = async () => {
+    if (!user?.id) return;
 
     try {
       setLoading(true);
       
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          name: profile.name,
-          full_name: profile.name,
-          avatar_url: profile.avatar_url
-        }
-      });
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao salvar perfil",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Atualizar também na tabela profiles se existir
-      const { error: profileError } = await supabase
+      // Buscar perfil do usuário
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          name: profile.name,
-          email: profile.email,
-          avatar_url: profile.avatar_url
-        });
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error loading profile:', profileError);
       }
 
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso.",
-      });
+      // Verificar se é owner da empresa através do CNPJ
+      const { data: companyData } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+
+      const userProfile: UserProfile = {
+        id: user.id,
+        full_name: profileData?.full_name || user.user_metadata?.full_name || '',
+        email: user.email || '',
+        company_name: profileData?.company_name || companyData?.name || '',
+        company_cnpj: profileData?.company_cnpj || companyData?.cnpj || '',
+        position: profileData?.position || '',
+        avatar_url: profileData?.avatar_url || user.user_metadata?.avatar_url || '',
+        is_company_owner: !!companyData
+      };
+
+      setProfile(userProfile);
+      setIsCompanyOwner(!!companyData);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading profile:', error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar perfil",
+        description: "Não foi possível carregar o perfil",
         variant: "destructive"
       });
     } finally {
@@ -84,95 +97,305 @@ export const Profile = () => {
     }
   };
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setProfile(prev => ({ ...prev, avatar_url: result }));
-      };
-      reader.readAsDataURL(file);
+  const handleSave = async () => {
+    if (!profile || !user?.id) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: profile.full_name,
+          company_name: profile.company_name,
+          company_cnpj: profile.company_cnpj,
+          position: profile.position,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso!"
+      });
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o perfil",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      if (profile) {
+        setProfile({ ...profile, avatar_url: data.publicUrl });
+      }
+
+      toast({
+        title: "Sucesso",
+        description: "Foto de perfil atualizada!"
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível fazer upload da imagem",
+        variant: "destructive"
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!profile) return null;
+
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Perfil</h1>
-          <p className="text-muted-foreground">
-            Gerencie suas informações pessoais
-          </p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              <User className="h-8 w-8" />
+              Perfil
+              {isCompanyOwner && (
+                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600">
+                  <Crown className="h-3 w-3 mr-1" />
+                  Owner
+                </Badge>
+              )}
+            </h1>
+            <p className="text-muted-foreground">
+              Gerencie suas informações pessoais e preferências da conta
+            </p>
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações Pessoais</CardTitle>
-            <CardDescription>
-              Atualize suas informações de perfil
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={profile.avatar_url} alt={profile.name} />
-                <AvatarFallback>
-                  {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <Label htmlFor="avatar-upload" className="cursor-pointer">
-                  <Button variant="outline" size="sm" asChild>
-                    <span>
-                      <Camera className="mr-2 h-4 w-4" />
-                      Alterar Foto
-                    </span>
-                  </Button>
-                </Label>
-                <Input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarUpload}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  PNG, JPG ou GIF (máx. 5MB)
-                </p>
-              </div>
-            </div>
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="profile">Informações Pessoais</TabsTrigger>
+            <TabsTrigger value="company">Empresa</TabsTrigger>
+            {isCompanyOwner && (
+              <TabsTrigger value="credits">Gestão de Créditos</TabsTrigger>
+            )}
+          </TabsList>
 
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  value={profile.name}
-                  onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </div>
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Foto de Perfil</CardTitle>
+                <CardDescription>
+                  Clique na foto para alterar sua imagem de perfil
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
+                      <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
+                      <AvatarFallback>
+                        {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1">
+                      <Camera className="h-3 w-3 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{profile.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{profile.email}</p>
+                  </div>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
-                  disabled
-                />
-                <p className="text-xs text-muted-foreground">
-                  Para alterar o email, entre em contato com o suporte
-                </p>
-              </div>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações Pessoais</CardTitle>
+                <CardDescription>
+                  Atualize suas informações básicas
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Nome Completo</Label>
+                    <Input
+                      id="full_name"
+                      value={profile.full_name}
+                      onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                      placeholder="Seu nome completo"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={profile.email}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="position">Cargo</Label>
+                  <Input
+                    id="position"
+                    value={profile.position}
+                    onChange={(e) => setProfile({ ...profile, position: e.target.value })}
+                    placeholder="Seu cargo na empresa"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <Button onClick={handleSave} disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </CardContent>
-        </Card>
+          <TabsContent value="company" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Informações da Empresa
+                </CardTitle>
+                <CardDescription>
+                  Dados da sua empresa ou organização
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="company_name">Nome da Empresa</Label>
+                  <Input
+                    id="company_name"
+                    value={profile.company_name}
+                    onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
+                    placeholder="Nome da sua empresa"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="company_cnpj">CNPJ</Label>
+                  <Input
+                    id="company_cnpj"
+                    value={profile.company_cnpj}
+                    onChange={(e) => setProfile({ ...profile, company_cnpj: e.target.value })}
+                    placeholder="00.000.000/0000-00"
+                    disabled={!isCompanyOwner}
+                    className={!isCompanyOwner ? "bg-muted" : ""}
+                  />
+                  {!isCompanyOwner && (
+                    <p className="text-xs text-muted-foreground">
+                      Apenas o proprietário da empresa pode alterar o CNPJ
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {isCompanyOwner && (
+            <TabsContent value="credits" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Gestão de Créditos
+                    <Badge variant="outline">Apenas Owner</Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Gerencie os créditos para cadastro de colaboradores
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CreditsCard />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Permissões de Empresa
+                  </CardTitle>
+                  <CardDescription>
+                    Suas permissões como proprietário da empresa
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Cadastro de Colaboradores</p>
+                        <p className="text-sm text-muted-foreground">Gerenciar equipe e créditos</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Autorizado</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Founder Dashboard</p>
+                        <p className="text-sm text-muted-foreground">Acesso a métricas de negócio</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Autorizado</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-medium">Configurações da Empresa</p>
+                        <p className="text-sm text-muted-foreground">Alterar dados corporativos</p>
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">Autorizado</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            <Save className="h-4 w-4 mr-2" />
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+          </Button>
+        </div>
       </div>
     </DashboardLayout>
   );

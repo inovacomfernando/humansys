@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -23,6 +22,7 @@ import { Goals } from '@/pages/Goals';
 import { Analytics } from '@/pages/Analytics';
 import { Changelog } from '@/pages/Changelog';
 import { Settings } from '@/pages/Settings';
+const Profile = React.lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
 import { Certificates } from '@/pages/Certificates';
 import { Documents } from '@/pages/Documents';
 import { Meetings } from '@/pages/Meetings';
@@ -48,10 +48,10 @@ export const AppRouter = () => {
       <Routes>
         {/* Rota inicial - mostra landing page ou redireciona */}
         <Route path="/" element={<Index />} />
-        
+
         {/* Rota pública para landing page */}
         <Route path="/home" element={<Landing />} />
-        
+
         <Route 
           path="/login" 
           element={
@@ -60,7 +60,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         {/* Rotas do App Principal */}
         <Route 
           path="/app/dashboard" 
@@ -70,7 +70,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/collaborators" 
           element={
@@ -79,7 +79,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/recruitment" 
           element={
@@ -88,7 +88,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/onboarding" 
           element={
@@ -97,7 +97,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/training" 
           element={
@@ -106,7 +106,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/feedback" 
           element={
@@ -115,7 +115,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/meetings" 
           element={
@@ -124,7 +124,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/goals" 
           element={
@@ -133,7 +133,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/surveys" 
           element={
@@ -142,7 +142,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/analytics" 
           element={
@@ -151,7 +151,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/changelog" 
           element={
@@ -160,7 +160,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/settings" 
           element={
@@ -169,7 +169,15 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+        <Route 
+          path="/app/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
+
         <Route 
           path="/app/certificates" 
           element={
@@ -178,7 +186,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         <Route 
           path="/app/documents" 
           element={
@@ -197,13 +205,13 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-        
+
         {/* Rotas Públicas Institucionais */}
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<Help />} />
         <Route path="/checkout" element={<Checkout />} />
-        
+
         {/* Redirects para manter compatibilidade - redirecionam para /app/[page] */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/founder-dashboard" element={<ProtectedRoute requiredRole="founder"><FounderDashboard /></ProtectedRoute>} />
@@ -216,11 +224,12 @@ export const AppRouter = () => {
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         <Route path="/changelog" element={<ProtectedRoute><Changelog /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
         <Route path="/surveys" element={<ProtectedRoute><ModernSurveys /></ProtectedRoute>} />
-        
+
         {/* 404 page for unmatched routes */}
         <Route path="*" element={<NotFound />} />
       </Routes>
