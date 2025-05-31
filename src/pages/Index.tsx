@@ -10,11 +10,12 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const [showLanding, setShowLanding] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     const handleRedirection = async () => {
       // Wait for auth to load
-      if (isLoading) return;
+      if (isLoading || redirecting) return;
 
       // If not authenticated, show landing page
       if (!user) {
@@ -22,14 +23,22 @@ const Index = () => {
         return;
       }
 
+      setRedirecting(true);
+
       try {
-        // Check if user has founder role
-        const { data: founderRole } = await supabase
+        // Check if user has founder role with timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 3000)
+        );
+
+        const queryPromise = supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
           .eq('role', 'founder')
           .maybeSingle();
+
+        const { data: founderRole } = await Promise.race([queryPromise, timeoutPromise]) as any;
         
         if (founderRole) {
           navigate('/founder/dashboard', { replace: true });
@@ -37,13 +46,15 @@ const Index = () => {
           navigate('/app/dashboard', { replace: true });
         }
       } catch (error) {
-        console.error('Error checking user role:', error);
+        console.log('Redirecting to default dashboard due to error or timeout');
         navigate('/app/dashboard', { replace: true });
+      } finally {
+        setRedirecting(false);
       }
     };
 
     handleRedirection();
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, redirecting]);
 
   // Show landing page for non-authenticated users
   if (showLanding) {

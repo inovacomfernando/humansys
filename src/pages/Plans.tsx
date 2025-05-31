@@ -1,15 +1,24 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { DynamicBadge } from '@/components/landing/DynamicBadge';
 import { Check, Star, Brain, Trophy, Zap, Smartphone, Users } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const Plans = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+  
+  // Pre-select plan if coming from landing page
+  useEffect(() => {
+    if (location.state?.selectedBilling) {
+      setBilling(location.state.selectedBilling);
+    }
+  }, [location.state]);
 
   const plans = [
     {
@@ -78,6 +87,8 @@ export const Plans = () => {
   };
 
   const handlePlanSelection = (planName: string, price: string, selectedBilling: 'monthly' | 'yearly') => {
+    console.log('Navegando para checkout com:', { planName, price, selectedBilling });
+    
     navigate('/checkout', { 
       state: { 
         plan: planName, 
@@ -132,7 +143,7 @@ export const Plans = () => {
               <div className="flex items-center space-x-2 font-medium text-purple-700 mb-2">
                 <Brain className="h-5 w-5" />
                 <span>Inteligência Artificial</span>
-                <Badge variant="secondary" className="bg-purple-100 text-purple-800">Novo</Badge>
+                <DynamicBadge>Novo</DynamicBadge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Analytics preditiva, recomendações inteligentes e insights automáticos para decisões estratégicas.
@@ -145,7 +156,7 @@ export const Plans = () => {
               <div className="flex items-center space-x-2 font-medium text-yellow-700 mb-2">
                 <Trophy className="h-5 w-5" />
                 <span>Sistema de Gamificação</span>
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Novo</Badge>
+                <DynamicBadge>Novo</DynamicBadge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Aumente o engajamento com badges, pontos, leaderboards e prêmios virtuais para sua equipe.
@@ -158,7 +169,7 @@ export const Plans = () => {
               <div className="flex items-center space-x-2 font-medium text-blue-700 mb-2">
                 <Smartphone className="h-5 w-5" />
                 <span>Experiência Mobile (PWA)</span>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">Novo</Badge>
+                <DynamicBadge>Novo</DynamicBadge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Acesse suas informações de qualquer lugar com nosso aplicativo progressivo para dispositivos móveis.
@@ -171,10 +182,10 @@ export const Plans = () => {
           {plans.map((plan, index) => (
             <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
               {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+                <DynamicBadge className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <Star className="mr-1 h-3 w-3" />
                   Mais Popular
-                </Badge>
+                </DynamicBadge>
               )}
               
               <CardHeader className="text-center pb-2">
@@ -236,7 +247,7 @@ export const Plans = () => {
           <p className="text-muted-foreground mb-4">
             Todos os planos incluem teste grátis de 30 dias sem compromisso
           </p>
-          <Button variant="outline" onClick={() => navigate('/trial')} className="px-8">
+          <Button variant="outline" onClick={() => navigate('/plans')} className="px-8">
             Começar Teste Grátis
           </Button>
         </div>

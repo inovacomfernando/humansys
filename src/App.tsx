@@ -1,65 +1,77 @@
 
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { AppRouter } from "@/components/auth/AppRouter";
-import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
-import { useSupabaseInterceptor } from "@/hooks/useSupabaseInterceptor";
+import { AppRouter } from '@/components/auth/AppRouter';
+import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary';
 
+// Public pages
+import Index from '@/pages/Index';
+import { Plans } from '@/pages/Plans';
+import { Checkout } from '@/pages/Checkout';
+import { Login } from '@/pages/Login';
+import { PublicChangelog } from '@/pages/PublicChangelog';
+import { About } from '@/pages/About';
+import { PrivacyPolicy } from '@/pages/PrivacyPolicy';
+import { TermsOfService } from '@/pages/TermsOfService';
+import { Documentation } from '@/pages/Documentation';
+import { Contact } from '@/pages/Contact';
+import { Help } from '@/pages/Help';
+import { Careers } from '@/pages/Careers';
+import { Blog } from '@/pages/Blog';
+import { NotFound } from '@/pages/NotFound';
+
+import './App.css';
+
+// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
-      retry: (failureCount, error: any) => {
-        // Don't retry auth errors
-        if (error?.message?.includes('JWT') || error?.message?.includes('auth')) {
-          return false;
-        }
-        return failureCount < 2; // Reduzido de 3 para 2 tentativas
-      },
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: 'always'
-    }
-  }
+      retry: 1,
+    },
+  },
 });
 
-// Make query cache available globally for clearing
-declare global {
-  interface Window {
-    queryCache: Map<any, any>;
-  }
+function App() {
+  return (
+    <GlobalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <Router>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/plans" element={<Plans />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/changelog" element={<PublicChangelog />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/documentation" element={<Documentation />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/blog" element={<Blog />} />
+
+                {/* Protected app routes */}
+                <Route path="/app/*" element={<AppRouter />} />
+                <Route path="/founder/*" element={<AppRouter />} />
+                
+                {/* 404 */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </Router>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </GlobalErrorBoundary>
+  );
 }
-
-window.queryCache = queryClient.getQueryCache() as any;
-
-const AppWithInterceptor = () => {
-  // Configurar interceptador aqui, após AuthProvider estar disponível
-  useSupabaseInterceptor();
-  
-  return <AppRouter />;
-};
-
-const App = () => (
-  <GlobalErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppWithInterceptor />
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  </GlobalErrorBoundary>
-);
 
 export default App;

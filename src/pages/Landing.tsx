@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { DynamicBadge } from '@/components/landing/DynamicBadge';
 import {
   Users,
   UserPlus,
@@ -222,7 +223,13 @@ export const Landing = () => {
   };
 
   const handlePlanSelection = (planName: string, price: string, billing: 'monthly' | 'yearly') => {
-    debouncedNavigate('/checkout');
+    debouncedNavigate('/plans', { 
+      state: { 
+        selectedPlan: planName, 
+        selectedPrice: price,
+        selectedBilling: billing 
+      } 
+    });
   };
 
   return (
@@ -233,10 +240,10 @@ export const Landing = () => {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 py-20 md:py-32">
         <div className="container relative z-10">
           <div className="mx-auto max-w-4xl text-center animate-fade-in">
-            <Badge variant="secondary" className="mb-4">
+            <DynamicBadge className="mb-4">
               <Sparkles className="mr-1 h-3 w-3" />
               Agora com IA e Gamificação
-            </Badge>
+            </DynamicBadge>
             <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
               Transforme sua
               <span className="text-primary"> Gestão de Pessoas</span>
@@ -252,7 +259,7 @@ export const Landing = () => {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => debouncedNavigate('/checkout')}
+                onClick={() => debouncedNavigate('/plans')}
               >
                 <Zap className="mr-2 h-5 w-5" />
                 Começar Teste Grátis
@@ -261,7 +268,7 @@ export const Landing = () => {
                 variant="outline" 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => debouncedNavigate('/app/changelog')}
+                onClick={() => debouncedNavigate('/changelog')}
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 Ver Novidades
@@ -311,10 +318,10 @@ export const Landing = () => {
             {plans.map((plan, index) => (
               <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+                  <DynamicBadge className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <Star className="mr-1 h-3 w-3" />
                     Mais Popular
-                  </Badge>
+                  </DynamicBadge>
                 )}
                 
                 <CardHeader className="text-center pb-2">
@@ -446,7 +453,7 @@ export const Landing = () => {
                 size="lg" 
                 variant="secondary"
                 className="text-lg px-8 py-6"
-                onClick={() => debouncedNavigate('/trial')}
+                onClick={() => debouncedNavigate('/plans')}
               >
                 <Shield className="mr-2 h-5 w-5" />
                 Teste Grátis por 30 Dias
@@ -472,8 +479,8 @@ export const Landing = () => {
               <h3 className="font-semibold mb-4">Produto</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><button onClick={() => debouncedNavigate('/app/dashboard')} className="hover:text-primary text-left">Funcionalidades</button></li>
-                <li><button onClick={() => debouncedNavigate('/checkout')} className="hover:text-primary text-left">Preços</button></li>
-                <li><button onClick={() => debouncedNavigate('/app/changelog')} className="hover:text-primary text-left">Novidades</button></li>
+                <li><button onClick={() => debouncedNavigate('/plans')} className="hover:text-primary text-left">Preços</button></li>
+                <li><button onClick={() => debouncedNavigate('/changelog')} className="hover:text-primary text-left">Novidades</button></li>
                 <li><button onClick={() => debouncedNavigate('/app/settings')} className="hover:text-primary text-left">Integrações</button></li>
               </ul>
             </div>
@@ -481,14 +488,14 @@ export const Landing = () => {
               <h3 className="font-semibold mb-4">Empresa</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><button onClick={() => debouncedNavigate('/about')} className="hover:text-primary text-left">Sobre</button></li>
-                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Carreiras</button></li>
-                <li><button onClick={() => debouncedNavigate('/app/changelog')} className="hover:text-primary text-left">Blog</button></li>
+                <li><button onClick={() => debouncedNavigate('/careers')} className="hover:text-primary text-left">Carreiras</button></li>
+                <li><button onClick={() => debouncedNavigate('/blog')} className="hover:text-primary text-left">Blog</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Suporte</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => debouncedNavigate('/app/documents')} className="hover:text-primary text-left">Documentação</button></li>
+                <li><button onClick={() => debouncedNavigate('/documentation')} className="hover:text-primary text-left">Documentação</button></li>
                 <li><button onClick={() => debouncedNavigate('/help')} className="hover:text-primary text-left">Ajuda</button></li>
                 <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Contato</button></li>
               </ul>
@@ -496,8 +503,8 @@ export const Landing = () => {
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Política de Privacidade</button></li>
-                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Termos de Uso</button></li>
+                <li><button onClick={() => debouncedNavigate('/privacy')} className="hover:text-primary text-left">Política de Privacidade</button></li>
+                <li><button onClick={() => debouncedNavigate('/terms')} className="hover:text-primary text-left">Termos de Uso</button></li>
               </ul>
             </div>
           </div>

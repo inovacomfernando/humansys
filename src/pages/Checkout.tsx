@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,10 @@ export const Checkout = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { plan, price, billing } = location.state || {};
+  
+  // Get data from state, with fallbacks
+  const planData = location.state || {};
+  const { plan = 'Em Crescimento', price = '149', billing = 'monthly' } = planData;
   
   const [formData, setFormData] = useState({
     cardNumber: '',
@@ -30,12 +33,17 @@ export const Checkout = () => {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [startTrial, setStartTrial] = useState(false);
 
-  if (!plan) {
-    navigate('/plans');
-    return null;
-  }
+  // If no plan data and user came directly, show default values but warn
+  useEffect(() => {
+    if (!location.state) {
+      toast({
+        title: "Plano padrão selecionado",
+        description: "Você pode alterar o plano retornando à página anterior.",
+        variant: "default",
+      });
+    }
+  }, [location.state, toast]);
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -52,36 +60,76 @@ export const Checkout = () => {
 
     setIsProcessing(true);
     
-    // Simular ativação do teste grátis
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log('Teste grátis ativado para:', { user: user.email, plan });
-    
-    toast({
-      title: "Teste grátis ativado!",
-      description: "Você tem 30 dias para explorar todas as funcionalidades do sistema.",
-    });
-    
-    setIsProcessing(false);
-    navigate('/dashboard');
+    try {
+      // Simular ativação do teste grátis
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('Teste grátis ativado para:', { user: user.email, plan });
+      
+      toast({
+        title: "Teste grátis ativado!",
+        description: "Você tem 30 dias para explorar todas as funcionalidades do sistema.",
+      });
+      
+      // Redirect to appropriate dashboard
+      const response = await fetch('/api/check-user-role', {
+        headers: { 'Authorization': `Bearer ${user.id}` }
+      }).catch(() => null);
+      
+      if (response?.ok) {
+        const { isFounder } = await response.json();
+        navigate(isFounder ? '/founder/dashboard' : '/app/dashboard');
+      } else {
+        navigate('/app/dashboard');
+      }
+    } catch (error) {
+      console.error('Error starting trial:', error);
+      toast({
+        title: "Erro ao ativar teste",
+        description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     
-    // Simular processamento do pagamento
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    console.log('Dados do pagamento:', { plan, price, billing, ...formData });
-    
-    toast({
-      title: "Pagamento processado!",
-      description: "Sua assinatura foi ativada com sucesso.",
-    });
-    
-    setIsProcessing(false);
-    navigate('/dashboard');
+    try {
+      // Simular processamento do pagamento
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      console.log('Dados do pagamento:', { plan, price, billing, ...formData });
+      
+      toast({
+        title: "Pagamento processado!",
+        description: "Sua assinatura foi ativada com sucesso.",
+      });
+      
+      // Redirect to appropriate dashboard
+      const response = await fetch('/api/check-user-role', {
+        headers: { 'Authorization': `Bearer ${user?.id}` }
+      }).catch(() => null);
+      
+      if (response?.ok) {
+        const { isFounder } = await response.json();
+        navigate(isFounder ? '/founder/dashboard' : '/app/dashboard');
+      } else {
+        navigate('/app/dashboard');
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast({
+        title: "Erro no pagamento",
+        description: "Tente novamente ou entre em contato com o suporte.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const formatPrice = (value: string) => {
