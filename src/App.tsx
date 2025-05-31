@@ -21,7 +21,7 @@ import { Contact } from '@/pages/Contact';
 import { Help } from '@/pages/Help';
 import { Careers } from '@/pages/Careers';
 import { Blog } from '@/pages/Blog';
-import { NotFound } from '@/pages/NotFound';
+import NotFound from '@/pages/NotFound';
 
 import './App.css';
 
