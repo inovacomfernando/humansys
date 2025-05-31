@@ -204,22 +204,22 @@ export const AppRouter = () => {
         <Route path="/help" element={<Help />} />
         <Route path="/checkout" element={<Checkout />} />
         
-        {/* Redirects para manter compatibilidade */}
-        <Route path="/dashboard" element={<Index />} />
-        <Route path="/founder-dashboard" element={<Index />} />
-        <Route path="/collaborators" element={<Index />} />
-        <Route path="/recruitment" element={<Index />} />
-        <Route path="/onboarding" element={<Index />} />
-        <Route path="/training" element={<Index />} />
-        <Route path="/feedback" element={<Index />} />
-        <Route path="/goals" element={<Index />} />
-        <Route path="/analytics" element={<Index />} />
-        <Route path="/changelog" element={<Index />} />
-        <Route path="/settings" element={<Index />} />
-        <Route path="/certificates" element={<Index />} />
-        <Route path="/documents" element={<Index />} />
-        <Route path="/meetings" element={<Index />} />
-        <Route path="/surveys" element={<Index />} />
+        {/* Redirects para manter compatibilidade - redirecionam para /app/[page] */}
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/founder-dashboard" element={<ProtectedRoute requiredRole="founder"><FounderDashboard /></ProtectedRoute>} />
+        <Route path="/collaborators" element={<ProtectedRoute><OptimizedCollaborators /></ProtectedRoute>} />
+        <Route path="/recruitment" element={<ProtectedRoute><OptimizedRecruitment /></ProtectedRoute>} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/training" element={<ProtectedRoute><Training /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute><Feedback /></ProtectedRoute>} />
+        <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
+        <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+        <Route path="/changelog" element={<ProtectedRoute><Changelog /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
+        <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+        <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
+        <Route path="/surveys" element={<ProtectedRoute><ModernSurveys /></ProtectedRoute>} />
         
         {/* 404 page for unmatched routes */}
         <Route path="*" element={<NotFound />} />

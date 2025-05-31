@@ -11,6 +11,9 @@ import { TrendChart } from '@/components/dashboard/TrendChart';
 import { ActivityItem } from '@/components/dashboard/ActivityItem';
 import { TaskItem } from '@/components/dashboard/TaskItem';
 import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 import {
   Users,
   UserPlus,
@@ -21,13 +24,37 @@ import {
   Brain,
   Trophy,
   Zap,
-  Target
+  Target,
+  Crown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const Dashboard = () => {
   const { data, isLoading, loadingStage } = useOptimizedDashboardData();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [isFounder, setIsFounder] = useState(false);
+
+  useEffect(() => {
+    const checkFounderRole = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .eq('role', 'founder')
+          .maybeSingle();
+        
+        setIsFounder(!!data);
+      } catch (error) {
+        console.log('Error checking founder role:', error);
+      }
+    };
+
+    checkFounderRole();
+  }, [user?.id]);
   
   return (
     <DashboardLayout>
@@ -41,10 +68,18 @@ export const Dashboard = () => {
               Bem-vindo ao seu painel de controle otimizado
             </p>
           </div>
-          <Button onClick={() => navigate('/changelog')} variant="outline">
-            <Trophy className="h-4 w-4 mr-2" />
-            Ver Novidades
-          </Button>
+          <div className="flex space-x-2">
+            {isFounder && (
+              <Button onClick={() => navigate('/founder/dashboard')} variant="outline">
+                <Crown className="h-4 w-4 mr-2" />
+                Founder Dashboard
+              </Button>
+            )}
+            <Button onClick={() => navigate('/changelog')} variant="outline">
+              <Trophy className="h-4 w-4 mr-2" />
+              Ver Novidades
+            </Button>
+          </div>
         </div>
 
         {/* Quick Stats */}

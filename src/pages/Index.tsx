@@ -26,27 +26,11 @@ const Index = () => {
       setRedirecting(true);
 
       try {
-        // Check if user has founder role with timeout
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout')), 3000)
-        );
-
-        const queryPromise = supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .eq('role', 'founder')
-          .maybeSingle();
-
-        const { data: founderRole } = await Promise.race([queryPromise, timeoutPromise]) as any;
-        
-        if (founderRole) {
-          navigate('/founder/dashboard', { replace: true });
-        } else {
-          navigate('/app/dashboard', { replace: true });
-        }
+        // Always redirect to regular dashboard first
+        // Users can navigate to founder dashboard manually if they have the role
+        navigate('/app/dashboard', { replace: true });
       } catch (error) {
-        console.log('Redirecting to default dashboard due to error or timeout');
+        console.log('Redirecting to default dashboard due to error');
         navigate('/app/dashboard', { replace: true });
       } finally {
         setRedirecting(false);
