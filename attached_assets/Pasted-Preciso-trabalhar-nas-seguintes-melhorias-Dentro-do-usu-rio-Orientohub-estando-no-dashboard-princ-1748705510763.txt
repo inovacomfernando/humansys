@@ -1,0 +1,37 @@
+Preciso trabalhar nas seguintes melhorias:
+
+Dentro do usuário Orientohub, estando no dashboard principal ao clicar em dashboard founder ele redireciona mas não exibie o dashboard correspondente, preciso que encontre ele e seja carregado, caso não encontre precisarei criar então uma nova tela para o founder que contenha as principais métricas do negócios:,
+
+:chart_with_upwards_trend: Crescimento e Aquisição
+MRR (Monthly Recurring Revenue): Receita recorrente mensal. É a métrica principal para acompanhar a evolução da receita.
+
+New MRR: Receita recorrente adicionada por novos clientes no mês.
+Expansion MRR: Receita recorrente adicionada via upsell ou cross-sell.
+Churned MRR: Receita perdida devido a cancelamentos ou downgrades.
+
+:money_with_wings: Receita e Eficiência Financeira
+ARR (Annual Recurring Revenue): MRR × 12. Útil para visão de longo prazo.
+
+LTV (Lifetime Value): Receita estimada por cliente ao longo do ciclo de vida.
+CAC (Customer Acquisition Cost): Custo médio para adquirir um novo cliente.
+LTV/CAC Ratio: Idealmente acima de 3. Indica sustentabilidade da aquisição.
+Gross Margin: Receita menos custo direto. Margens altas são esperadas em SaaS.
+
+:bar_chart: Retenção e Engajamento
+Churn Rate (logo de clientes): % de clientes perdidos em um período.
+Revenue Churn: % de receita perdida (melhor que churn de logo para medir impacto financeiro).
+Net Revenue Retention (NRR): [(MRR atual de clientes existentes - churn + expansão) / MRR inicial]. Idealmente > 100%.
+DAU/MAU: Indicador de engajamento — quantos usuários ativos diários comparado ao mensal.
+
+:gear: Operacional e Eficiência
+Burn Rate: Velocidade com que a empresa consome caixa. Crucial para startups.
+Runway: Tempo restante até o caixa zerar, dado o burn rate atual.
+Activation Rate: % de usuários que completam a primeira ação de valor após o cadastro.
+Support Tickets per User: Indica escalabilidade do suporte e possíveis problemas de UX. 
+:dart: Outros Indicadores Estratégicos
+Trial-to-Paid Conversion Rate: Conversão de usuários de teste para pagantes.
+Payback Period: Tempo necessário para recuperar o CAC com MRR.
+Product Stickiness: Pode ser calculado como DAU/WAU, indicando frequência de uso.
+
+
+Esse painel precisa estar conectado com base de dados retornando os dados do negócio, o painel pode ser bem inovador, dinamico, com gamificação, traga tecnologia de machine learning e ia preditiva, crie também um recurso de acionar os departamentos e responsáveis quanto as metas de negocio que precisarm ser cobradas para o crescimento
