@@ -5,7 +5,7 @@ import { useIntelligentCache } from './useIntelligentCache';
 interface LoadingState {
   isLoading: boolean;
   progress: number;
-  stage: 'initial' | 'essential' | 'secondary' | 'complete';
+  currentStage: 'initial' | 'collaborators' | 'stats' | 'complete';
   error: string | null;
 }
 
@@ -20,7 +20,7 @@ export const useProgressiveLoader = <T extends Record<string, any>>() => {
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
     progress: 0,
-    stage: 'initial',
+    currentStage: 'initial',
     error: null
   });
   
@@ -50,7 +50,7 @@ export const useProgressiveLoader = <T extends Record<string, any>>() => {
     setLoadingState({
       isLoading: true,
       progress: 0,
-      stage: 'initial',
+      currentStage: 'initial',
       error: null
     });
 
@@ -61,7 +61,7 @@ export const useProgressiveLoader = <T extends Record<string, any>>() => {
       });
 
       // Carregar dados essenciais primeiro (high priority)
-      setLoadingState(prev => ({ ...prev, stage: 'essential' }));
+      setLoadingState(prev => ({ ...prev, currentStage: 'collaborators' }));
       const essentialStages = stages.filter(s => s.priority === 'high');
       
       for (let i = 0; i < essentialStages.length; i++) {
@@ -89,7 +89,7 @@ export const useProgressiveLoader = <T extends Record<string, any>>() => {
       }
 
       // Carregar dados secundários (medium/low priority)
-      setLoadingState(prev => ({ ...prev, stage: 'secondary' }));
+      setLoadingState(prev => ({ ...prev, currentStage: 'stats' }));
       const secondaryStages = stages.filter(s => s.priority !== 'high');
       
       for (let i = 0; i < secondaryStages.length; i++) {
@@ -121,7 +121,7 @@ export const useProgressiveLoader = <T extends Record<string, any>>() => {
       setLoadingState({
         isLoading: false,
         progress: 100,
-        stage: 'complete',
+        currentStage: 'complete',
         error: null
       });
 
@@ -157,7 +157,7 @@ export const useProgressiveLoader = <T extends Record<string, any>>() => {
     setLoadingState({
       isLoading: false,
       progress: 0,
-      stage: 'initial',
+      currentStage: 'initial',
       error: null
     });
   }, []);

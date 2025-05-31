@@ -19,8 +19,8 @@ export interface Collaborator {
   join_date: string;
   created_at: string;
   updated_at: string;
-  skills?: string[];
-  hireDate?: string;
+  skills: string[];
+  hireDate: string;
 }
 
 interface CollaboratorsData {
@@ -59,7 +59,7 @@ export const useOptimizedCollaborators = () => {
   // Converter loadingState para o formato esperado
   const loadingState: LoadingState = {
     isLoading: baseLoadingState.isLoading,
-    currentStage: baseLoadingState.currentStage as 'initial' | 'collaborators' | 'stats' | 'complete',
+    currentStage: baseLoadingState.currentStage,
     progress: baseLoadingState.progress
   };
 

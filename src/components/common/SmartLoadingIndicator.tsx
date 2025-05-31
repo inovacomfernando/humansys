@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface SmartLoadingIndicatorProps {
   progress: number;
-  stage: 'initial' | 'essential' | 'secondary' | 'complete';
+  stage: 'initial' | 'collaborators' | 'stats' | 'complete';
   networkStatus?: 'online' | 'offline' | 'slow';
   showDetails?: boolean;
   className?: string;
@@ -24,9 +24,9 @@ export const SmartLoadingIndicator: React.FC<SmartLoadingIndicatorProps> = ({
     switch (stage) {
       case 'initial':
         return 'Iniciando carregamento...';
-      case 'essential':
+      case 'collaborators':
         return 'Carregando dados essenciais...';
-      case 'secondary':
+      case 'stats':
         return 'Carregando dados adicionais...';
       case 'complete':
         return 'Carregamento concluído!';
@@ -84,8 +84,8 @@ export const SmartLoadingIndicator: React.FC<SmartLoadingIndicatorProps> = ({
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{Math.round(progress)}%</span>
               <span>
-                {stage === 'essential' ? 'Dados essenciais' : 
-                 stage === 'secondary' ? 'Dados adicionais' : 
+                {stage === 'collaborators' ? 'Dados essenciais' : 
+                 stage === 'stats' ? 'Dados adicionais' : 
                  stage === 'complete' ? 'Concluído' : 'Iniciando'}
               </span>
             </div>
@@ -100,7 +100,7 @@ export const SmartLoadingIndicator: React.FC<SmartLoadingIndicatorProps> = ({
               {networkStatus === 'offline' && (
                 <p>📱 Modo offline - usando dados em cache</p>
               )}
-              {stage === 'essential' && (
+              {stage === 'collaborators' && (
                 <p>🚀 Carregando o mínimo necessário para você começar a usar</p>
               )}
             </div>
