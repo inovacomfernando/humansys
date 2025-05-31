@@ -31,6 +31,7 @@ import { Checkout } from '@/pages/Checkout';
 import { About } from '@/pages/About';
 import { Contact } from '@/pages/Contact';
 import { Help } from '@/pages/Help';
+import NotFound from '@/pages/NotFound';
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -220,8 +221,8 @@ export const AppRouter = () => {
         <Route path="/meetings" element={<Index />} />
         <Route path="/surveys" element={<Index />} />
         
-        {/* Fallback - redireciona para a página inicial */}
-        <Route path="/*" element={<Index />} />
+        {/* 404 page for unmatched routes */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );
