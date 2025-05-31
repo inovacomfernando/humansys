@@ -23,13 +23,13 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 
 export const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useRouter();
+  const navigate = useNavigate();
 
   const [settings, setSettings] = useState({
     notifications: {
