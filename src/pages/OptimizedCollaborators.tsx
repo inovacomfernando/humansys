@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -337,7 +336,7 @@ export const OptimizedCollaborators = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {loadingState.isLoading && loadingState.currentStage === 'essential' ? (
+            {loadingState.isLoading && loadingState.currentStage === 'collaborators' ? (
               <SkeletonCards count={6} />
             ) : filteredCollaborators.length === 0 ? (
               <div className="text-center py-12">

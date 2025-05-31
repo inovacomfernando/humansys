@@ -36,7 +36,7 @@ interface CollaboratorsData {
 
 interface LoadingState {
   isLoading: boolean;
-  currentStage: 'initial' | 'essential' | 'secondary' | 'complete';
+  currentStage: 'initial' | 'collaborators' | 'stats' | 'complete';
   progress: number;
 }
 
@@ -59,7 +59,7 @@ export const useOptimizedCollaborators = () => {
   // Converter loadingState para o formato esperado
   const loadingState: LoadingState = {
     isLoading: baseLoadingState.isLoading,
-    currentStage: baseLoadingState.currentStage as 'initial' | 'essential' | 'secondary' | 'complete',
+    currentStage: baseLoadingState.currentStage as 'initial' | 'collaborators' | 'stats' | 'complete',
     progress: baseLoadingState.progress
   };
 
@@ -91,7 +91,7 @@ export const useOptimizedCollaborators = () => {
         const typedData: Collaborator[] = (data || []).map(item => ({
           ...item,
           status: item.status as 'active' | 'inactive' | 'vacation',
-          skills: item.skills || [],
+          skills: [], // Adicionar skills como array vazio
           hireDate: item.join_date
         }));
         
@@ -135,21 +135,21 @@ export const useOptimizedCollaborators = () => {
     reset();
 
     // Estágio 1: Dados essenciais (colaboradores básicos)
-    addStage('essential', {
-      name: 'essential',
+    addStage('collaborators', {
+      name: 'collaborators',
       priority: 'high',
       loader: fetchCollaborators
     });
 
     // Estágio 2: Estatísticas (calculadas dos dados essenciais)
-    addStage('secondary', {
-      name: 'secondary',
+    addStage('stats', {
+      name: 'stats',
       priority: 'medium',
       loader: async () => {
         const collaborators = data.collaborators || [];
         return calculateStats(collaborators);
       },
-      dependencies: ['essential']
+      dependencies: ['collaborators']
     });
 
   }, [user?.id, addStage, reset, fetchCollaborators, calculateStats, data.collaborators]);
