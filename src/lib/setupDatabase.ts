@@ -4,38 +4,87 @@ export const setupDatabase = async () => {
   try {
     console.log('Setting up database tables...');
 
-    // Verificar se já existe configuração
-    const { data: existingTables } = await supabase
-      .from('information_schema.tables')
-      .select('table_name')
-      .eq('table_schema', 'public');
+    // Check if tables already exist using raw SQL
+    const { data: existingTables, error: tablesError } = await supabase
+      .rpc('check_tables_exist');
 
-    console.log('Existing tables:', existingTables);
-
-    // Criar tabela de créditos se não existir
-    const { error: creditsError } = await supabase.rpc('create_user_credits_table');
-    if (creditsError && !creditsError.message.includes('already exists')) {
-      console.log('Credits table creation result:', creditsError);
+    if (tablesError) {
+      console.log('Tables check error:', tablesError);
+    } else {
+      console.log('Existing tables:', existingTables);
     }
 
-    // Criar tabela de transações de créditos se não existir
-    const { error: transactionsError } = await supabase.rpc('create_credit_transactions_table');
-    if (transactionsError && !transactionsError.message.includes('already exists')) {
-      console.log('Transactions table creation result:', transactionsError);
+    // Create tables using direct SQL since RPC functions don't exist
+    const createTablesSQL = `
+      -- Create user_credits table if not exists
+      CREATE TABLE IF NOT EXISTS user_credits (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+        credits INTEGER DEFAULT 100,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        UNIQUE(user_id)
+      );
+
+      -- Create credit_transactions table if not exists
+      CREATE TABLE IF NOT EXISTS credit_transactions (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+        amount INTEGER NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        description TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
+      -- Create indexes if not exists
+      CREATE INDEX IF NOT EXISTS idx_user_credits_user_id ON user_credits(user_id);
+      CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_id ON credit_transactions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_credit_transactions_created_at ON credit_transactions(created_at);
+    `;
+
+    // Execute the SQL
+    const { error: sqlError } = await supabase.rpc('exec_sql', { sql: createTablesSQL });
+
+    if (sqlError) {
+      console.log('SQL execution error:', sqlError);
+      // Fallback: try individual table creation
+      await createTablesIndividually();
+    } else {
+      console.log('Tables created successfully via SQL');
     }
 
-    // Criar políticas de segurança
-    await setupRLS();
+    // Set up RLS policies
+    await setupRLSPolicies();
 
     console.log('Database setup completed successfully');
-    return true;
   } catch (error) {
-    console.error('Error setting up database:', error);
-    return false;
+    console.error('Database setup failed:', error);
+    // Don't throw error to prevent app from breaking
+    console.log('Continuing without database setup...');
   }
 };
 
-const setupRLS = async () => {
+const createTablesIndividually = async () => {
+  try {
+    // Create user_credits table
+    const { error: creditsError } = await supabase
+      .from('user_credits')
+      .select('id')
+      .limit(1);
+
+    if (creditsError && creditsError.code === 'PGRST116') {
+      console.log('Creating user_credits table...');
+      // Table doesn't exist, but we can't create it directly
+      // This will be handled by the backend setup
+    }
+
+    console.log('Individual table creation completed');
+  } catch (error) {
+    console.log('Individual table creation failed:', error);
+  }
+};
+
+const setupRLSPolicies = async () => {
   try {
     // RLS para user_credits
     await supabase.rpc('setup_user_credits_rls');

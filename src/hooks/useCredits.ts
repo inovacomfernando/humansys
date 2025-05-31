@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { UserCredits, CreditTransaction, PLAN_CREDITS } from '@/types/credits';
@@ -8,134 +7,137 @@ import { useToast } from '@/hooks/use-toast';
 export const useCredits = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [credits, setCredits] = useState<UserCredits | null>(null);
+  const [credits, setCredits] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchCredits = async () => {
-    if (!user?.id) {
-      setIsLoading(false);
-      return;
-    }
+  const fetchCredits = useCallback(async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    setError(null);
 
     try {
-      setIsLoading(true);
-      
-      // Primeiro, verificar se as tabelas existem
-      const { data: tables, error: tablesError } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
-        .eq('table_name', 'user_credits');
+      // First try to get from cache
+      const cachedCredits = localStorage.getItem(`credits_${user.id}`);
+      const cacheTimestamp = localStorage.getItem(`credits_timestamp_${user.id}`);
+      const isRecentCache = cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < 60000; // 1 minute
 
-      if (tablesError) {
-        console.log('Tables check error:', tablesError);
-      }
-
-      // Buscar créditos do usuário
-      const { data: creditsData, error: creditsError } = await supabase
-        .from('user_credits')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (creditsError) {
-        console.log('Credits fetch error:', creditsError);
-        // Se a tabela não existir, criar registro padrão local
-        const defaultCredits = {
-          id: `temp_${user.id}`,
-          user_id: user.id,
-          plan_type: 'trial' as const,
-          total_credits: PLAN_CREDITS.trial,
-          used_credits: 0,
-          remaining_credits: PLAN_CREDITS.trial,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setCredits(defaultCredits);
+      if (cachedCredits && isRecentCache) {
+        setCredits(parseInt(cachedCredits));
         setIsLoading(false);
         return;
       }
 
-      if (!creditsData) {
-        // Criar registro inicial com plano trial
-        const newCredits = {
-          user_id: user.id,
-          plan_type: 'trial' as const,
-          total_credits: PLAN_CREDITS.trial,
-          used_credits: 0,
-          remaining_credits: PLAN_CREDITS.trial
-        };
+      const { data, error } = await supabase
+        .from('user_credits')
+        .select('credits')
+        .eq('user_id', user.id)
+        .single();
 
-        const { data: insertedCredits, error: insertError } = await supabase
-          .from('user_credits')
-          .insert([newCredits])
-          .select()
-          .single();
-
-        if (insertError) {
-          console.log('Insert error:', insertError);
-          // Usar dados padrão se falhar
-          const defaultCredits = {
-            id: `temp_${user.id}`,
-            user_id: user.id,
-            plan_type: 'trial' as const,
-            total_credits: PLAN_CREDITS.trial,
-            used_credits: 0,
-            remaining_credits: PLAN_CREDITS.trial,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
+      if (error) {
+        if (error.code === 'PGRST116' || error.code === '42P01') {
+          // Table doesn't exist or permission denied, use default
+          const defaultCredits = 100;
           setCredits(defaultCredits);
+          localStorage.setItem(`credits_${user.id}`, defaultCredits.toString());
+          localStorage.setItem(`credits_timestamp_${user.id}`, Date.now().toString());
+        } else if (error.code === 'PGRST406') {
+          // No rows found, create default user credits
+          try {
+            const { error: insertError } = await supabase
+              .from('user_credits')
+              .insert({ user_id: user.id, credits: 100 });
+
+            if (!insertError) {
+              setCredits(100);
+              localStorage.setItem(`credits_${user.id}`, '100');
+              localStorage.setItem(`credits_timestamp_${user.id}`, Date.now().toString());
+            }
+          } catch (insertErr) {
+            console.log('Insert error:', insertErr);
+            // Use default
+            setCredits(100);
+            localStorage.setItem(`credits_${user.id}`, '100');
+          }
         } else {
-          setCredits(insertedCredits);
+          throw error;
         }
       } else {
-        setCredits(creditsData);
+        setCredits(data.credits);
+        // Cache the result
+        localStorage.setItem(`credits_${user.id}`, data.credits.toString());
+        localStorage.setItem(`credits_timestamp_${user.id}`, Date.now().toString());
       }
-
-      // Buscar histórico de transações (opcional)
-      try {
-        const { data: transactionsData, error: transactionsError } = await supabase
-          .from('credit_transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        if (!transactionsError && transactionsData) {
-          setTransactions(transactionsData);
-        }
-      } catch (transactionError) {
-        console.log('Transactions fetch error (non-critical):', transactionError);
-        setTransactions([]);
+    } catch (err) {
+      console.error('Error fetching credits:', err);
+      setError('Erro ao carregar créditos');
+      // Use cached value if available
+      const cachedCredits = localStorage.getItem(`credits_${user.id}`);
+      if (cachedCredits) {
+        setCredits(parseInt(cachedCredits));
+      } else {
+        setCredits(100); // Default fallback
       }
-
-    } catch (error) {
-      console.error('Error fetching credits:', error);
-      // Usar dados padrão em caso de erro
-      const defaultCredits = {
-        id: `temp_${user.id}`,
-        user_id: user.id,
-        plan_type: 'trial' as const,
-        total_credits: PLAN_CREDITS.trial,
-        used_credits: 0,
-        remaining_credits: PLAN_CREDITS.trial,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      setCredits(defaultCredits);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  const addTransaction = useCallback(async (amount: number, type: string, description?: string) => {
+    if (!user?.id) return false;
+
+    try {
+      // Update credits optimistically
+      const newCredits = credits + amount;
+      setCredits(newCredits);
+
+      // Cache the new value immediately
+      localStorage.setItem(`credits_${user.id}`, newCredits.toString());
+      localStorage.setItem(`credits_timestamp_${user.id}`, Date.now().toString());
+
+      // Try to save to database
+      const { error } = await supabase
+        .from('credit_transactions')
+        .insert({
+          user_id: user.id,
+          amount,
+          type,
+          description
+        });
+
+      if (error) {
+        console.log('Transaction save error:', error);
+        // Save transaction to local storage as backup
+        const transactionId = `transaction_${Date.now()}_${Math.random()}`;
+        const transaction = {
+          user_id: user.id,
+          amount,
+          type,
+          description,
+          created_at: new Date().toISOString(),
+          synced: false
+        };
+        localStorage.setItem(transactionId, JSON.stringify(transaction));
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error adding transaction:', err);
+      // Revert optimistic update
+      setCredits(prev => prev - amount);
+      localStorage.setItem(`credits_${user.id}`, (credits - amount).toString());
+      return false;
+    }
+  }, [user?.id, credits]);
 
   const updateCredits = async (planType: 'inicial' | 'crescimento' | 'profissional') => {
     if (!user?.id) return false;
 
     try {
       const newTotalCredits = PLAN_CREDITS[planType];
-      
+
       const { error } = await supabase
         .from('user_credits')
         .update({
@@ -160,7 +162,7 @@ export const useCredits = () => {
         }]);
 
       await fetchCredits();
-      
+
       toast({
         title: "Créditos atualizados",
         description: `Você agora tem ${newTotalCredits} créditos para cadastro de colaboradores`,
@@ -179,9 +181,9 @@ export const useCredits = () => {
   };
 
   const useCredit = async (description: string = 'Cadastro de colaborador') => {
-    if (!user?.id || !credits) return false;
+    if (!user?.id) return false;
 
-    if (credits.remaining_credits <= 0) {
+    if (credits <= 0) {
       toast({
         title: "Créditos esgotados",
         description: "Você não tem mais créditos disponíveis para cadastrar colaboradores",
@@ -191,14 +193,13 @@ export const useCredits = () => {
     }
 
     try {
-      const newUsedCredits = credits.used_credits + 1;
-      const newRemainingCredits = credits.remaining_credits - 1;
+      const newUsedCredits = 1;
+      const newRemainingCredits = credits - 1;
 
       const { error } = await supabase
         .from('user_credits')
         .update({
-          used_credits: newUsedCredits,
-          remaining_credits: newRemainingCredits,
+          credits: newRemainingCredits,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -232,7 +233,7 @@ export const useCredits = () => {
     if (user?.id) {
       fetchCredits();
     }
-  }, [user?.id]);
+  }, [user?.id, fetchCredits]);
 
   return {
     credits,
@@ -240,6 +241,8 @@ export const useCredits = () => {
     isLoading,
     updateCredits,
     useCredit,
-    refetchCredits: fetchCredits
+    refetchCredits: fetchCredits,
+    addTransaction,
+    error,
   };
 };

@@ -265,10 +265,18 @@ export const Landing = () => {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 py-20 md:py-32">
         <div className="container relative z-10">
           <div className="mx-auto max-w-4xl text-center animate-fade-in">
-            <DynamicBadge className="mb-4">
-              <Sparkles className="mr-1 h-3 w-3" />
-              Agora com IA e Gamificação
-            </DynamicBadge>
+            <div className="flex items-center space-x-4 mb-8">
+          <DynamicBadge 
+            texts={[
+              '🚀 Novo: Founder Dashboard', 
+              '🎯 Cache Inteligente', 
+              '⚡ Performance Otimizada',
+              '💾 Persistência Melhorada',
+              '🔄 Sincronização Automática'
+            ]} 
+            interval={4000} 
+          />
+        </div>
             <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
               Transforme sua
               <span className="text-primary"> Gestão de Pessoas</span>
