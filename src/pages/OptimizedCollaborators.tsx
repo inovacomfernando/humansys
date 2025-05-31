@@ -19,9 +19,101 @@ import {
 } from 'lucide-react';
 import { useOptimizedCollaborators } from '@/hooks/useOptimizedCollaborators';
 import { CollaboratorCard } from '@/components/collaborators/CollaboratorCard';
-import { NewCollaboratorDialog } from '@/components/dashboard/NewCollaboratorDialog';
 import { SmartLoadingIndicator } from '@/components/common/SmartLoadingIndicator';
 import { SkeletonCards } from '@/components/common/SkeletonCards';
+
+interface SimpleNewCollaboratorDialog {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: any) => Promise<void>;
+}
+
+const SimpleNewCollaboratorDialog: React.FC<SimpleNewCollaboratorDialog> = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit 
+}) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: '',
+    department: '',
+    phone: '',
+    location: ''
+  });
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSubmit(formData);
+    setFormData({ name: '', email: '', role: '', department: '', phone: '', location: '' });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        <h2 className="text-lg font-semibold mb-4">Novo Colaborador</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Nome"
+            value={formData.name}
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Cargo"
+            value={formData.role}
+            onChange={(e) => setFormData({...formData, role: e.target.value})}
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Departamento"
+            value={formData.department}
+            onChange={(e) => setFormData({...formData, department: e.target.value})}
+            className="w-full p-2 border rounded"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Telefone"
+            value={formData.phone}
+            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+            className="w-full p-2 border rounded"
+          />
+          <input
+            type="text"
+            placeholder="Localização"
+            value={formData.location}
+            onChange={(e) => setFormData({...formData, location: e.target.value})}
+            className="w-full p-2 border rounded"
+          />
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 border rounded">
+              Cancelar
+            </button>
+            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
+              Criar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export const OptimizedCollaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -245,7 +337,7 @@ export const OptimizedCollaborators = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {loadingState.isLoading && loadingState.currentStage === 'collaborators' ? (
+            {loadingState.isLoading && loadingState.currentStage === 'essential' ? (
               <SkeletonCards count={6} />
             ) : filteredCollaborators.length === 0 ? (
               <div className="text-center py-12">
@@ -285,13 +377,11 @@ export const OptimizedCollaborators = () => {
         </Card>
 
         {/* New Collaborator Dialog */}
-        {isNewDialogOpen && (
-          <NewCollaboratorDialog
-            isOpen={isNewDialogOpen}
-            onClose={() => setIsNewDialogOpen(false)}
-            onSubmit={handleCreateCollaborator}
-          />
-        )}
+        <SimpleNewCollaboratorDialog
+          isOpen={isNewDialogOpen}
+          onClose={() => setIsNewDialogOpen(false)}
+          onSubmit={handleCreateCollaborator}
+        />
       </div>
     </DashboardLayout>
   );

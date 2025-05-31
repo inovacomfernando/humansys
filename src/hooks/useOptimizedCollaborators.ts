@@ -19,6 +19,8 @@ export interface Collaborator {
   join_date: string;
   created_at: string;
   updated_at: string;
+  skills?: string[];
+  hireDate?: string;
 }
 
 interface CollaboratorsData {
@@ -34,7 +36,7 @@ interface CollaboratorsData {
 
 interface LoadingState {
   isLoading: boolean;
-  currentStage: 'initial' | 'collaborators' | 'stats' | 'complete';
+  currentStage: 'initial' | 'essential' | 'secondary' | 'complete';
   progress: number;
 }
 
@@ -57,7 +59,7 @@ export const useOptimizedCollaborators = () => {
   // Converter loadingState para o formato esperado
   const loadingState: LoadingState = {
     isLoading: baseLoadingState.isLoading,
-    currentStage: baseLoadingState.currentStage as 'initial' | 'collaborators' | 'stats' | 'complete',
+    currentStage: baseLoadingState.currentStage as 'initial' | 'essential' | 'secondary' | 'complete',
     progress: baseLoadingState.progress
   };
 
@@ -88,7 +90,9 @@ export const useOptimizedCollaborators = () => {
         // Corrigir o tipo de status para corresponder à interface
         const typedData: Collaborator[] = (data || []).map(item => ({
           ...item,
-          status: item.status as 'active' | 'inactive' | 'vacation'
+          status: item.status as 'active' | 'inactive' | 'vacation',
+          skills: item.skills || [],
+          hireDate: item.join_date
         }));
         
         return typedData;
@@ -131,21 +135,21 @@ export const useOptimizedCollaborators = () => {
     reset();
 
     // Estágio 1: Dados essenciais (colaboradores básicos)
-    addStage('collaborators', {
-      name: 'collaborators',
+    addStage('essential', {
+      name: 'essential',
       priority: 'high',
       loader: fetchCollaborators
     });
 
     // Estágio 2: Estatísticas (calculadas dos dados essenciais)
-    addStage('stats', {
-      name: 'stats',
+    addStage('secondary', {
+      name: 'secondary',
       priority: 'medium',
       loader: async () => {
         const collaborators = data.collaborators || [];
         return calculateStats(collaborators);
       },
-      dependencies: ['collaborators']
+      dependencies: ['essential']
     });
 
   }, [user?.id, addStage, reset, fetchCollaborators, calculateStats, data.collaborators]);
@@ -195,7 +199,9 @@ export const useOptimizedCollaborators = () => {
       // Atualizar dados localmente para resposta imediata
       const newCollaborator: Collaborator = {
         ...result,
-        status: result.status as 'active' | 'inactive' | 'vacation'
+        status: result.status as 'active' | 'inactive' | 'vacation',
+        skills: [],
+        hireDate: result.join_date
       };
       const currentCollaborators = data.collaborators || [];
       const updatedCollaborators = [newCollaborator, ...currentCollaborators];
