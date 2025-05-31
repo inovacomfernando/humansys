@@ -32,13 +32,19 @@ interface CollaboratorsData {
   };
 }
 
+interface LoadingState {
+  isLoading: boolean;
+  currentStage: 'initial' | 'collaborators' | 'stats' | 'complete';
+  progress: number;
+}
+
 export const useOptimizedCollaborators = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { sessionHealth } = useSessionHealthCheck();
   
   const {
-    loadingState,
+    loadingState: baseLoadingState,
     data,
     addStage,
     loadProgressively,
@@ -47,6 +53,13 @@ export const useOptimizedCollaborators = () => {
   } = useProgressiveLoader<CollaboratorsData>();
 
   const [error, setError] = useState<string | null>(null);
+
+  // Converter loadingState para o formato esperado
+  const loadingState: LoadingState = {
+    isLoading: baseLoadingState.isLoading,
+    currentStage: baseLoadingState.currentStage as 'initial' | 'collaborators' | 'stats' | 'complete',
+    progress: baseLoadingState.progress
+  };
 
   // Função para buscar colaboradores com retry inteligente
   const fetchCollaborators = useCallback(async (): Promise<Collaborator[]> => {

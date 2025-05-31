@@ -67,6 +67,13 @@ export const OptimizedCollaborators = () => {
     }
   };
 
+  const handleCreateCollaborator = async (collaboratorData: any) => {
+    const result = await createCollaborator(collaboratorData);
+    if (result) {
+      setIsNewDialogOpen(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -97,11 +104,12 @@ export const OptimizedCollaborators = () => {
         </div>
 
         {/* Loading Indicator */}
-        <SmartLoadingIndicator 
-          stage={loadingState.currentStage}
-          progress={loadingState.progress}
-          isLoading={loadingState.isLoading}
-        />
+        {loadingState.isLoading && (
+          <SmartLoadingIndicator 
+            stage={loadingState.currentStage}
+            progress={loadingState.progress}
+          />
+        )}
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -277,11 +285,13 @@ export const OptimizedCollaborators = () => {
         </Card>
 
         {/* New Collaborator Dialog */}
-        <NewCollaboratorDialog
-          isOpen={isNewDialogOpen}
-          onClose={() => setIsNewDialogOpen(false)}
-          onSubmit={createCollaborator}
-        />
+        {isNewDialogOpen && (
+          <NewCollaboratorDialog
+            isOpen={isNewDialogOpen}
+            onClose={() => setIsNewDialogOpen(false)}
+            onSubmit={handleCreateCollaborator}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
