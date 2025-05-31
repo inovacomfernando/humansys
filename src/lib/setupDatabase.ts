@@ -1,10 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const setupDatabase = async () => {
   try {
     console.log('Setting up database tables...');
-    
+
     // Verificar se já existe configuração
     const { data: existingTables } = await supabase
       .from('information_schema.tables')
@@ -27,7 +26,7 @@ export const setupDatabase = async () => {
 
     // Criar políticas de segurança
     await setupRLS();
-    
+
     console.log('Database setup completed successfully');
     return true;
   } catch (error) {
@@ -40,10 +39,10 @@ const setupRLS = async () => {
   try {
     // RLS para user_credits
     await supabase.rpc('setup_user_credits_rls');
-    
+
     // RLS para credit_transactions
     await supabase.rpc('setup_credit_transactions_rls');
-    
+
     console.log('RLS policies set up successfully');
   } catch (error) {
     console.log('RLS setup info:', error);
@@ -122,6 +121,96 @@ export const createTablesSQL = async () => {
   if (error) {
     console.log('SQL execution info:', error);
   }
-  
+
   return !error;
+};
+
+const createCreditTransactionsTable = async () => {
+  try {
+    console.log('Creating credit_transactions table...');
+    const { data, error } = await supabase.rpc('create_credit_transactions_table');
+
+    if (error) {
+      console.log('Credits transactions table creation result:', error);
+    } else {
+      console.log('Credits transactions table created successfully');
+    }
+  } catch (error) {
+    console.log('Transactions table creation result:', error);
+  }
+};
+
+const createBusinessMetricsTable = async () => {
+  try {
+    console.log('Creating business_metrics table...');
+
+    // Create business_metrics table
+    const { error: tableError } = await supabase.rpc('sql', {
+      query: `
+        CREATE TABLE IF NOT EXISTS business_metrics (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          company_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+          mrr DECIMAL(12,2) DEFAULT 0,
+          arr DECIMAL(12,2) DEFAULT 0,
+          new_mrr DECIMAL(12,2) DEFAULT 0,
+          expansion_mrr DECIMAL(12,2) DEFAULT 0,
+          churned_mrr DECIMAL(12,2) DEFAULT 0,
+          ltv DECIMAL(12,2) DEFAULT 0,
+          cac DECIMAL(12,2) DEFAULT 0,
+          churn_rate DECIMAL(5,2) DEFAULT 0,
+          nrr DECIMAL(5,2) DEFAULT 0,
+          burn_rate DECIMAL(12,2) DEFAULT 0,
+          runway INTEGER DEFAULT 0,
+          activation_rate DECIMAL(5,2) DEFAULT 0,
+          trial_to_paid DECIMAL(5,2) DEFAULT 0,
+          payback_period INTEGER DEFAULT 0,
+          dau_mau DECIMAL(5,2) DEFAULT 0,
+          support_tickets DECIMAL(5,2) DEFAULT 0,
+          gross_margin DECIMAL(5,2) DEFAULT 0,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `
+    });
+
+    if (tableError) {
+      console.log('Business metrics table error:', tableError);
+    } else {
+      console.log('Business metrics table created successfully');
+    }
+  } catch (error) {
+    console.log('Business metrics table creation error:', error);
+  }
+};
+
+const createFounderGamificationTable = async () => {
+  try {
+    console.log('Creating founder_gamification table...');
+
+    const { error: tableError } = await supabase.rpc('sql', {
+      query: `
+        CREATE TABLE IF NOT EXISTS founder_gamification (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          founder_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+          level INTEGER DEFAULT 1,
+          xp INTEGER DEFAULT 0,
+          next_level_xp INTEGER DEFAULT 1000,
+          badges TEXT[] DEFAULT '{}',
+          achievements JSONB DEFAULT '[]',
+          leaderboard_position INTEGER DEFAULT 0,
+          total_founders INTEGER DEFAULT 0,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        );
+      `
+    });
+
+    if (tableError) {
+      console.log('Founder gamification table error:', tableError);
+    } else {
+      console.log('Founder gamification table created successfully');
+    }
+  } catch (error) {
+    console.log('Founder gamification table creation error:', error);
+  }
 };

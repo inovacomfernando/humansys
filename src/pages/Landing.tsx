@@ -26,7 +26,10 @@ import {
   Trophy,
   Smartphone,
   TrendingUp,
-  Video
+  Video,
+  Crown,
+  DollarSign,
+  TrendingDown
 } from 'lucide-react';
 import { useDebounceNavigation } from '@/hooks/useDebounceNavigation';
 import { FeatureCard } from '@/components/landing/FeatureCard';
@@ -45,6 +48,18 @@ export const Landing = () => {
         metric: 'Precisão de 85% na previsão de turnover',
         example: 'Empresa TechCorp identificou 12 colaboradores em risco',
         benefit: 'Redução de 60% na rotatividade não planejada'
+      }
+    },
+    {
+      icon: Crown,
+      title: 'Founder Dashboard',
+      description: 'Métricas estratégicas de negócio com IA preditiva para founders.',
+      path: '/app/founder/dashboard',
+      isNew: true,
+      realImpact: {
+        metric: 'Visibilidade 360° do negócio em tempo real',
+        example: 'MRR, Churn, LTV/CAC e previsões de crescimento',
+        benefit: 'Decisões estratégicas baseadas em dados e IA'
       }
     },
     {
@@ -134,7 +149,10 @@ export const Landing = () => {
     'Melhoria de 60% na comunicação interna',
     'Economia de 50% em processos manuais',
     'IA prevê turnover com 85% de precisão',
-    'Gamificação aumenta engajamento em 40%'
+    'Gamificação aumenta engajamento em 40%',
+    'Dashboard founder com métricas em tempo real',
+    'Alertas inteligentes para departamentos',
+    'Previsões de receita com IA preditiva'
   ];
 
   const plans = [
@@ -150,6 +168,7 @@ export const Landing = () => {
         'Gestão de documentos',
         'Analytics básicas',
         'Gamificação simples',
+        'Dashboard founder simplificado',
         'Suporte por email',
         '1 GB de armazenamento'
       ]
@@ -167,6 +186,8 @@ export const Landing = () => {
         'Treinamentos interativos',
         'Gamificação completa',
         'Analytics avançadas',
+        'Dashboard founder completo',
+        'Alertas departamentais',
         'PWA móvel',
         'Pesquisas de clima',
         'Suporte prioritário',
@@ -184,6 +205,10 @@ export const Landing = () => {
         'Todas as funcionalidades',
         'IA preditiva para turnover',
         'ML insights avançados',
+        'Dashboard founder premium',
+        'Alertas inteligentes 24/7',
+        'Previsões de receita com IA',
+        'Métricas SaaS completas',
         'Relatórios executivos',
         'API personalizada',
         'Suporte 24/7',
@@ -280,6 +305,125 @@ export const Landing = () => {
                 Ver Novidades
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Novidades Section */}
+      <section className="py-20 md:py-32 bg-gradient-to-r from-purple-50 to-blue-50">
+        <div className="container">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <DynamicBadge className="mb-4">
+              <Sparkles className="mr-1 h-3 w-3" />
+              Lançamento Oficial
+            </DynamicBadge>
+            <h2 className="text-3xl font-bold md:text-4xl">
+              <Crown className="inline h-8 w-8 mr-2 text-yellow-500" />
+              Novo Founder Dashboard
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Tome decisões estratégicas com métricas de negócio em tempo real e IA preditiva
+            </p>
+          </div>
+          
+          <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 group-hover:bg-green-200 transition-colors">
+                  <DollarSign className="h-8 w-8 text-green-600" />
+                </div>
+                <CardTitle className="text-xl">Métricas SaaS</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-muted-foreground mb-4">
+                  MRR, ARR, Churn Rate, LTV/CAC, NRR e todas as métricas essenciais para SaaS
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>MRR Tracking</span>
+                    <Check className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Churn Analysis</span>
+                    <Check className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Revenue Forecasting</span>
+                    <Check className="h-4 w-4 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 group-hover:bg-purple-200 transition-colors">
+                  <Brain className="h-8 w-8 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl">IA Preditiva</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-muted-foreground mb-4">
+                  Previsões inteligentes de churn, crescimento e otimizações automáticas
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Churn Prediction</span>
+                    <Brain className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Revenue Forecast</span>
+                    <Brain className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Smart Recommendations</span>
+                    <Brain className="h-4 w-4 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 group-hover:bg-orange-200 transition-colors">
+                  <Trophy className="h-8 w-8 text-orange-600" />
+                </div>
+                <CardTitle className="text-xl">Gamificação</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <p className="text-muted-foreground mb-4">
+                  Sistema de níveis, conquistas e ranking para founders
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Level System</span>
+                    <Trophy className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Achievements</span>
+                    <Trophy className="h-4 w-4 text-orange-600" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Leaderboard</span>
+                    <Trophy className="h-4 w-4 text-orange-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <Button 
+              size="lg" 
+              className="text-lg px-8 py-6"
+              onClick={() => debouncedNavigate('/app/founder/dashboard')}
+            >
+              <Crown className="mr-2 h-5 w-5" />
+              Acessar Founder Dashboard
+            </Button>
           </div>
         </div>
       </section>
