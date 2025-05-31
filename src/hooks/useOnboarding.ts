@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -58,21 +57,16 @@ export const useOnboarding = () => {
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('name'),
-      { maxRetries: 3, requireAuth: true, timeout: 8000 }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result && Array.isArray(result)) {
       setCollaborators(result as Collaborator[]);
-      console.log('useOnboarding: Colaboradores carregados:', result.length);
     }
   };
 
   const fetchProcesses = async () => {
-    console.log('useOnboarding: Iniciando fetchProcesses');
-    console.log('useOnboarding: User ID:', user?.id);
-
     if (!user?.id) {
-      console.log('useOnboarding: Usuário não autenticado, limpando processos');
       setProcesses([]);
       setIsLoading(false);
       setError(null);
@@ -91,7 +85,7 @@ export const useOnboarding = () => {
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
-      { maxRetries: 3, requireAuth: true, timeout: 8000 }
+      { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
     if (result && Array.isArray(result)) {
@@ -102,7 +96,6 @@ export const useOnboarding = () => {
       
       setProcesses(formattedData);
       setError(null);
-      console.log('useOnboarding: Processos carregados com sucesso:', formattedData.length);
     } else {
       setProcesses([]);
       setError('Falha ao carregar processos de onboarding');
@@ -112,8 +105,6 @@ export const useOnboarding = () => {
   };
 
   useEffect(() => {
-    console.log('useOnboarding: useEffect executado, user?.id:', user?.id);
-    
     if (user?.id) {
       fetchCollaborators();
       fetchProcesses();
@@ -254,7 +245,6 @@ export const useOnboarding = () => {
     getProcessSteps,
     updateStepStatus,
     refetch: () => {
-      console.log('useOnboarding: Executando refetch manual');
       fetchCollaborators();
       fetchProcesses();
     }

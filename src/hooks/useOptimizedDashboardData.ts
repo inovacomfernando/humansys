@@ -2,17 +2,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useOptimizedCache } from './useOptimizedCache';
 import { DashboardData } from '@/types/dashboard';
 import { fetchDashboardStats } from '@/services/dashboardStatsService';
 import { fetchRecentActivities, logActivity as logActivityService } from '@/services/dashboardActivitiesService';
 import { fetchPendingTasks, fetchTrends } from '@/services/dashboardDataService';
-import { cacheTTLs } from '@/cacheConfig';
 
 export const useOptimizedDashboardData = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const cache = useOptimizedCache<any>(cacheTTLs.cacheDefault);
 
   const [data, setData] = useState<DashboardData>({
     stats: {
@@ -27,133 +24,64 @@ export const useOptimizedDashboardData = () => {
   });
 
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingStage, setLoadingStage] = useState<'initial' | 'stats' | 'activities' | 'complete'>('initial');
 
-  // Carregar estatísticas com cache
-  const loadDashboardStats = useCallback(async () => {
-    if (!user?.id) return null;
-
-    const cacheKey = `dashboard-stats-${user.id}`;
-    const cachedStats = cache.get(cacheKey);
-
-    if (cachedStats) {
-      return cachedStats;
-    }
-
-    try {
-      const stats = await fetchDashboardStats(user.id);
-      cache.set(cacheKey, stats, cacheTTLs.dashboardStats);
-      return stats;
-    } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
-      return null;
-    }
-  }, [user?.id, cache]);
-
-  // Carregar atividades com cache
-  const loadRecentActivities = useCallback(async () => {
-    if (!user?.id) return [];
-
-    const cacheKey = `activities-${user.id}`;
-    const cachedActivities = cache.get(cacheKey);
-
-    if (cachedActivities) {
-      return cachedActivities;
-    }
-
-    try {
-      const activities = await fetchRecentActivities(user.id);
-      cache.set(cacheKey, activities, cacheTTLs.recentActivities);
-      return activities;
-    } catch (error) {
-      console.error('Erro ao carregar atividades:', error);
-      return [];
-    }
-  }, [user?.id, cache]);
-
-  // Carregar tarefas (dados mock, cache mais longo)
-  const loadPendingTasks = useCallback(async () => {
-    const cacheKey = 'pending-tasks';
-    const cachedTasks = cache.get(cacheKey);
-
-    if (cachedTasks) {
-      return cachedTasks;
-    }
-
-    try {
-      const tasks = await fetchPendingTasks();
-      cache.set(cacheKey, tasks, cacheTTLs.pendingTasks);
-      return tasks;
-    } catch (error) {
-      console.error('Erro ao carregar tarefas:', error);
-      return [];
-    }
-  }, [cache]);
-
-  // Carregar trends (dados mock, cache mais longo)
-  const loadTrends = useCallback(async () => {
-    const cacheKey = 'dashboard-trends';
-    const cachedTrends = cache.get(cacheKey);
-
-    if (cachedTrends) {
-      return cachedTrends;
-    }
-
-    try {
-      const trends = await fetchTrends();
-      cache.set(cacheKey, trends, cacheTTLs.trends);
-      return trends;
-    } catch (error) {
-      console.error('Erro ao carregar trends:', error);
-      return [];
-    }
-  }, [cache]);
-
-  // Carregar todos os dados de forma otimizada
+  // Simplified sequential loading
   const loadAllData = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
+      setLoadingStage('stats');
 
-      // Carregar dados essenciais primeiro (stats e activities)
-      const [stats, activities] = await Promise.all([
-        loadDashboardStats(),
-        loadRecentActivities()
-      ]);
+      // Load stats first
+      const stats = await fetchDashboardStats(user.id);
+      setData(prev => ({ ...prev, stats: stats || prev.stats }));
 
-      // Atualizar com dados essenciais imediatamente
-      setData(prev => ({
-        ...prev,
-        stats: stats || prev.stats,
-        recentActivities: activities || prev.recentActivities
-      }));
+      setLoadingStage('activities');
 
-      // Carregar dados secundários em background
+      // Load activities second
+      const activities = await fetchRecentActivities(user.id);
+      setData(prev => ({ ...prev, recentActivities: activities || [] }));
+
+      // Load static data last (no loading state change)
       const [tasks, trends] = await Promise.all([
-        loadPendingTasks(),
-        loadTrends()
+        fetchPendingTasks().catch(() => []),
+        fetchTrends().catch(() => [])
       ]);
 
-      // Atualizar com dados completos
       setData(prev => ({
         ...prev,
         pendingTasks: tasks,
         trends: trends
       }));
 
+      setLoadingStage('complete');
+
     } catch (error) {
-      console.error('Erro ao carregar dashboard:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar alguns dados do dashboard.",
-        variant: "destructive"
-      });
+      console.error('Dashboard loading error:', error);
+      // Don't show toast for loading errors - too intrusive
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id, loadDashboardStats, loadRecentActivities, loadPendingTasks, loadTrends, toast]);
+  }, [user?.id]);
 
-  // Log de atividade otimizado
+  // Debounced effect to prevent rapid reloads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (user?.id) {
+        loadAllData();
+      } else {
+        setIsLoading(false);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [user?.id, loadAllData]);
+
   const logActivity = useCallback(
     async (
       type: string,
@@ -165,41 +93,24 @@ export const useOptimizedDashboardData = () => {
 
       try {
         await logActivityService(user.id, type, description, entityType, entityId);
-
-        // Invalidar cache de atividades para próximo carregamento
-        const cacheKey = `activities-${user.id}`;
-        cache.set(cacheKey, null, 0); // Expira imediatamente
-
-        // Recarregar atividades
-        const newActivities = await loadRecentActivities();
+        // Reload activities after logging
+        const newActivities = await fetchRecentActivities(user.id);
         setData(prev => ({
           ...prev,
-          recentActivities: newActivities
+          recentActivities: newActivities || prev.recentActivities
         }));
       } catch (error) {
-        console.error('Erro ao registrar atividade:', error);
+        console.error('Error logging activity:', error);
       }
     },
-    [user?.id, cache, loadRecentActivities]
+    [user?.id]
   );
-
-  // Carregar dados na inicialização
-  useEffect(() => {
-    if (user?.id) {
-      loadAllData();
-    } else {
-      setIsLoading(false);
-    }
-  }, [user?.id, loadAllData]);
-
-  // Estatísticas do cache para debug
-  const cacheStats = useMemo(() => cache.stats, [cache.stats]);
 
   return {
     data,
     isLoading,
+    loadingStage,
     refetch: loadAllData,
-    logActivity,
-    cacheStats
+    logActivity
   };
 };
