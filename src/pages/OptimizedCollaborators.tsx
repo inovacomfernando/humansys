@@ -366,8 +366,6 @@ export const OptimizedCollaborators = () => {
                   <CollaboratorCard
                     key={collaborator.id}
                     collaborator={collaborator}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
                   />
                 ))}
               </div>
