@@ -49,7 +49,7 @@ export const DiscDashboard: React.FC<DiscDashboardProps> = ({
       if (userProfiles.length > 0) {
         const latestProfile = userProfiles[0];
         const gamificationData = discService.generateGamificationData(latestProfile);
-        setGamificationData(gamificationData);
+        setGamification(gamificationData);
       }
     } catch (error) {
       toast({

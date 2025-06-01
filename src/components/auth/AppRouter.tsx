@@ -32,6 +32,7 @@ import { About } from '@/pages/About';
 import { Contact } from '@/pages/Contact';
 import { Help } from '@/pages/Help';
 import NotFound from '@/pages/NotFound';
+import { Disc } from '@/pages/Disc';
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -183,7 +184,7 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute>
               <Certificates />
-            </ProtectedRoute>
+            ProtectedRoute>
           } 
         />
 
@@ -192,6 +193,15 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute>
               <Documents />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/app/disc" 
+          element={
+            <ProtectedRoute>
+              <Disc />
             </ProtectedRoute>
           } 
         />
