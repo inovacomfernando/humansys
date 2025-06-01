@@ -970,8 +970,6 @@ export const Landing = () => {
                 </div>
               </CardContent>
             </Card>
-
-            
           </div>
         </div>
       </section>
