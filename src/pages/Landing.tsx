@@ -447,46 +447,41 @@ export const Landing = () => {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => (
-              <div key={index} className="group relative">
-                <div className="relative overflow-hidden bg-background border rounded-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-transparent">
-                  {/* Animated border effect on hover */}
-                  <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <div className="absolute inset-0 rounded-lg border-2 border-transparent bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-border animate-gradient-border"></div>
-                  </div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                        <feature.icon className="h-6 w-6 text-primary" />
-                      </div>
-                      {feature.isNew && (
-                        <div className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                          Novo
-                        </div>
-                      )}
+              <Card key={index} className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <CardHeader>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <feature.icon className="h-6 w-6 text-primary" />
                     </div>
-                    
-                    <h3 className="font-semibold mb-2 text-foreground group-hover:text-primary transition-colors">
-                      {feature.title}
-                    </h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      {feature.description}
-                    </p>
-                    
-                    {feature.realImpact && (
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-center text-green-600">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                          {feature.realImpact.metric}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {feature.realImpact.example}
-                        </div>
-                      </div>
+                    {feature.isNew && (
+                      <Badge className="bg-green-500 text-white">
+                        Novo
+                      </Badge>
                     )}
                   </div>
-                </div>
-              </div>
+                  
+                  <CardTitle className="text-lg">
+                    {feature.title}
+                  </CardTitle>
+                  <CardDescription>
+                    {feature.description}
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  {feature.realImpact && (
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center text-green-600">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        {feature.realImpact.metric}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {feature.realImpact.example}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>

@@ -315,24 +315,7 @@ input:focus, textarea:focus, select:focus {
   animation: glow-pulse 2s ease-in-out infinite;
 }
 
-/* Gradiente animado para bordas */
-@keyframes gradient-border {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
 
-.animate-gradient-border {
-  background: linear-gradient(90deg, transparent 0%, #3b82f6 25%, #8b5cf6 50%, #06b6d4 75%, transparent 100%);
-  background-size: 200% 100%;
-  animation: gradient-border 2s linear infinite;
-}
 
 /* Estilos específicos para os cards com efeito luminoso */
 .feature-card-glow {
