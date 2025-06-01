@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,7 +102,7 @@ export const Documentation = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
-
+      
       <div className="container py-20">
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-12">
@@ -130,7 +131,7 @@ export const Documentation = () => {
                 </Button>
               </CardContent>
             </Card>
-
+            
             <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-100">
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-2 font-medium text-yellow-700 mb-2">
@@ -146,7 +147,7 @@ export const Documentation = () => {
                 </Button>
               </CardContent>
             </Card>
-
+            
             <Card className="bg-gradient-to-r from-blue-50 to-sky-50 border-blue-100">
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-2 font-medium text-blue-700 mb-2">
@@ -290,7 +291,7 @@ export const Documentation = () => {
                       <li>• Não há limite de tempo para usar os créditos</li>
                       <li>• Histórico completo de uso disponível</li>
                     </ul>
-
+                    
                     <h4 className="font-medium text-green-800 mt-6">📊 Planos Disponíveis</h4>
                     <div className="space-y-1 text-sm text-green-700">
                       <div className="flex justify-between">
@@ -311,7 +312,7 @@ export const Documentation = () => {
                       </div>
                     </div>
                   </div>
-
+                  
                   <div className="space-y-4">
                     <h4 className="font-medium text-green-800">⚙️ Gerenciamento</h4>
                     <ul className="space-y-2 text-sm text-green-700">
@@ -320,7 +321,7 @@ export const Documentation = () => {
                       <li>• Acesse em Configurações → Aba Créditos</li>
                       <li>• Upgrade automático disponível a qualquer momento</li>
                     </ul>
-
+                    
                     <h4 className="font-medium text-green-800 mt-6">📈 Controle e Relatórios</h4>
                     <ul className="space-y-2 text-sm text-green-700">
                       <li>• Histórico completo de transações</li>
@@ -330,7 +331,7 @@ export const Documentation = () => {
                     </ul>
                   </div>
                 </div>
-
+                
                 <div className="mt-8 p-4 bg-white rounded-lg border border-green-200">
                   <h4 className="font-medium text-green-800 mb-2">💡 Dica Importante</h4>
                   <p className="text-sm text-green-700">

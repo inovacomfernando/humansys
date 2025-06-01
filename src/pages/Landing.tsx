@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { DynamicBadge } from '@/components/landing/DynamicBadge';
 import {
   Users,
   UserPlus,
@@ -40,19 +41,7 @@ export const Landing = () => {
   const features = [
     {
       icon: Brain,
-      title: 'Análise DISC com IA',
-      description: 'Perfis comportamentais avançados com insights de inteligência artificial para desenvolvimento de talentos.',
-      path: '/app/disc',
-      isNew: true,
-      realImpact: {
-        metric: 'Identificação precisa de perfis comportamentais',
-        example: 'Startup ABC melhorou formação de equipes em 70%',
-        benefit: 'Desenvolvimento direcionado de cada colaborador'
-      }
-    },
-    {
-      icon: TrendingUp,
-      title: 'Analytics Preditivas',
+      title: 'Analytics com IA',
       description: 'Machine Learning para prever turnover e identificar talentos em risco.',
       path: '/app/analytics',
       isNew: true,
@@ -329,46 +318,45 @@ export const Landing = () => {
         <div className="container">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <div className="flex justify-center mb-4">
-              <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-emerald-300 animate-pulse">
-                <Brain className="mr-1 h-3 w-3 inline" />
-                Novo Recurso
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-purple-300 animate-pulse">
+                <Sparkles className="mr-1 h-3 w-3 inline" />
+                Lançamento Oficial
               </div>
             </div>
             <h2 className="text-3xl font-bold md:text-4xl">
-              <Brain className="inline h-8 w-8 mr-2 text-emerald-600" />
-              Análise DISC com IA
+              <Crown className="inline h-8 w-8 mr-2 text-yellow-500" />
+              Novo Founder Dashboard
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Descubra perfis comportamentais com inteligência artificial e transforme sua gestão de pessoas
+              Tome decisões estratégicas com métricas de negócio em tempo real e IA preditiva
             </p>
-          </div></div>
+          </div>
 
           <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
-            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-emerald-300 bg-gradient-to-br from-emerald-50 to-green-50">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-green-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <CardHeader className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 group-hover:bg-emerald-200 transition-colors border-2 border-emerald-300">
-                  <Brain className="h-8 w-8 text-emerald-600" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 group-hover:bg-green-200 transition-colors">
+                  <DollarSign className="h-8 w-8 text-green-600" />
                 </div>
-                <CardTitle className="text-xl text-emerald-700">Análise DISC com IA</CardTitle>
-                <Badge className="bg-emerald-500 text-white">Destaque</Badge>
+                <CardTitle className="text-xl">Métricas SaaS</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4">
-                  Perfis comportamentais avançados com insights de IA para desenvolvimento de talentos
+                  MRR, ARR, Churn Rate, LTV/CAC, NRR e todas as métricas essenciais para SaaS
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Perfis Comportamentais</span>
-                    <Brain className="h-4 w-4 text-emerald-600" />
+                    <span>MRR Tracking</span>
+                    <Check className="h-4 w-4 text-green-600" />
                   </div>
                   <div className="flex justify-between">
-                    <span>Insights de IA</span>
-                    <Brain className="h-4 w-4 text-emerald-600" />
+                    <span>Churn Analysis</span>
+                    <Check className="h-4 w-4 text-green-600" />
                   </div>
                   <div className="flex justify-between">
-                    <span>Relatórios Personalizados</span>
-                    <Brain className="h-4 w-4 text-emerald-600" />
+                    <span>Revenue Forecasting</span>
+                    <Check className="h-4 w-4 text-green-600" />
                   </div>
                 </div>
               </CardContent>
@@ -378,26 +366,26 @@ export const Landing = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <CardHeader className="text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 group-hover:bg-purple-200 transition-colors">
-                  <Crown className="h-8 w-8 text-purple-600" />
+                  <Brain className="h-8 w-8 text-purple-600" />
                 </div>
-                <CardTitle className="text-xl">Founder Dashboard</CardTitle>
+                <CardTitle className="text-xl">IA Preditiva</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4">
-                  Métricas SaaS completas com IA preditiva para founders e executivos
+                  Previsões inteligentes de churn, crescimento e otimizações automáticas
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Métricas SaaS</span>
-                    <Crown className="h-4 w-4 text-purple-600" />
+                    <span>Churn Prediction</span>
+                    <Brain className="h-4 w-4 text-purple-600" />
                   </div>
                   <div className="flex justify-between">
-                    <span>IA Preditiva</span>
-                    <Crown className="h-4 w-4 text-purple-600" />
+                    <span>Revenue Forecast</span>
+                    <Brain className="h-4 w-4 text-purple-600" />
                   </div>
                   <div className="flex justify-between">
-                    <span>Dashboard Executivo</span>
-                    <Crown className="h-4 w-4 text-purple-600" />
+                    <span>Smart Recommendations</span>
+                    <Brain className="h-4 w-4 text-purple-600" />
                   </div>
                 </div>
               </CardContent>
@@ -409,23 +397,23 @@ export const Landing = () => {
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 group-hover:bg-orange-200 transition-colors">
                   <Trophy className="h-8 w-8 text-orange-600" />
                 </div>
-                <CardTitle className="text-xl">Gamificação Avançada</CardTitle>
+                <CardTitle className="text-xl">Gamificação</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4">
-                  Sistema completo de badges, níveis e conquistas para engajamento
+                  Sistema de níveis, conquistas e ranking para founders
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span>Sistema de Badges</span>
+                    <span>Level System</span>
                     <Trophy className="h-4 w-4 text-orange-600" />
                   </div>
                   <div className="flex justify-between">
-                    <span>Ranking Global</span>
+                    <span>Achievements</span>
                     <Trophy className="h-4 w-4 text-orange-600" />
                   </div>
                   <div className="flex justify-between">
-                    <span>Conquistas</span>
+                    <span>Leaderboard</span>
                     <Trophy className="h-4 w-4 text-orange-600" />
                   </div>
                 </div>
@@ -433,149 +421,15 @@ export const Landing = () => {
             </Card>
           </div>
 
-          <div className="text-center mt-12 space-y-4">
+          <div className="text-center mt-12">
             <Button 
               size="lg" 
-              className="text-lg px-8 py-6 bg-emerald-600 hover:bg-emerald-700"
-              onClick={() => debouncedNavigate('/app/disc')}
+              className="text-lg px-8 py-6"
+              onClick={() => debouncedNavigate('/app/founder/dashboard')}
             >
-              <Brain className="mr-2 h-5 w-5" />
-              Descobrir Meu Perfil DISC
+              <Crown className="mr-2 h-5 w-5" />
+              Acessar Founder Dashboard
             </Button>
-            <div className="text-sm text-muted-foreground">
-              🎁 Análise gratuita completa com insights de IA
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Seção DISC Destaque */}
-      <section className="py-12 md:py-20 bg-gradient-to-br from-emerald-50 via-white to-green-50">
-        <div className="container">
-          <div className="mx-auto max-w-6xl">
-            <div className="text-center mb-16">
-              <div className="flex justify-center mb-4">
-                <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-emerald-300">
-                  <Brain className="mr-1 h-3 w-3 inline" />
-                  Destaque do Mês
-                </div>
-              </div>
-              <h2 className="text-3xl font-bold md:text-4xl mb-4">
-                <Brain className="inline h-10 w-10 mr-3 text-emerald-600" />
-                Análise DISC Revolucionária
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Primeira plataforma de RH brasileira com análise DISC potencializada por Inteligência Artificial. 
-                Descubra perfis comportamentais únicos e otimize sua gestão de pessoas.
-              </p>
-            </div>
-
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
-              <Card className="text-center group hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-200 transition-colors">
-                    <span className="text-red-600 font-bold text-2xl">D</span>
-                  </div>
-                  <CardTitle className="text-lg">Dominante</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Perfil orientado para resultados, direto e determinado. Ideal para liderança e tomada de decisões.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="text-center group hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-200 transition-colors">
-                    <span className="text-yellow-600 font-bold text-2xl">I</span>
-                  </div>
-                  <CardTitle className="text-lg">Influente</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Sociável, otimista e persuasivo. Excelente para vendas, marketing e relacionamento com clientes.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="text-center group hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
-                    <span className="text-green-600 font-bold text-2xl">S</span>
-                  </div>
-                  <CardTitle className="text-lg">Estável</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Paciente, confiável e colaborativo. Perfeito para trabalho em equipe e suporte operacional.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="text-center group hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-                    <span className="text-blue-600 font-bold text-2xl">C</span>
-                  </div>
-                  <CardTitle className="text-lg">Consciencioso</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Preciso, analítico e sistemático. Ideal para análise de dados, qualidade e processos.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="bg-gradient-to-r from-emerald-500 to-green-500 text-white">
-              <CardContent className="p-8">
-                <div className="grid gap-8 md:grid-cols-2 items-center">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-4">Powered by Inteligência Artificial</h3>
-                    <ul className="space-y-3">
-                      <li className="flex items-center">
-                        <Check className="h-5 w-5 mr-3 flex-shrink-0" />
-                        <span>Análise comportamental com 95% de precisão</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Check className="h-5 w-5 mr-3 flex-shrink-0" />
-                        <span>Insights personalizados de desenvolvimento</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Check className="h-5 w-5 mr-3 flex-shrink-0" />
-                        <span>Recomendações de carreira e liderança</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Check className="h-5 w-5 mr-3 flex-shrink-0" />
-                        <span>Compatibilidade em equipes</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Check className="h-5 w-5 mr-3 flex-shrink-0" />
-                        <span>Relatórios executivos detalhados</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="text-center">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6">
-                      <Brain className="h-16 w-16 mx-auto mb-4 text-white" />
-                      <p className="text-lg font-medium">
-                        Primeira análise <span className="font-bold">GRATUITA</span>
-                      </p>
-                    </div>
-                    <Button 
-                      size="lg" 
-                      variant="secondary" 
-                      className="text-lg px-8 py-4"
-                      onClick={() => debouncedNavigate('/app/disc')}
-                    >
-                      <Brain className="mr-2 h-5 w-5" />
-                      Fazer Minha Análise DISC
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </section>
@@ -969,6 +823,8 @@ export const Landing = () => {
                 </div>
               </CardContent>
             </Card>
+
+            
           </div>
         </div>
       </section>
