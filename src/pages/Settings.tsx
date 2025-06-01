@@ -21,15 +21,19 @@ import {
   Smartphone,
   Settings as SettingsIcon,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  CreditCard
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { CreditsCard } from '@/components/dashboard/CreditsCard';
+import { useCredits } from '@/hooks/useCredits';
 
 export const Settings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { credits, updateCredits } = useCredits();
 
   const [settings, setSettings] = useState({
     notifications: {
@@ -92,10 +96,14 @@ export const Settings = () => {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="profile" className="flex items-center gap-2" onClick={() => navigate('/app/profile')}>
               <User className="h-4 w-4" />
               Perfil
+            </TabsTrigger>
+            <TabsTrigger value="credits" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Créditos
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="h-4 w-4" />
@@ -176,6 +184,94 @@ export const Settings = () => {
                   <Key className="h-4 w-4 mr-2" />
                   Configurar 2FA
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="credits" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Gestão de Créditos
+                </CardTitle>
+                <CardDescription>
+                  Gerencie seus créditos para cadastro de colaboradores
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <CreditsCard />
+                
+                <Separator />
+                
+                <div className="space-y-4">
+                  <h4 className="font-medium">Planos Disponíveis</h4>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="p-4">
+                      <div className="space-y-2">
+                        <h5 className="font-medium">Inicial</h5>
+                        <p className="text-sm text-muted-foreground">10 créditos para colaboradores</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => updateCredits('inicial')}
+                        >
+                          Ativar Plano
+                        </Button>
+                      </div>
+                    </Card>
+                    
+                    <Card className="p-4">
+                      <div className="space-y-2">
+                        <h5 className="font-medium">Em Crescimento</h5>
+                        <p className="text-sm text-muted-foreground">50 créditos para colaboradores</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => updateCredits('crescimento')}
+                        >
+                          Ativar Plano
+                        </Button>
+                      </div>
+                    </Card>
+                    
+                    <Card className="p-4">
+                      <div className="space-y-2">
+                        <h5 className="font-medium">Profissional</h5>
+                        <p className="text-sm text-muted-foreground">500 créditos para colaboradores</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => updateCredits('profissional')}
+                        >
+                          Ativar Plano
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                  <h4 className="font-medium">Como Funcionam os Créditos</h4>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p>• Cada colaborador cadastrado consome 1 crédito</p>
+                    <p>• Os créditos são renovados a cada mudança de plano</p>
+                    <p>• Durante o período de teste, você tem créditos ilimitados</p>
+                    <p>• Créditos não utilizados não são transferidos entre planos</p>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
+                    <h4 className="font-medium text-blue-800">Dica</h4>
+                  </div>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Para empresas com muitos colaboradores, recomendamos o plano Profissional que oferece 500 créditos.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
