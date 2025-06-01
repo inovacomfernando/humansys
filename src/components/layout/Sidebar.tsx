@@ -136,3 +136,135 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     </div>
   );
 };
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  LayoutDashboard, 
+  Users, 
+  UserPlus, 
+  GraduationCap, 
+  MessageSquare, 
+  Target, 
+  BarChart3, 
+  Calendar, 
+  ClipboardList, 
+  Award, 
+  FileText, 
+  Settings,
+  Brain
+} from 'lucide-react';
+
+const menuItems = [
+  {
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+    href: '/app/dashboard'
+  },
+  {
+    icon: Users,
+    label: 'Colaboradores',
+    href: '/app/collaborators'
+  },
+  {
+    icon: UserPlus,
+    label: 'Recrutamento',
+    href: '/app/recruitment'
+  },
+  {
+    icon: GraduationCap,
+    label: 'Onboarding',
+    href: '/app/onboarding'
+  },
+  {
+    icon: MessageSquare,
+    label: 'Feedback',
+    href: '/app/feedback'
+  },
+  {
+    icon: Target,
+    label: 'Metas & PDI',
+    href: '/app/goals'
+  },
+  {
+    icon: GraduationCap,
+    label: 'Treinamentos',
+    href: '/app/training'
+  },
+  {
+    icon: Award,
+    label: 'Certificados',
+    href: '/app/certificates'
+  },
+  {
+    icon: ClipboardList,
+    label: 'Pesquisas',
+    href: '/app/surveys'
+  },
+  {
+    icon: Brain,
+    label: 'Análise DISC',
+    href: '/app/disc',
+    badge: 'Novo'
+  },
+  {
+    icon: Calendar,
+    label: 'Reuniões 1:1',
+    href: '/app/meetings'
+  },
+  {
+    icon: BarChart3,
+    label: 'Analytics',
+    href: '/app/analytics'
+  },
+  {
+    icon: FileText,
+    label: 'Documentos',
+    href: '/app/documents'
+  },
+  {
+    icon: Settings,
+    label: 'Configurações',
+    href: '/app/settings'
+  }
+];
+
+export const Sidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  return (
+    <div className="pb-12 w-64">
+      <div className="space-y-4 py-4">
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
+            Menu
+          </h2>
+          <div className="space-y-1">
+            {menuItems.map((item) => (
+              <Button
+                key={item.href}
+                variant={location.pathname === item.href ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start",
+                  location.pathname === item.href && "bg-muted"
+                )}
+                onClick={() => navigate(item.href)}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                {item.label}
+                {item.badge && (
+                  <Badge className="ml-auto bg-green-500 text-white">
+                    {item.badge}
+                  </Badge>
+                )}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
