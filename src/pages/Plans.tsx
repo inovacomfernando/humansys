@@ -24,52 +24,58 @@ export const Plans = () => {
     {
       name: 'Inicial',
       description: 'Perfeito para empresas iniciantes',
-      monthlyPrice: 'R$ 79',
-      yearlyPrice: 'R$ 790',
+      monthlyPrice: 'R$ 127',
+      yearlyPrice: 'R$ 1270',
       popular: false,
       features: [
-        'Até 10 colaboradores',
-        'Onboarding básico',
+        'Até 15 colaboradores',
+        'Onboarding estruturado',
         'Gestão de documentos',
         'Gamificação básica',
+        'Análise DISC básica',
         'Suporte por email',
-        '1 GB de armazenamento',
+        'Relatórios essenciais',
+        '5 GB de armazenamento',
         'PWA para acesso mobile'
       ]
     },
     {
       name: 'Em Crescimento',
       description: 'Ideal para empresas em expansão',
-      monthlyPrice: 'R$ 149',
-      yearlyPrice: 'R$ 1490',
+      monthlyPrice: 'R$ 247',
+      yearlyPrice: 'R$ 2470',
       popular: true,
       features: [
-        'Até 50 colaboradores',
+        'Até 75 colaboradores',
         'Onboarding completo com gamificação',
-        'Sistema de feedback avançado',
+        'Sistema de feedback 360°',
         'Treinamentos e certificados',
-        'Pesquisas de clima',
-        'Analytics básica com IA',
+        'Pesquisas de clima organizacional',
+        'Analytics com IA preditiva',
+        'Análise DISC completa',
         'Suporte prioritário',
-        '10 GB de armazenamento'
+        'Integração com sistemas externos',
+        '25 GB de armazenamento'
       ]
     },
     {
       name: 'Profissional',
       description: 'Para empresas estabelecidas',
-      monthlyPrice: 'R$ 299',
-      yearlyPrice: 'R$ 2990',
+      monthlyPrice: 'R$ 497',
+      yearlyPrice: 'R$ 4970',
       popular: false,
       features: [
         'Colaboradores ilimitados',
-        'Todas as funcionalidades',
-        'IA para triagem e análises preditivas',
+        'Todas as funcionalidades premium',
+        'IA avançada para predição de turnover',
         'Gamificação completa com leaderboards',
-        'Relatórios avançados',
-        'API personalizada',
-        'Suporte 24/7',
-        'Armazenamento ilimitado',
-        'White label'
+        'Relatórios executivos automatizados',
+        'API personalizada e webhooks',
+        'Suporte 24/7 com CSM dedicado',
+        'White label completo',
+        'Consultoria estratégica mensal',
+        'Implementação assistida',
+        'Armazenamento ilimitado'
       ]
     }
   ];

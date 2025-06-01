@@ -210,7 +210,7 @@ export const Settings = () => {
                     <Card className="p-4">
                       <div className="space-y-2">
                         <h5 className="font-medium">Inicial</h5>
-                        <p className="text-sm text-muted-foreground">10 créditos para colaboradores</p>
+                        <p className="text-sm text-muted-foreground">15 créditos para colaboradores</p>
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -224,7 +224,7 @@ export const Settings = () => {
                     <Card className="p-4">
                       <div className="space-y-2">
                         <h5 className="font-medium">Em Crescimento</h5>
-                        <p className="text-sm text-muted-foreground">50 créditos para colaboradores</p>
+                        <p className="text-sm text-muted-foreground">75 créditos para colaboradores</p>
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -238,7 +238,7 @@ export const Settings = () => {
                     <Card className="p-4">
                       <div className="space-y-2">
                         <h5 className="font-medium">Profissional</h5>
-                        <p className="text-sm text-muted-foreground">500 créditos para colaboradores</p>
+                        <p className="text-sm text-muted-foreground">Colaboradores ilimitados</p>
                         <Button 
                           variant="outline" 
                           size="sm"

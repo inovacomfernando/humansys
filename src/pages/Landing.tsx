@@ -160,62 +160,54 @@ export const Landing = () => {
     {
       name: 'Inicial',
       description: 'Perfeito para empresas iniciantes',
-      monthlyPrice: 'R$ 79',
-      yearlyPrice: 'R$ 790',
+      monthlyPrice: 'R$ 127',
+      yearlyPrice: 'R$ 1270',
       popular: false,
       features: [
-        'Até 10 colaboradores',
-        'Onboarding básico',
+        'Até 15 colaboradores',
+        'Onboarding estruturado',
         'Gestão de documentos',
-        'Analytics básicas',
-        'Gamificação simples',
-        'Dashboard founder simplificado',
+        'Gamificação básica',
+        'Análise DISC básica',
         'Suporte por email',
-        '1 GB de armazenamento'
+        'Relatórios essenciais'
       ]
     },
     {
       name: 'Em Crescimento',
       description: 'Ideal para empresas em expansão',
-      monthlyPrice: 'R$ 129',
-      yearlyPrice: 'R$ 1290',
+      monthlyPrice: 'R$ 247',
+      yearlyPrice: 'R$ 2470',
       popular: true,
       features: [
-        'Até 50 colaboradores',
-        'Onboarding completo com vídeos',
+        'Até 75 colaboradores',
+        'Onboarding completo com gamificação',
         'Sistema de feedback 360°',
-        'Treinamentos interativos',
-        'Gamificação completa',
-        'Analytics avançadas',
-        'Dashboard founder completo',
-        'Alertas departamentais',
-        'PWA móvel',
-        'Pesquisas de clima',
+        'Treinamentos e certificados',
+        'Pesquisas de clima organizacional',
+        'Analytics com IA preditiva',
+        'Análise DISC completa',
         'Suporte prioritário',
-        '10 GB de armazenamento'
+        'Integração com sistemas externos'
       ]
     },
     {
       name: 'Profissional',
       description: 'Para empresas estabelecidas',
-      monthlyPrice: 'R$ 299',
-      yearlyPrice: 'R$ 2990',
+      monthlyPrice: 'R$ 497',
+      yearlyPrice: 'R$ 4970',
       popular: false,
       features: [
         'Colaboradores ilimitados',
-        'Todas as funcionalidades',
-        'IA preditiva para turnover',
-        'ML insights avançados',
-        'Dashboard founder premium',
-        'Alertas inteligentes 24/7',
-        'Previsões de receita com IA',
-        'Métricas SaaS completas',
-        'Relatórios executivos',
-        'API personalizada',
-        'Suporte 24/7',
-        'Armazenamento ilimitado',
-        'White label',
-        'Consultoria estratégica'
+        'Todas as funcionalidades premium',
+        'IA avançada para predição de turnover',
+        'Gamificação completa com leaderboards',
+        'Relatórios executivos automatizados',
+        'API personalizada e webhooks',
+        'Suporte 24/7 com CSM dedicado',
+        'White label completo',
+        'Consultoria estratégica mensal',
+        'Implementação assistida'
       ]
     }
   ];
@@ -460,7 +452,7 @@ export const Landing = () => {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <CardTitle className="text-lg">
                     {feature.title}
                   </CardTitle>
@@ -468,7 +460,7 @@ export const Landing = () => {
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
-                
+
                 <CardContent>
                   {feature.realImpact && (
                     <div className="space-y-2 text-xs">
@@ -1021,7 +1013,7 @@ export const Landing = () => {
               </CardContent>
             </Card>
 
-            
+
           </div>
         </div>
       </section>

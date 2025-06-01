@@ -41,9 +41,9 @@ export const CreditsCard = () => {
   
   const planLabels = {
     trial: 'Teste Grátis',
-    inicial: 'Inicial',
-    crescimento: 'Em Crescimento',
-    profissional: 'Profissional'
+    inicial: 'Inicial (15 colaboradores)',
+    crescimento: 'Em Crescimento (75 colaboradores)',
+    profissional: 'Profissional (Ilimitado)'
   };
 
   const planColors = {
