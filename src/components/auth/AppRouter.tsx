@@ -21,6 +21,7 @@ import { Feedback } from '@/pages/Feedback';
 import { Goals } from '@/pages/Goals';
 import { Analytics } from '@/pages/Analytics';
 import { Changelog } from '@/pages/Changelog';
+import { Documentation } from '@/pages/Documentation';
 import { Settings } from '@/pages/Settings';
 const Profile = React.lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
 import { Certificates } from '@/pages/Certificates';
@@ -206,6 +207,15 @@ export const AppRouter = () => {
           } 
         />
 
+        <Route 
+          path="/app/documentation" 
+          element={
+            <ProtectedRoute>
+              <Documentation />
+            </ProtectedRoute>
+          } 
+        />
+
         {/* Rotas do Founder */}
         <Route 
           path="/founder/dashboard" 
@@ -240,6 +250,7 @@ export const AppRouter = () => {
         <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
         <Route path="/surveys" element={<ProtectedRoute><ModernSurveys /></ProtectedRoute>} />
         <Route path="/disc" element={<ProtectedRoute><Disc /></ProtectedRoute>} />
+        <Route path="/documentation" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
 
         {/* 404 page for unmatched routes */}
         <Route path="*" element={<NotFound />} />

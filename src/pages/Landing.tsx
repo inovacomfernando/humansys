@@ -691,6 +691,203 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* Análise DISC Section */}
+      <section className="py-12 md:py-20 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <div className="container">
+          <div className="mx-auto max-w-6xl">
+            <div className="text-center mb-16">
+              <div className="flex justify-center mb-4">
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-indigo-300 animate-pulse">
+                  <Brain className="mr-1 h-3 w-3 inline" />
+                  Nova Funcionalidade
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold md:text-4xl">
+                <Brain className="inline h-8 w-8 mr-2 text-indigo-600" />
+                Análise de Perfil DISC com IA
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Descubra o perfil comportamental dos seus colaboradores com análise avançada e insights de IA
+              </p>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 mb-12">
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-red-200 transition-colors">
+                    <span className="text-2xl font-bold text-red-600">D</span>
+                  </div>
+                  <CardTitle className="text-xl">Dominante</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Orientado para resultados, direto e determinado
+                  </p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-center">
+                      <Badge className="bg-red-100 text-red-800">Liderança Natural</Badge>
+                    </div>
+                    <div className="flex justify-center">
+                      <Badge className="bg-red-100 text-red-800">Foco em Resultados</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-200 transition-colors">
+                    <span className="text-2xl font-bold text-yellow-600">I</span>
+                  </div>
+                  <CardTitle className="text-xl">Influente</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Sociável, otimista e persuasivo
+                  </p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-center">
+                      <Badge className="bg-yellow-100 text-yellow-800">Comunicativo</Badge>
+                    </div>
+                    <div className="flex justify-center">
+                      <Badge className="bg-yellow-100 text-yellow-800">Motivador</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
+                    <span className="text-2xl font-bold text-green-600">S</span>
+                  </div>
+                  <CardTitle className="text-xl">Estável</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Paciente, confiável e colaborativo
+                  </p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-center">
+                      <Badge className="bg-green-100 text-green-800">Trabalho em Equipe</Badge>
+                    </div>
+                    <div className="flex justify-center">
+                      <Badge className="bg-green-100 text-green-800">Estabilidade</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
+                    <span className="text-2xl font-bold text-blue-600">C</span>
+                  </div>
+                  <CardTitle className="text-xl">Consciencioso</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Preciso, analítico e sistemático
+                  </p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-center">
+                      <Badge className="bg-blue-100 text-blue-800">Atenção aos Detalhes</Badge>
+                    </div>
+                    <div className="flex justify-center">
+                      <Badge className="bg-blue-100 text-blue-800">Analítico</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Benefícios da Análise DISC */}
+            <div className="grid gap-8 md:grid-cols-2 mb-12">
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/5"></div>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-6 w-6 text-purple-600" />
+                    Insights de Inteligência Artificial
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Análise comportamental avançada com IA</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Previsões de performance e adaptabilidade</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Recomendações personalizadas de carreira</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Gamificação com badges e conquistas</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-blue-500/5"></div>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-6 w-6 text-indigo-600" />
+                    Aplicações Práticas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Formação de equipes complementares</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Desenvolvimento de lideranças</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Otimização da comunicação interna</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Relatórios detalhados em HTML</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center">
+              <Card className="inline-block bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6">
+                <CardContent className="pt-0">
+                  <h3 className="text-xl font-bold mb-2">🧠 Análise DISC Disponível Agora!</h3>
+                  <p className="mb-4">Descubra o perfil comportamental dos seus colaboradores</p>
+                  <Button 
+                    variant="secondary" 
+                    size="lg"
+                    onClick={() => debouncedNavigate('/app/disc')}
+                  >
+                    <Brain className="mr-2 h-5 w-5" />
+                    Fazer Análise DISC
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section className="py-12 md:py-20 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="container">

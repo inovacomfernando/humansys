@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,86 @@ export const Changelog = () => {
   const navigate = useNavigate();
 
   const updates = [
+    {
+      version: '3.3.0',
+      date: '2024-01-20',
+      type: 'major' as const,
+      title: 'Análise de Perfil DISC com IA',
+      description: 'Sistema completo de análise comportamental DISC com insights de inteligência artificial, gamificação e relatórios avançados.',
+      features: [
+        {
+          icon: Brain,
+          title: 'Análise DISC Inteligente',
+          description: 'Questionário de 12 perguntas com análise comportamental avançada'
+        },
+        {
+          icon: Trophy,
+          title: 'Gamificação DISC',
+          description: 'Sistema de badges, níveis e conquistas para análises comportamentais'
+        },
+        {
+          icon: FileText,
+          title: 'Relatórios em HTML',
+          description: 'Relatórios detalhados exportáveis com insights de IA'
+        },
+        {
+          icon: Users,
+          title: 'Perfis Comportamentais',
+          description: 'Identificação de estilos D, I, S, C com recomendações personalizadas'
+        }
+      ],
+      impacts: [
+        'Identificação precisa de perfis comportamentais',
+        'Formação de equipes mais eficientes',
+        'Desenvolvimento personalizado de lideranças',
+        'Otimização da comunicação interna baseada em perfis'
+      ],
+      testimonial: {
+        text: "A análise DISC nos ajudou a entender melhor nossa equipe e formar times mais complementares. Os insights de IA são incríveis!",
+        author: "Maria Santos",
+        role: "Diretora de RH, InnovaCorp"
+      }
+    },
+    {
+      version: '3.2.0',
+      date: '2024-01-15',
+      type: 'major' as const,
+      title: 'Founder Dashboard com IA Preditiva',
+      description: 'Dashboard exclusivo para founders com métricas SaaS avançadas, previsões de churn e IA preditiva para otimização de negócios.',
+      features: [
+        {
+          icon: Crown,
+          title: 'Founder Dashboard Premium',
+          description: 'Interface dedicada com métricas de negócio em tempo real'
+        },
+        {
+          icon: Brain,
+          title: 'IA Preditiva para SaaS',
+          description: 'Previsões de churn, MRR e otimizações automáticas'
+        },
+        {
+          icon: TrendingUp,
+          title: 'Métricas SaaS Completas',
+          description: 'MRR, ARR, Churn Rate, LTV/CAC, NRR e mais'
+        },
+        {
+          icon: DollarSign,
+          title: 'Análise de Receita',
+          description: 'Forecasting inteligente e análise de tendências'
+        }
+      ],
+      impacts: [
+        'Visibilidade 360° do negócio em tempo real',
+        'Decisões estratégicas baseadas em dados e IA',
+        'Previsões de receita com 90% de precisão',
+        'Identificação automática de oportunidades de crescimento'
+      ],
+      testimonial: {
+        text: "O Founder Dashboard mudou completamente como vejo meu negócio. As previsões de IA me ajudaram a identificar problemas antes que acontecessem.",
+        author: "Carlos Silva",
+        role: "CEO, TechCorp"
+      }
+    },
     {
       version: "v2.5.0",
       date: "2024-12-20",
@@ -97,7 +176,7 @@ export const Changelog = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
-      
+
       <div className="container py-20">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-16">
@@ -136,7 +215,7 @@ export const Changelog = () => {
                     )}
                   </div>
                 </CardHeader>
-                
+
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {update.items.map((item, itemIndex) => {
