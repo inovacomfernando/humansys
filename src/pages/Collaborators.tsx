@@ -1,22 +1,39 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, UserPlus, Search, Mail, Phone, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
+import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import { useCollaborators } from '@/hooks/useCollaborators';
+import { CollaboratorActions } from '@/components/collaborators/CollaboratorActions';
+import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
   const { collaborators, isLoading, error, createCollaborator, refetch } = useCollaborators();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Auto-refresh a cada 30 segundos para garantir dados atualizados
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (user?.id && !isLoading) {
+        console.log('Auto-refresh colaboradores...');
+        refetch();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user?.id, isLoading, refetch]);
 
   const [newCollaborator, setNewCollaborator] = useState({
     name: '',
@@ -37,15 +54,55 @@ export const Collaborators = () => {
       return;
     }
 
-    const result = await createCollaborator({
-      ...newCollaborator,
-      status: 'active' as const
-    });
-
-    if (result) {
-      setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
-      setIsAddingCollaborator(false);
+    try {
+      const result = await createCollaborator({
+        ...newCollaborator,
+        status: 'active' as const
+      });
+      
+      if (result) {
+        setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
+        setIsAddingCollaborator(false);
+        
+        // Forçar atualização imediata da lista
+        setTimeout(() => refetch(), 100);
+        
+        toast({
+          title: "Sucesso",
+          description: "Colaborador criado com sucesso! Atualizando lista...",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao criar colaborador:', error);
     }
+  };
+
+  const handleStatsClick = (type: string) => {
+    const filteredByStatus = collaborators.filter(c => {
+      switch (type) {
+        case 'active':
+          return c.status === 'active';
+        case 'vacation':
+          return c.status === 'vacation';
+        case 'inactive':
+          return c.status === 'inactive';
+        default:
+          return true;
+      }
+    });
+    
+    toast({
+      title: `Colaboradores ${type}`,
+      description: `${filteredByStatus.length} colaboradores encontrados`
+    });
+  };
+
+  const handleRetry = () => {
+    toast({
+      title: "Tentando novamente",
+      description: "Recarregando dados..."
+    });
+    refetch();
   };
 
   const filteredCollaborators = collaborators.filter(collaborator =>
@@ -87,17 +144,27 @@ export const Collaborators = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
+        {/* Header com Status de Conexão */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Colaboradores</h1>
             <p className="text-muted-foreground">
               Gerencie todos os colaboradores da empresa ({collaborators.length} encontrados)
             </p>
+            {process.env.NODE_ENV === 'development' && (
+              <p className="text-xs text-blue-600 mt-1">
+                Debug: User ID: {user?.id}, Carregados: {collaborators.length}
+              </p>
+            )}
           </div>
-
+          
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={refetch}>
+            <ConnectionStatus />
+            <Button 
+              variant="outline" 
+              onClick={handleRetry}
+              className="mr-2"
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
             </Button>
@@ -185,13 +252,18 @@ export const Collaborators = () => {
           </div>
         </div>
 
-        {/* Error Alert */}
+        {/* Alert de Erro */}
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
               <span>{error}</span>
-              <Button variant="outline" size="sm" onClick={refetch} className="ml-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleRetry}
+                className="ml-2"
+              >
                 <RefreshCw className="h-3 w-3 mr-1" />
                 Tentar Novamente
               </Button>
@@ -201,7 +273,7 @@ export const Collaborators = () => {
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('total')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -210,8 +282,8 @@ export const Collaborators = () => {
               <div className="text-2xl font-bold">{collaborators.length}</div>
             </CardContent>
           </Card>
-
-          <Card>
+          
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('active')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Ativos</CardTitle>
               <div className="h-2 w-2 bg-green-500 rounded-full"></div>
@@ -222,8 +294,8 @@ export const Collaborators = () => {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
+          
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('vacation')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Em Férias</CardTitle>
               <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
@@ -234,10 +306,11 @@ export const Collaborators = () => {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
+          
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleStatsClick('departments')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Departamentos</CardTitle>
+              <Filter className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -247,7 +320,7 @@ export const Collaborators = () => {
           </Card>
         </div>
 
-        {/* Search */}
+        {/* Search and Filters */}
         <Card>
           <CardHeader>
             <CardTitle>Buscar Colaboradores</CardTitle>
@@ -266,72 +339,98 @@ export const Collaborators = () => {
         </Card>
 
         {/* Collaborators List */}
-        {filteredCollaborators.length === 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredCollaborators.map((collaborator) => (
+            <Card key={collaborator.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <Avatar>
+                      <AvatarFallback>
+                        {collaborator.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold">{collaborator.name}</h3>
+                      <p className="text-sm text-muted-foreground">{collaborator.role}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`h-3 w-3 rounded-full ${getStatusColor(collaborator.status)}`} />
+                    <CollaboratorActions 
+                      collaboratorId={collaborator.id}
+                      collaboratorName={collaborator.name}
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Badge variant="secondary">{collaborator.department}</Badge>
+                  <Badge variant="outline">{getStatusText(collaborator.status)}</Badge>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center text-muted-foreground">
+                    <Mail className="mr-2 h-3 w-3" />
+                    {collaborator.email}
+                  </div>
+                  {collaborator.phone && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Phone className="mr-2 h-3 w-3" />
+                      {collaborator.phone}
+                    </div>
+                  )}
+                  {collaborator.location && (
+                    <div className="flex items-center text-muted-foreground">
+                      <MapPin className="mr-2 h-3 w-3" />
+                      {collaborator.location}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredCollaborators.length === 0 && !error && (
           <Card>
             <CardContent className="py-8">
               <div className="text-center">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">
-                  {searchTerm ? 'Nenhum colaborador encontrado' : 'Nenhum colaborador cadastrado'}
-                </h3>
+                <h3 className="text-lg font-medium mb-2">Nenhum colaborador encontrado</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchTerm ? 'Tente ajustar sua busca' : 'Comece adicionando seu primeiro colaborador'}
                 </p>
-                <Button onClick={() => setIsAddingCollaborator(true)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Adicionar Colaborador
-                </Button>
+                
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-left bg-gray-50 p-4 rounded-lg mb-4 max-w-md mx-auto">
+                    <h4 className="font-semibold mb-2">Debug Info:</h4>
+                    <p>Total colaboradores: {collaborators.length}</p>
+                    <p>Filtrados: {filteredCollaborators.length}</p>
+                    <p>Busca: "{searchTerm}"</p>
+                    <p>User ID: {user?.id}</p>
+                    <p>Loading: {isLoading.toString()}</p>
+                    <p>Error: {error || 'nenhum'}</p>
+                  </div>
+                )}
+                
+                {!searchTerm && (
+                  <div className="space-y-2">
+                    <Button onClick={() => setIsAddingCollaborator(true)}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Adicionar Primeiro Colaborador
+                    </Button>
+                    <br />
+                    <Button variant="outline" onClick={handleRetry} size="sm">
+                      <RefreshCw className="mr-2 h-3 w-3" />
+                      Verificar Novamente
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCollaborators.map((collaborator) => (
-              <Card key={collaborator.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {collaborator.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold">{collaborator.name}</h3>
-                        <p className="text-sm text-muted-foreground">{collaborator.role}</p>
-                      </div>
-                    </div>
-                    <div className={`h-3 w-3 rounded-full ${getStatusColor(collaborator.status)}`} />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <Badge variant="secondary">{collaborator.department}</Badge>
-                    <Badge variant="outline">{getStatusText(collaborator.status)}</Badge>
-                  </div>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center text-muted-foreground">
-                      <Mail className="mr-2 h-3 w-3" />
-                      {collaborator.email}
-                    </div>
-                    {collaborator.phone && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Phone className="mr-2 h-3 w-3" />
-                        {collaborator.phone}
-                      </div>
-                    )}
-                    {collaborator.location && (
-                      <div className="flex items-center text-muted-foreground">
-                        <MapPin className="mr-2 h-3 w-3" />
-                        {collaborator.location}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         )}
       </div>
     </DashboardLayout>
