@@ -19,11 +19,26 @@ export const Disc = () => {
   const [currentReport, setCurrentReport] = useState<DiscReport | null>(null);
 
   const handleStartAssessment = () => {
-    setCurrentView('assessment');
+    try {
+      setCurrentView('assessment');
+      setCurrentProfile(null);
+      setCurrentReport(null);
+    } catch (error) {
+      console.error('Erro ao iniciar análise:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível iniciar a análise.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAssessmentComplete = async (answers: DiscAnswer[]) => {
     try {
+      if (!answers || answers.length === 0) {
+        throw new Error('Respostas inválidas');
+      }
+
       // Calcular perfil baseado nas respostas
       const profile = discService.calculateProfile(answers);
       
@@ -54,61 +69,116 @@ export const Disc = () => {
   };
 
   const handleCancelAssessment = () => {
-    setCurrentView('dashboard');
+    try {
+      setCurrentView('dashboard');
+      setCurrentProfile(null);
+      setCurrentReport(null);
+    } catch (error) {
+      console.error('Erro ao cancelar análise:', error);
+    }
   };
 
   const handleViewProfile = (profile: DiscProfile) => {
-    const report = discService.generateReport(profile);
-    setCurrentProfile(profile);
-    setCurrentReport(report);
-    setCurrentView('results');
+    try {
+      if (!profile) {
+        throw new Error('Perfil inválido');
+      }
+      
+      const report = discService.generateReport(profile);
+      setCurrentProfile(profile);
+      setCurrentReport(report);
+      setCurrentView('results');
+    } catch (error) {
+      console.error('Erro ao visualizar perfil:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o perfil.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDownloadReport = () => {
-    if (!currentProfile || !currentReport) return;
+    try {
+      if (!currentProfile || !currentReport) {
+        toast({
+          title: "Erro",
+          description: "Nenhum relatório disponível para download.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    // Gerar PDF do relatório
-    const reportContent = generateReportHTML(currentProfile, currentReport);
-    const blob = new Blob([reportContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `disc-profile-${currentProfile.primary_style}-${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      // Gerar PDF do relatório
+      const reportContent = generateReportHTML(currentProfile, currentReport);
+      const blob = new Blob([reportContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `disc-profile-${currentProfile.primary_style}-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-    toast({
-      title: "Download Iniciado",
-      description: "Seu relatório está sendo baixado."
-    });
+      toast({
+        title: "Download Iniciado",
+        description: "Seu relatório está sendo baixado."
+      });
+    } catch (error) {
+      console.error('Erro ao fazer download:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível fazer o download do relatório.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleShareResults = () => {
-    if (!currentProfile) return;
+  const handleShareResults = async () => {
+    try {
+      if (!currentProfile) {
+        toast({
+          title: "Erro",
+          description: "Nenhum perfil disponível para compartilhar.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    const shareText = `Acabei de descobrir que tenho perfil ${currentProfile.primary_style} (${getStyleName(currentProfile.primary_style)}) na análise DISC! 🧠✨`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: 'Meu Perfil DISC',
-        text: shareText,
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(shareText);
+      const shareText = `Acabei de descobrir que tenho perfil ${currentProfile.primary_style} (${getStyleName(currentProfile.primary_style)}) na análise DISC! 🧠✨`;
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Meu Perfil DISC',
+          text: shareText,
+          url: window.location.href
+        });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Copiado!",
+          description: "Texto copiado para a área de transferência."
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
       toast({
-        title: "Copiado!",
-        description: "Texto copiado para a área de transferência."
+        title: "Erro",
+        description: "Não foi possível compartilhar os resultados.",
+        variant: "destructive"
       });
     }
   };
 
   const handleBackToList = () => {
-    setCurrentView('dashboard');
-    setCurrentProfile(null);
-    setCurrentReport(null);
+    try {
+      setCurrentView('dashboard');
+      setCurrentProfile(null);
+      setCurrentReport(null);
+    } catch (error) {
+      console.error('Erro ao voltar para lista:', error);
+    }
   };
 
   const getStyleName = (style: string) => {

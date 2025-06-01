@@ -11,12 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import { 
   Brain, 
   Plus, 
-  TrendingUp, 
   Trophy, 
+  Target, 
+  Users, 
+  Clock, 
   Star,
-  Calendar,
-  Download,
-  Eye
+  TrendingUp,
+  Award,
+  Zap
 } from 'lucide-react';
 
 interface DiscDashboardProps {
@@ -52,6 +54,7 @@ export const DiscDashboard: React.FC<DiscDashboardProps> = ({
         setGamification(gamificationData);
       }
     } catch (error) {
+      console.error('Erro ao carregar perfis:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os perfis",
@@ -116,111 +119,153 @@ export const DiscDashboard: React.FC<DiscDashboardProps> = ({
         </Button>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Análises Realizadas</CardTitle>
-            <Brain className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{profiles.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {profiles.length > 0 ? 'Evolução mapeada' : 'Comece sua jornada'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Perfil Atual</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {profiles.length > 0 ? profiles[0].primary_style : '--'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {profiles.length > 0 ? getStyleName(profiles[0].primary_style) : 'Realize uma análise'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Nível</CardTitle>
-            <Trophy className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gamification?.level || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {gamification?.experience_points || 0} XP
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Badges</CardTitle>
-            <Star className="h-4 w-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{gamification?.badges.length || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Conquistas desbloqueadas
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gamification Panel */}
-      {gamification && (
+      {/* Introdução para novos usuários */}
+      {profiles.length === 0 && (
         <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-purple-600" />
-              Progresso e Conquistas
+              <Brain className="h-6 w-6 text-purple-600" />
+              Bem-vindo à Análise DISC!
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Nível {gamification.level}</span>
-                <span className="text-sm text-muted-foreground">
-                  {gamification.experience_points} / {(gamification.level + 1) * 100} XP
-                </span>
-              </div>
-              <Progress 
-                value={(gamification.experience_points / ((gamification.level + 1) * 100)) * 100} 
-                className="h-2"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {gamification.badges.map((badge) => (
-                <Badge key={badge.id} className={`${badge.color === 'purple' ? 'bg-purple-500' : `bg-${badge.color}-500`} text-white`}>
-                  <Star className="h-3 w-3 mr-1" />
-                  {badge.name}
-                </Badge>
-              ))}
-            </div>
-
-            <div className="grid gap-2 md:grid-cols-2">
-              {gamification.achievements.map((achievement) => (
-                <div key={achievement.id} className="p-3 bg-white border rounded-lg">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium">{achievement.title}</span>
-                    <Badge variant={achievement.unlocked ? "default" : "secondary"}>
-                      {achievement.points} XP
-                    </Badge>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                A análise DISC é uma ferramenta poderosa que revela seu estilo comportamental 
+                e como você se relaciona com outros em diferentes situações.
+              </p>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="text-center p-4 bg-white rounded-lg">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <span className="text-red-600 font-bold">D</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {achievement.description}
-                  </p>
-                  <Progress 
-                    value={(achievement.progress / achievement.max_progress) * 100} 
-                    className="h-1"
-                  />
+                  <h4 className="font-medium text-sm">Dominante</h4>
+                  <p className="text-xs text-muted-foreground">Direto, decidido</p>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <span className="text-yellow-600 font-bold">I</span>
+                  </div>
+                  <h4 className="font-medium text-sm">Influente</h4>
+                  <p className="text-xs text-muted-foreground">Sociável, otimista</p>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <span className="text-green-600 font-bold">S</span>
+                  </div>
+                  <h4 className="font-medium text-sm">Estável</h4>
+                  <p className="text-xs text-muted-foreground">Paciente, confiável</p>
+                </div>
+                <div className="text-center p-4 bg-white rounded-lg">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <span className="text-blue-600 font-bold">C</span>
+                  </div>
+                  <h4 className="font-medium text-sm">Consciencioso</h4>
+                  <p className="text-xs text-muted-foreground">Preciso, analítico</p>
+                </div>
+              </div>
+              <div className="flex justify-center pt-4">
+                <Button onClick={onStartAssessment} size="lg">
+                  <Brain className="h-5 w-5 mr-2" />
+                  Fazer Primeira Análise
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stats Cards */}
+      {profiles.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Brain className="h-8 w-8 text-purple-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Análises</p>
+                  <p className="text-2xl font-bold">{profiles.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-8 w-8 text-yellow-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Nível</p>
+                  <p className="text-2xl font-bold">{gamification?.level || 1}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Star className="h-8 w-8 text-blue-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">XP</p>
+                  <p className="text-2xl font-bold">{gamification?.experience_points || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Award className="h-8 w-8 text-green-500" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Badges</p>
+                  <p className="text-2xl font-bold">{gamification?.badges.length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Perfis Realizados */}
+      {profiles.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Suas Análises DISC
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {profiles.map((profile, index) => (
+                <div 
+                  key={profile.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => onViewProfile(profile)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${getStyleColor(profile.primary_style)}`}>
+                      {profile.primary_style}
+                    </div>
+                    <div>
+                      <h4 className="font-medium">
+                        Perfil {getStyleName(profile.primary_style)}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(profile.completed_at).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {profile.primary_style}/{profile.secondary_style}
+                    </Badge>
+                    <Button variant="outline" size="sm">
+                      Ver Relatório
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -228,85 +273,78 @@ export const DiscDashboard: React.FC<DiscDashboardProps> = ({
         </Card>
       )}
 
-      {/* Recent Profiles */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Histórico de Análises
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {profiles.length > 0 ? (
-            <div className="space-y-3">
-              {profiles.slice(0, 5).map((profile) => (
-                <div key={profile.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full ${getStyleColor(profile.primary_style)} flex items-center justify-center font-bold`}>
-                      {profile.primary_style}
+      {/* Gamificação */}
+      {gamification && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                Badges Conquistados
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3">
+                {gamification.badges.map((badge) => (
+                  <div key={badge.id} className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
+                    <div className={`w-10 h-10 rounded-full bg-${badge.color}-100 flex items-center justify-center`}>
+                      <Award className={`h-5 w-5 text-${badge.color}-600`} />
                     </div>
                     <div>
-                      <div className="font-medium">
-                        Perfil {getStyleName(profile.primary_style)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(profile.completed_at).toLocaleDateString('pt-BR')}
-                      </div>
+                      <h4 className="font-medium text-sm">{badge.name}</h4>
+                      <p className="text-xs text-muted-foreground">{badge.description}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => onViewProfile(profile)}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      Ver
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Download className="h-4 w-4 mr-1" />
-                      PDF
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Nenhuma análise realizada</h3>
-              <p className="text-muted-foreground mb-4">
-                Comece sua jornada de autoconhecimento com uma análise DISC
-              </p>
-              <Button onClick={onStartAssessment}>
-                <Plus className="h-4 w-4 mr-2" />
-                Realizar Primeira Análise
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Próximos Passos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 md:grid-cols-2">
-            <Button variant="outline" className="justify-start h-auto p-4">
-              <Brain className="h-5 w-5 mr-3" />
-              <div className="text-left">
-                <div className="font-medium">Análise Comparativa</div>
-                <div className="text-sm text-muted-foreground">
-                  Compare diferentes períodos
-                </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-500" />
+                Conquistas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {gamification.achievements.map((achievement) => (
+                  <div key={achievement.id} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-sm">{achievement.title}</span>
+                      <Badge variant={achievement.unlocked ? "default" : "secondary"}>
+                        {achievement.points} XP
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                    <Progress 
+                      value={(achievement.progress / achievement.max_progress) * 100} 
+                      className="h-2"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {achievement.progress}/{achievement.max_progress}
+                    </p>
+                  </div>
+                ))}
               </div>
-            </Button>
-            <Button variant="outline" className="justify-start h-auto p-4">
-              <TrendingUp className="h-5 w-5 mr-3" />
-              <div className="text-left">
-                <div className="font-medium">Plano de Desenvolvimento</div>
-                <div className="text-sm text-muted-foreground">
-                  Baseado no seu perfil
-                </div>
-              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Call to Action */}
+      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <CardContent className="p-6">
+          <div className="text-center">
+            <Zap className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Continue Desenvolvendo</h3>
+            <p className="text-muted-foreground mb-4">
+              Faça análises regulares para acompanhar sua evolução comportamental
+            </p>
+            <Button onClick={onStartAssessment}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Análise DISC
             </Button>
           </div>
         </CardContent>
