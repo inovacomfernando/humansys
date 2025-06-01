@@ -17,23 +17,18 @@ export const Disc = () => {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
   const [currentProfile, setCurrentProfile] = useState<DiscProfile | null>(null);
   const [currentReport, setCurrentReport] = useState<DiscReport | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleStartAssessment = () => {
-    try {
-      setCurrentView('assessment');
-      setCurrentProfile(null);
-      setCurrentReport(null);
-    } catch (error) {
-      console.error('Erro ao iniciar análise:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível iniciar a análise.",
-        variant: "destructive"
-      });
-    }
+    setCurrentView('assessment');
+    setCurrentProfile(null);
+    setCurrentReport(null);
   };
 
   const handleAssessmentComplete = async (answers: DiscAnswer[]) => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
     try {
       if (!answers || answers.length === 0) {
         throw new Error('Respostas inválidas');
@@ -45,7 +40,7 @@ export const Disc = () => {
       // Gerar relatório completo
       const report = discService.generateReport(profile);
 
-      // Salvar no banco de dados
+      // Salvar no banco de dados se houver usuário
       if (user?.id) {
         await discService.saveProfile(profile, user.id);
       }
@@ -65,25 +60,19 @@ export const Disc = () => {
         description: "Não foi possível processar sua análise. Tente novamente.",
         variant: "destructive"
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleCancelAssessment = () => {
-    try {
-      setCurrentView('dashboard');
-      setCurrentProfile(null);
-      setCurrentReport(null);
-    } catch (error) {
-      console.error('Erro ao cancelar análise:', error);
-    }
+    setCurrentView('dashboard');
+    setCurrentProfile(null);
+    setCurrentReport(null);
   };
 
   const handleViewProfile = (profile: DiscProfile) => {
     try {
-      if (!profile) {
-        throw new Error('Perfil inválido');
-      }
-      
       const report = discService.generateReport(profile);
       setCurrentProfile(profile);
       setCurrentReport(report);
@@ -99,17 +88,16 @@ export const Disc = () => {
   };
 
   const handleDownloadReport = () => {
-    try {
-      if (!currentProfile || !currentReport) {
-        toast({
-          title: "Erro",
-          description: "Nenhum relatório disponível para download.",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (!currentProfile || !currentReport) {
+      toast({
+        title: "Erro",
+        description: "Nenhum relatório disponível para download.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      // Gerar PDF do relatório
+    try {
       const reportContent = generateReportHTML(currentProfile, currentReport);
       const blob = new Blob([reportContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
@@ -136,16 +124,16 @@ export const Disc = () => {
   };
 
   const handleShareResults = async () => {
-    try {
-      if (!currentProfile) {
-        toast({
-          title: "Erro",
-          description: "Nenhum perfil disponível para compartilhar.",
-          variant: "destructive"
-        });
-        return;
-      }
+    if (!currentProfile) {
+      toast({
+        title: "Erro",
+        description: "Nenhum perfil disponível para compartilhar.",
+        variant: "destructive"
+      });
+      return;
+    }
 
+    try {
       const shareText = `Acabei de descobrir que tenho perfil ${currentProfile.primary_style} (${getStyleName(currentProfile.primary_style)}) na análise DISC! 🧠✨`;
       
       if (navigator.share) {
@@ -172,13 +160,9 @@ export const Disc = () => {
   };
 
   const handleBackToList = () => {
-    try {
-      setCurrentView('dashboard');
-      setCurrentProfile(null);
-      setCurrentReport(null);
-    } catch (error) {
-      console.error('Erro ao voltar para lista:', error);
-    }
+    setCurrentView('dashboard');
+    setCurrentProfile(null);
+    setCurrentReport(null);
   };
 
   const getStyleName = (style: string) => {

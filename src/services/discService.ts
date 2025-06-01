@@ -1,12 +1,12 @@
-import { supabase } from '@/integrations/supabase/client';
-import { DiscProfile, DiscAnswer, DiscReport, DiscInsight, DiscGamification } from '@/types/disc';
+
+import { DiscQuestion, DiscAnswer, DiscProfile, DiscReport, DiscInsight, DiscGamification, DiscBadge, DiscAchievement } from '@/types/disc';
 
 class DiscService {
   // Perguntas padrão do DISC
-  private discQuestions = [
+  private discQuestions: DiscQuestion[] = [
     {
       id: '1',
-      category: 'D' as const,
+      category: 'D',
       question: 'Como você aborda desafios e problemas?',
       options: [
         'Enfrento diretamente e tomo decisões rápidas',
@@ -17,7 +17,7 @@ class DiscService {
     },
     {
       id: '2',
-      category: 'I' as const,
+      category: 'I',
       question: 'Como você se comporta em situações sociais?',
       options: [
         'Assumo a liderança e dirijo as conversas',
@@ -28,7 +28,7 @@ class DiscService {
     },
     {
       id: '3',
-      category: 'S' as const,
+      category: 'S',
       question: 'Como você lida com mudanças?',
       options: [
         'Adapto-me rapidamente e vejo oportunidades',
@@ -39,7 +39,7 @@ class DiscService {
     },
     {
       id: '4',
-      category: 'C' as const,
+      category: 'C',
       question: 'Como você aborda seu trabalho?',
       options: [
         'Foco em resultados e eficiência',
@@ -50,54 +50,118 @@ class DiscService {
     },
     {
       id: '5',
-      category: 'D' as const,
+      category: 'D',
       question: 'Como você toma decisões?',
       options: [
-        'Rapidamente, baseado na intuição',
-        'Consultando outras pessoas',
-        'Considerando o impacto em todos',
-        'Analisando dados e fatos'
+        'De forma rápida e decisiva',
+        'Considerando o impacto nas pessoas',
+        'Com cautela e consultando outros',
+        'Baseando-me em dados e análises'
       ]
     },
     {
       id: '6',
-      category: 'I' as const,
-      question: 'O que te motiva no trabalho?',
+      category: 'I',
+      question: 'Como você prefere comunicar-se?',
       options: [
-        'Autonomia e controle',
-        'Reconhecimento e interação social',
-        'Segurança e harmonia da equipe',
-        'Precisão e qualidade'
+        'Direto e objetivo',
+        'Entusiasmado e expressivo',
+        'Calmo e respeitoso',
+        'Preciso e detalhado'
+      ]
+    },
+    {
+      id: '7',
+      category: 'S',
+      question: 'Como você trabalha em equipe?',
+      options: [
+        'Lidero e dirijo as atividades',
+        'Motivo e energizo o grupo',
+        'Colaboro e apoio os colegas',
+        'Contribuo com análises e dados'
+      ]
+    },
+    {
+      id: '8',
+      category: 'C',
+      question: 'Como você lida com regras e procedimentos?',
+      options: [
+        'Questiono se são eficientes',
+        'Adapto-as conforme necessário',
+        'Sigo-as fielmente',
+        'Estudo-as em detalhes'
+      ]
+    },
+    {
+      id: '9',
+      category: 'D',
+      question: 'Qual é seu estilo de liderança?',
+      options: [
+        'Autoritário e direto',
+        'Inspirador e motivador',
+        'Democrático e colaborativo',
+        'Analítico e metódico'
+      ]
+    },
+    {
+      id: '10',
+      category: 'I',
+      question: 'Como você influencia outros?',
+      options: [
+        'Através de autoridade e pressão',
+        'Com entusiasmo e persuasão',
+        'Sendo confiável e consistente',
+        'Com fatos e lógica'
+      ]
+    },
+    {
+      id: '11',
+      category: 'S',
+      question: 'Como você reage a conflitos?',
+      options: [
+        'Enfrento diretamente',
+        'Procuro mediar e harmonizar',
+        'Evito e busco estabilidade',
+        'Analiso as causas'
+      ]
+    },
+    {
+      id: '12',
+      category: 'C',
+      question: 'Como você organiza seu trabalho?',
+      options: [
+        'Foco nos resultados principais',
+        'Mantenho flexibilidade',
+        'Sigo uma rotina estável',
+        'Planejo detalhadamente'
       ]
     }
   ];
 
-  getQuestions() {
+  getQuestions(): DiscQuestion[] {
     return this.discQuestions;
   }
 
   calculateProfile(answers: DiscAnswer[]): DiscProfile {
-    const scores = { D: 0, I: 0, S: 0, C: 0 };
+    if (!answers || answers.length === 0) {
+      throw new Error('Respostas inválidas para calcular perfil');
+    }
 
+    const scores = { D: 0, I: 0, S: 0, C: 0 };
+    
+    // Calcular pontuações baseadas nas respostas
     answers.forEach(answer => {
       const question = this.discQuestions.find(q => q.id === answer.question_id);
       if (question) {
-        // Pontuação baseada na resposta selecionada
-        const categoryWeights = {
-          D: [4, 2, 1, 3],
-          I: [2, 4, 3, 1],
-          S: [1, 3, 4, 2],
-          C: [3, 1, 2, 4]
-        };
-
-        Object.keys(scores).forEach(category => {
-          scores[category as keyof typeof scores] += 
-            categoryWeights[category as keyof typeof categoryWeights][answer.selected_option];
-        });
+        const styleMapping = ['D', 'I', 'S', 'C'];
+        const selectedStyle = styleMapping[answer.selected_option];
+        if (selectedStyle) {
+          scores[selectedStyle as keyof typeof scores] += 1;
+        }
       }
     });
 
-    // Normalizar pontuações
+    // Normalizar pontuações para percentuais
     const total = Object.values(scores).reduce((sum, score) => sum + score, 0);
     const normalizedScores = {
       dominance: Math.round((scores.D / total) * 100),
@@ -106,17 +170,25 @@ class DiscService {
       conscientiousness: Math.round((scores.C / total) * 100)
     };
 
-    // Determinar estilo primário e secundário
+    // Determinar estilos primário e secundário
     const sortedStyles = Object.entries(normalizedScores)
       .sort(([,a], [,b]) => b - a)
-      .map(([style]) => style.charAt(0).toUpperCase() as 'D' | 'I' | 'S' | 'C');
+      .map(([key]) => {
+        const styleMap: { [key: string]: 'D' | 'I' | 'S' | 'C' } = {
+          dominance: 'D',
+          influence: 'I', 
+          steadiness: 'S',
+          conscientiousness: 'C'
+        };
+        return styleMap[key];
+      });
 
     const insights = this.generateInsights(normalizedScores);
-    const recommendations = this.generateRecommendations(sortedStyles[0], normalizedScores);
+    const recommendations = this.getCareerRecommendations(sortedStyles[0]);
 
     return {
       id: crypto.randomUUID(),
-      user_id: '', // Será preenchido ao salvar
+      user_id: '',
       dominance: normalizedScores.dominance,
       influence: normalizedScores.influence,
       steadiness: normalizedScores.steadiness,
@@ -144,22 +216,52 @@ class DiscService {
       development_areas: scores.dominance < 50 
         ? ['Desenvolver assertividade', 'Praticar tomada de decisão'] 
         : ['Desenvolver paciência', 'Melhorar escuta ativa'],
-      ai_prediction: this.generateAIPrediction('D', scores.dominance)
+      ai_prediction: this.generateAIPrediction('dominance', scores.dominance)
     });
 
     // Análise de Influência
     insights.push({
       category: 'Influência',
-      description: scores.influence > 70 
-        ? 'Você é naturalmente sociável e persuasivo'
-        : scores.influence > 40 
-        ? 'Você tem boas habilidades de comunicação'
-        : 'Você prefere comunicação mais reservada',
+      description: scores.influence > 70
+        ? 'Você tem excelentes habilidades sociais e de comunicação'
+        : scores.influence > 40
+        ? 'Você consegue se relacionar bem com outras pessoas'
+        : 'Você prefere comunicação mais reservada e focada',
       strength_level: scores.influence,
-      development_areas: scores.influence < 50 
-        ? ['Desenvolver habilidades de apresentação', 'Praticar networking'] 
-        : ['Focar em detalhes', 'Melhorar follow-up'],
-      ai_prediction: this.generateAIPrediction('I', scores.influence)
+      development_areas: scores.influence < 50
+        ? ['Desenvolver habilidades de apresentação', 'Praticar networking']
+        : ['Focar em detalhes', 'Melhorar escuta'],
+      ai_prediction: this.generateAIPrediction('influence', scores.influence)
+    });
+
+    // Análise de Estabilidade
+    insights.push({
+      category: 'Estabilidade',
+      description: scores.steadiness > 70
+        ? 'Você valoriza estabilidade e trabalho em equipe'
+        : scores.steadiness > 40
+        ? 'Você equilibra bem estabilidade e mudanças'
+        : 'Você adapta-se facilmente a mudanças',
+      strength_level: scores.steadiness,
+      development_areas: scores.steadiness < 50
+        ? ['Desenvolver paciência', 'Melhorar trabalho em equipe']
+        : ['Aumentar flexibilidade', 'Aceitar mudanças'],
+      ai_prediction: this.generateAIPrediction('steadiness', scores.steadiness)
+    });
+
+    // Análise de Conscienciosidade
+    insights.push({
+      category: 'Conscienciosidade',
+      description: scores.conscientiousness > 70
+        ? 'Você tem alta atenção aos detalhes e qualidade'
+        : scores.conscientiousness > 40
+        ? 'Você equilibra qualidade e eficiência'
+        : 'Você foca mais em resultados do que em detalhes',
+      strength_level: scores.conscientiousness,
+      development_areas: scores.conscientiousness < 50
+        ? ['Atenção aos detalhes', 'Melhorar planejamento']
+        : ['Aumentar velocidade', 'Focar em resultados'],
+      ai_prediction: this.generateAIPrediction('conscientiousness', scores.conscientiousness)
     });
 
     return insights;
@@ -167,52 +269,30 @@ class DiscService {
 
   private generateAIPrediction(category: string, score: number): string {
     const predictions = {
-      D: {
-        high: 'Com base em padrões similares, você tem 85% de probabilidade de se destacar em posições de liderança nos próximos 2 anos.',
-        medium: 'Análise preditiva indica 70% de chance de desenvolver forte liderança com treinamento adequado.',
-        low: 'IA sugere focar em desenvolvimento de assertividade para alcançar 90% de melhoria em confiança em 6 meses.'
+      dominance: {
+        high: 'IA prevê excelente performance em posições de liderança e gestão estratégica',
+        medium: 'IA prevê bom desempenho em funções que requerem iniciativa e tomada de decisão',
+        low: 'IA prevê maior sucesso em funções colaborativas e de suporte'
       },
-      I: {
-        high: 'Modelo ML prevê excelente desempenho em vendas e relacionamento com 92% de precisão.',
-        medium: 'Algoritmo indica potencial para crescimento em comunicação com 80% de sucesso em programas de desenvolvimento.',
-        low: 'Sistema recomenda foco em habilidades sociais para aumentar influência em 75% em 1 ano.'
+      influence: {
+        high: 'IA prevê grande sucesso em vendas, marketing e funções que envolvem persuasão',
+        medium: 'IA prevê bom desempenho em funções que requerem comunicação interpessoal',
+        low: 'IA prevê maior eficiência em trabalhos técnicos e analíticos'
+      },
+      steadiness: {
+        high: 'IA prevê excelência em funções que requerem consistência e trabalho em equipe',
+        medium: 'IA prevê adaptabilidade a diferentes ambientes de trabalho',
+        low: 'IA prevê maior sucesso em ambientes dinâmicos e de mudança rápida'
+      },
+      conscientiousness: {
+        high: 'IA prevê excelente performance em funções que requerem precisão e qualidade',
+        medium: 'IA prevê equilíbrio entre qualidade e produtividade',
+        low: 'IA prevê maior eficiência em funções que priorizam velocidade e resultados'
       }
     };
 
     const level = score > 70 ? 'high' : score > 40 ? 'medium' : 'low';
-    return predictions[category as keyof typeof predictions]?.[level] || 
-           'Análise em andamento - recomendações personalizadas em breve.';
-  }
-
-  private generateRecommendations(primaryStyle: string, scores: any): string[] {
-    const recommendations = {
-      D: [
-        'Desenvolva paciência para trabalhar melhor em equipe',
-        'Pratique escuta ativa nas reuniões',
-        'Delegue mais tarefas para desenvolver outros',
-        'Considere o impacto emocional das suas decisões'
-      ],
-      I: [
-        'Foque mais nos detalhes dos projetos',
-        'Desenvolva habilidades de planejamento',
-        'Pratique follow-up consistente',
-        'Balance entusiasmo com análise crítica'
-      ],
-      S: [
-        'Desenvolva maior assertividade',
-        'Pratique falar em público',
-        'Tome mais iniciativas',
-        'Acelere processo de tomada de decisão'
-      ],
-      C: [
-        'Desenvolva flexibilidade para mudanças',
-        'Pratique comunicação mais direta',
-        'Balance perfeccionismo com prazos',
-        'Melhore habilidades de networking'
-      ]
-    };
-
-    return recommendations[primaryStyle as keyof typeof recommendations] || [];
+    return predictions[category as keyof typeof predictions][level];
   }
 
   generateReport(profile: DiscProfile): DiscReport {
@@ -225,137 +305,24 @@ class DiscService {
 
     return {
       profile,
-      detailed_analysis: `Seu perfil ${styleDescriptions[profile.primary_style]} indica que você possui características únicas que podem ser potencializadas. Com ${profile[profile.primary_style.toLowerCase() as keyof DiscProfile]}% no estilo primário, você demonstra forte tendência para comportamentos típicos desta categoria.`,
+      detailed_analysis: `Seu perfil ${styleDescriptions[profile.primary_style]} indica que você possui características únicas que podem ser potencializadas. Com ${this.getStyleScore(profile, profile.primary_style)}% no estilo primário, você demonstra forte tendência para comportamentos típicos desta categoria.`,
       career_recommendations: this.getCareerRecommendations(profile.primary_style),
       team_compatibility: this.getTeamCompatibility(profile),
       leadership_style: this.getLeadershipStyle(profile.primary_style),
       communication_preferences: this.getCommunicationPreferences(profile.primary_style),
       stress_indicators: this.getStressIndicators(profile.primary_style),
-      growth_opportunities: profile.recommendations
+      growth_opportunities: this.getGrowthOpportunities(profile.primary_style)
     };
   }
 
-  private getCareerRecommendations(style: string): string[] {
-    const careers = {
-      D: ['Executivo', 'Empreendedor', 'Gerente de Projetos', 'Consultor'],
-      I: ['Vendas', 'Marketing', 'Relações Públicas', 'Treinamento'],
-      S: ['Recursos Humanos', 'Atendimento ao Cliente', 'Mediação', 'Ensino'],
-      C: ['Análise', 'Qualidade', 'Pesquisa', 'Contabilidade']
+  private getStyleScore(profile: DiscProfile, style: string): number {
+    const scoreMap = {
+      D: profile.dominance,
+      I: profile.influence,
+      S: profile.steadiness,
+      C: profile.conscientiousness
     };
-    return careers[style as keyof typeof careers] || [];
-  }
-
-  private getTeamCompatibility(profile: DiscProfile): string {
-    const compatibility = {
-      D: 'Trabalha bem com pessoas orientadas para ação. Pode ter conflitos com estilos muito detalhistas.',
-      I: 'Excelente em equipes colaborativas. Pode precisar de suporte em tarefas analíticas.',
-      S: 'Ótimo mediador em conflitos. Pode precisar de encorajamento para tomar iniciativas.',
-      C: 'Valioso em projetos que exigem precisão. Pode precisar de apoio em mudanças rápidas.'
-    };
-    return compatibility[profile.primary_style];
-  }
-
-  private getLeadershipStyle(style: string): string {
-    const leadership = {
-      D: 'Liderança diretiva - toma decisões rápidas e assume responsabilidades',
-      I: 'Liderança inspiradora - motiva através do entusiasmo e relacionamentos',
-      S: 'Liderança participativa - constrói consenso e apoia o desenvolvimento da equipe',
-      C: 'Liderança técnica - lidera através da expertise e análise cuidadosa'
-    };
-    return leadership[style as keyof typeof leadership] || '';
-  }
-
-  private getCommunicationPreferences(style: string): string[] {
-    const communication = {
-      D: ['Comunicação direta e objetiva', 'Foco em resultados', 'Reuniões eficientes'],
-      I: ['Comunicação expressiva', 'Interação social', 'Brainstorming em grupo'],
-      S: ['Comunicação empática', 'Escuta ativa', 'Feedback construtivo'],
-      C: ['Comunicação detalhada', 'Dados e fatos', 'Documentação clara']
-    };
-    return communication[style as keyof typeof communication] || [];
-  }
-
-  private getStressIndicators(style: string): string[] {
-    const stress = {
-      D: ['Perda de controle', 'Burocracia excessiva', 'Indecisão da equipe'],
-      I: ['Isolamento social', 'Tarefas muito detalhadas', 'Ambiente negativo'],
-      S: ['Mudanças súbitas', 'Conflitos não resolvidos', 'Pressão de tempo'],
-      C: ['Ambiguidade', 'Decisões apressadas', 'Falta de informações']
-    };
-    return stress[style as keyof typeof stress] || [];
-  }
-
-  generateGamificationData(profile: DiscProfile): DiscGamification {
-    const badges = [
-      {
-        id: '1',
-        name: 'Autoconhecimento',
-        description: 'Completou primeira análise DISC',
-        icon: 'Brain',
-        color: 'purple',
-        earned_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: `Especialista ${profile.primary_style}`,
-        description: `Demonstrou forte perfil ${profile.primary_style}`,
-        icon: 'Trophy',
-        color: this.getStyleColor(profile.primary_style),
-        earned_at: new Date().toISOString()
-      }
-    ];
-
-    const achievements = [
-      {
-        id: '1',
-        title: 'Primeira Análise',
-        description: 'Complete sua primeira análise DISC',
-        points: 100,
-        unlocked: true,
-        progress: 100,
-        max_progress: 100
-      },
-      {
-        id: '2',
-        title: 'Desenvolvimento Contínuo',
-        description: 'Complete 5 análises para acompanhar sua evolução',
-        points: 500,
-        unlocked: false,
-        progress: 1,
-        max_progress: 5
-      }
-    ];
-
-    return {
-      badges,
-      level: 1,
-      experience_points: 100,
-      achievements,
-      progress_streak: 1
-    };
-  }
-
-  private getStyleColor(style: string): string {
-    const colors = {
-      D: 'red',
-      I: 'yellow', 
-      S: 'green',
-      C: 'blue'
-    };
-    return colors[style as keyof typeof colors] || 'gray';
-  }
-
-  async saveProfile(profile: DiscProfile, userId: string): Promise<void> {
-    // Implementação do salvamento no Supabase
-    // Por enquanto apenas console.log para desenvolvimento
-    console.log('Salvando perfil DISC:', { profile, userId });
-  }
-
-  async getUserProfiles(userId: string): Promise<DiscProfile[]> {
-    // Implementação da busca de perfis do usuário
-    // Por enquanto retorna array vazio
-    console.log('Buscando perfis do usuário:', userId);
-    return [];
+    return scoreMap[style as keyof typeof scoreMap] || 0;
   }
 
   getCareerRecommendations(style: string): string[] {
@@ -389,34 +356,40 @@ class DiscService {
   }
 
   getTeamCompatibility(profile: DiscProfile): string {
-    return `Seu perfil ${profile.primary_style} trabalha bem em equipes diversificadas e complementa perfis diferentes, criando um ambiente de trabalho equilibrado.`;
+    const compatibility = {
+      D: 'Trabalha melhor com equipes orientadas para resultados e que aceitem liderança direta.',
+      I: 'Prospera em equipes colaborativas e ambientes sociais dinâmicos.',
+      S: 'Excelente em equipes estáveis que valorizam harmonia e cooperação.',
+      C: 'Funciona bem em equipes que valorizam precisão e trabalho detalhado.'
+    };
+    return compatibility[profile.primary_style as keyof typeof compatibility] || '';
   }
 
   getLeadershipStyle(style: string): string {
     const styles = {
-      D: 'Liderança direta e orientada para resultados',
-      I: 'Liderança inspiradora e motivacional',
-      S: 'Liderança colaborativa e de apoio',
-      C: 'Liderança técnica e baseada em dados'
+      D: 'Liderança direta e orientada para resultados, tomando decisões rápidas.',
+      I: 'Liderança inspiradora e motivacional, focando no desenvolvimento da equipe.',
+      S: 'Liderança colaborativa e democrática, priorizando o consenso.',
+      C: 'Liderança analítica e metodológica, baseada em dados e processos.'
     };
     return styles[style as keyof typeof styles] || '';
   }
 
   getCommunicationPreferences(style: string): string[] {
     const preferences = {
-      D: ['Comunicação direta e objetiva', 'Foco nos resultados', 'Decisões rápidas'],
-      I: ['Comunicação entusiástica', 'Interação social', 'Apresentações dinâmicas'],
-      S: ['Comunicação calma e paciente', 'Escuta ativa', 'Ambiente harmonioso'],
-      C: ['Comunicação precisa e detalhada', 'Dados e fatos', 'Tempo para análise']
+      D: ['Comunicação direta e objetiva', 'Foco em resultados', 'Decisões rápidas'],
+      I: ['Comunicação expressiva e entusiasmada', 'Interação social', 'Apresentações dinâmicas'],
+      S: ['Comunicação calma e respeitosa', 'Escuta ativa', 'Consenso em grupo'],
+      C: ['Comunicação precisa e detalhada', 'Informações completas', 'Documentação clara']
     };
     return preferences[style as keyof typeof preferences] || [];
   }
 
   getStressIndicators(style: string): string[] {
     const indicators = {
-      D: ['Microgerenciamento', 'Processos lentos', 'Falta de autonomia'],
-      I: ['Isolamento social', 'Tarefas repetitivas', 'Críticas constantes'],
-      S: ['Mudanças frequentes', 'Conflitos', 'Pressão por velocidade'],
+      D: ['Falta de controle', 'Processos lentos', 'Microgerenciamento'],
+      I: ['Isolamento social', 'Tarefas repetitivas', 'Ambiente formal'],
+      S: ['Mudanças súbitas', 'Conflitos', 'Pressão por velocidade'],
       C: ['Falta de informações', 'Decisões apressadas', 'Ambiente desorganizado']
     };
     return indicators[style as keyof typeof indicators] || [];
@@ -427,9 +400,92 @@ class DiscService {
       D: ['Desenvolver paciência', 'Melhorar escuta ativa', 'Trabalhar em equipe'],
       I: ['Foco em detalhes', 'Gestão do tempo', 'Análise crítica'],
       S: ['Assertividade', 'Adaptabilidade', 'Tomada de decisão'],
-      C: ['Flexibilidade', 'Comunicação interpessoal', 'Tolerância a mudanças']
+      C: ['Flexibilidade', 'Comunicação interpessoal', 'Tolerância a ambiguidade']
     };
     return opportunities[style as keyof typeof opportunities] || [];
+  }
+
+  generateGamificationData(profile: DiscProfile): DiscGamification {
+    const badges: DiscBadge[] = [
+      {
+        id: '1',
+        name: 'Primeiro Perfil',
+        description: 'Completou sua primeira análise DISC',
+        icon: 'brain',
+        color: 'purple',
+        earned_at: profile.completed_at
+      },
+      {
+        id: '2',
+        name: `Especialista ${profile.primary_style}`,
+        description: `Identificado como perfil ${profile.primary_style}`,
+        icon: 'star',
+        color: this.getStyleColor(profile.primary_style),
+        earned_at: profile.completed_at
+      }
+    ];
+
+    const achievements: DiscAchievement[] = [
+      {
+        id: '1',
+        title: 'Autoconhecimento',
+        description: 'Complete sua primeira análise DISC',
+        points: 100,
+        unlocked: true,
+        progress: 1,
+        max_progress: 1
+      },
+      {
+        id: '2',
+        title: 'Evolução Contínua',
+        description: 'Complete 3 análises DISC',
+        points: 300,
+        unlocked: false,
+        progress: 1,
+        max_progress: 3
+      }
+    ];
+
+    return {
+      badges,
+      level: 1,
+      experience_points: 100,
+      achievements,
+      progress_streak: 1
+    };
+  }
+
+  private getStyleColor(style: string): string {
+    const colors = {
+      D: 'red',
+      I: 'yellow',
+      S: 'green',
+      C: 'blue'
+    };
+    return colors[style as keyof typeof colors] || 'gray';
+  }
+
+  async saveProfile(profile: DiscProfile, userId: string): Promise<void> {
+    try {
+      // Por enquanto apenas log, implementação real do Supabase seria aqui
+      console.log('Salvando perfil DISC:', { profile, userId });
+      // Simular sucesso
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      throw new Error('Não foi possível salvar o perfil');
+    }
+  }
+
+  async getUserProfiles(userId: string): Promise<DiscProfile[]> {
+    try {
+      // Por enquanto retorna array vazio, implementação real do Supabase seria aqui
+      console.log('Buscando perfis do usuário:', userId);
+      return [];
+    } catch (error) {
+      console.error('Erro ao buscar perfis:', error);
+      return [];
+    }
   }
 }
 
