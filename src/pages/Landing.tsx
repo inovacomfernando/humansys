@@ -32,19 +32,11 @@ import {
   TrendingDown,
   CreditCard
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useDebounceNavigation } from '@/hooks/useDebounceNavigation';
+import { FeatureCard } from '@/components/landing/FeatureCard';
 
 export const Landing = () => {
-  const navigate = useNavigate();
-
-  const handleNavigation = (path: string, state?: any) => {
-    try {
-      navigate(path, state ? { state } : undefined);
-    } catch (error) {
-      console.error('Navigation error:', error);
-      window.location.href = path;
-    }
-  };
+  const { debouncedNavigate } = useDebounceNavigation();
 
   const features = [
     {
@@ -264,6 +256,20 @@ export const Landing = () => {
     { icon: Github, href: '#', label: 'GitHub' }
   ];
 
+  const handleFeatureClick = (path: string) => {
+    debouncedNavigate(path);
+  };
+
+  const handlePlanSelection = (planName: string, price: string, billing: 'monthly' | 'yearly') => {
+    debouncedNavigate('/plans', { 
+      state: { 
+        selectedPlan: planName, 
+        selectedPrice: price,
+        selectedBilling: billing 
+      } 
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
@@ -294,10 +300,12 @@ export const Landing = () => {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => handleNavigation('/checkout', { 
-                  selectedPlan: 'Teste Grátis', 
-                  selectedPrice: 'Grátis',
-                  selectedBilling: 'trial' 
+                onClick={() => debouncedNavigate('/checkout', { 
+                  state: { 
+                    selectedPlan: 'Teste Grátis', 
+                    selectedPrice: 'Grátis',
+                    selectedBilling: 'trial' 
+                  } 
                 })}
               >
                 <Zap className="mr-2 h-5 w-5" />
@@ -307,7 +315,7 @@ export const Landing = () => {
                 variant="outline" 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => handleNavigation('/changelog')}
+                onClick={() => debouncedNavigate('/changelog')}
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 Ver Novidades
@@ -334,7 +342,7 @@ export const Landing = () => {
             <p className="mt-4 text-lg text-muted-foreground">
               Descubra perfis comportamentais com inteligência artificial e transforme sua gestão de pessoas
             </p>
-          </div>
+          </div></div>
 
           <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
             <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-emerald-300 bg-gradient-to-br from-emerald-50 to-green-50">
@@ -430,7 +438,7 @@ export const Landing = () => {
             <Button 
               size="lg" 
               className="text-lg px-8 py-6 bg-emerald-600 hover:bg-emerald-700"
-              onClick={() => handleNavigation('/app/disc')}
+              onClick={() => debouncedNavigate('/app/disc')}
             >
               <Brain className="mr-2 h-5 w-5" />
               Descobrir Meu Perfil DISC
@@ -560,7 +568,7 @@ export const Landing = () => {
                       size="lg" 
                       variant="secondary" 
                       className="text-lg px-8 py-4"
-                      onClick={() => handleNavigation('/app/disc')}
+                      onClick={() => debouncedNavigate('/app/disc')}
                     >
                       <Brain className="mr-2 h-5 w-5" />
                       Fazer Minha Análise DISC
@@ -587,11 +595,7 @@ export const Landing = () => {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => (
-              <Card 
-                key={index} 
-                className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                onClick={() => handleNavigation(feature.path)}
-              >
+              <Card key={index} className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                 <CardHeader>
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -603,7 +607,7 @@ export const Landing = () => {
                       </Badge>
                     )}
                   </div>
-
+                  
                   <CardTitle className="text-lg">
                     {feature.title}
                   </CardTitle>
@@ -611,7 +615,7 @@ export const Landing = () => {
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
-
+                
                 <CardContent>
                   {feature.realImpact && (
                     <div className="space-y-2 text-xs">
@@ -682,22 +686,14 @@ export const Landing = () => {
                     <Button 
                       className="w-full" 
                       variant={plan.popular ? "default" : "outline"}
-                      onClick={() => handleNavigation('/checkout', {
-                        selectedPlan: plan.name,
-                        selectedPrice: plan.monthlyPrice,
-                        selectedBilling: 'monthly'
-                      })}
+                      onClick={() => handlePlanSelection(plan.name, plan.monthlyPrice, 'monthly')}
                     >
                       Contratar Mensal
                     </Button>
                     <Button 
                       className="w-full" 
                       variant="secondary"
-                      onClick={() => handleNavigation('/checkout', {
-                        selectedPlan: plan.name,
-                        selectedPrice: plan.yearlyPrice,
-                        selectedBilling: 'yearly'
-                      })}
+                      onClick={() => handlePlanSelection(plan.name, plan.yearlyPrice, 'yearly')}
                     >
                       Contratar Anual
                     </Button>
@@ -742,7 +738,8 @@ export const Landing = () => {
                     Sistema simples: cada colaborador cadastrado consome 1 crédito
                   </p>
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between"><span>Cadastro completo</span>
+                    <div className="flex justify-between">
+                      <span>Cadastro completo</span>
                       <Badge variant="outline">1 crédito</Badge>
                     </div>
                     <div className="flex justify-between">
@@ -824,10 +821,12 @@ export const Landing = () => {
                   <Button 
                     variant="secondary" 
                     size="lg"
-                    onClick={() => handleNavigation('/checkout', { 
-                      selectedPlan: 'Teste Grátis', 
-                      selectedPrice: 'Grátis',
-                      selectedBilling: 'trial' 
+                    onClick={() => debouncedNavigate('/checkout', { 
+                      state: { 
+                        selectedPlan: 'Teste Grátis', 
+                        selectedPrice: 'Grátis',
+                        selectedBilling: 'trial' 
+                      } 
                     })}
                   >
                     Começar Teste Grátis
@@ -971,6 +970,8 @@ export const Landing = () => {
                 </div>
               </CardContent>
             </Card>
+
+            
           </div>
         </div>
       </section>
@@ -1029,10 +1030,12 @@ export const Landing = () => {
                 size="lg" 
                 variant="secondary"
                 className="text-lg px-8 py-6"
-                onClick={() => handleNavigation('/checkout', { 
-                  selectedPlan: 'Teste Grátis', 
-                  selectedPrice: 'Grátis',
-                  selectedBilling: 'trial' 
+                onClick={() => debouncedNavigate('/checkout', { 
+                  state: { 
+                    selectedPlan: 'Teste Grátis', 
+                    selectedPrice: 'Grátis',
+                    selectedBilling: 'trial' 
+                  } 
                 })}
               >
                 <Shield className="mr-2 h-5 w-5" />
@@ -1042,7 +1045,7 @@ export const Landing = () => {
                 size="lg" 
                 variant="outline"
                 className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary"
-                onClick={() => handleNavigation('/plans')}
+                onClick={() => debouncedNavigate('/plans')}
               >
                 Ver Planos
               </Button>
@@ -1058,33 +1061,33 @@ export const Landing = () => {
             <div>
               <h3 className="font-semibold mb-4">Produto</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => handleNavigation('/app/dashboard')} className="hover:text-primary text-left">Funcionalidades</button></li>
-                <li><button onClick={() => handleNavigation('/plans')} className="hover:text-primary text-left">Preços</button></li>
-                <li><button onClick={() => handleNavigation('/changelog')} className="hover:text-primary text-left">Novidades</button></li>
-                <li><button onClick={() => handleNavigation('/app/settings')} className="hover:text-primary text-left">Integrações</button></li>
+                <li><button onClick={() => debouncedNavigate('/app/dashboard')} className="hover:text-primary text-left">Funcionalidades</button></li>
+                <li><button onClick={() => debouncedNavigate('/plans')} className="hover:text-primary text-left">Preços</button></li>
+                <li><button onClick={() => debouncedNavigate('/changelog')} className="hover:text-primary text-left">Novidades</button></li>
+                <li><button onClick={() => debouncedNavigate('/app/settings')} className="hover:text-primary text-left">Integrações</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Empresa</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => handleNavigation('/about')} className="hover:text-primary text-left">Sobre</button></li>
-                <li><button onClick={() => handleNavigation('/careers')} className="hover:text-primary text-left">Carreiras</button></li>
-                <li><button onClick={() => handleNavigation('/blog')} className="hover:text-primary text-left">Blog</button></li>
+                <li><button onClick={() => debouncedNavigate('/about')} className="hover:text-primary text-left">Sobre</button></li>
+                <li><button onClick={() => debouncedNavigate('/careers')} className="hover:text-primary text-left">Carreiras</button></li>
+                <li><button onClick={() => debouncedNavigate('/blog')} className="hover:text-primary text-left">Blog</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Suporte</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => handleNavigation('/documentation')} className="hover:text-primary text-left">Documentação</button></li>
-                <li><button onClick={() => handleNavigation('/help')} className="hover:text-primary text-left">Ajuda</button></li>
-                <li><button onClick={() => handleNavigation('/contact')} className="hover:text-primary text-left">Contato</button></li>
+                <li><button onClick={() => debouncedNavigate('/documentation')} className="hover:text-primary text-left">Documentação</button></li>
+                <li><button onClick={() => debouncedNavigate('/help')} className="hover:text-primary text-left">Ajuda</button></li>
+                <li><button onClick={() => debouncedNavigate('/contact')} className="hover:text-primary text-left">Contato</button></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => handleNavigation('/privacy')} className="hover:text-primary text-left">Política de Privacidade</button></li>
-                <li><button onClick={() => handleNavigation('/terms')} className="hover:text-primary text-left">Termos de Uso</button></li>
+                <li><button onClick={() => debouncedNavigate('/privacy')} className="hover:text-primary text-left">Política de Privacidade</button></li>
+                <li><button onClick={() => debouncedNavigate('/terms')} className="hover:text-primary text-left">Termos de Uso</button></li>
               </ul>
             </div>
           </div>
