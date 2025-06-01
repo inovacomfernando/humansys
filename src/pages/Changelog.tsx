@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Star, Zap, Brain, Trophy, Video, Smartphone, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Target, Sparkles, Alert, AlertTitle, AlertDescription } from 'lucide-react';
 
 export const Changelog = () => {
   const navigate = useNavigate();
@@ -97,7 +97,7 @@ export const Changelog = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
-      
+
       <div className="container py-20">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-16">
@@ -113,7 +113,163 @@ export const Changelog = () => {
           </div>
 
           <div className="space-y-8">
-            {updates.map((update, index) => (
+        {/* Versão mais recente */}
+        <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-50 to-green-50 shadow-lg">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <Brain className="h-6 w-6 text-emerald-600" />
+                  v2.2.0 - Análise DISC com Inteligência Artificial
+                  <Badge className="bg-emerald-500 text-white animate-pulse">
+                    🚀 Lançamento
+                  </Badge>
+                </CardTitle>
+                <CardDescription className="text-base">
+                  {new Date().toLocaleDateString('pt-BR')}
+                </CardDescription>
+              </div>
+              <div className="text-right">
+                <Badge variant="outline" className="text-sm border-emerald-300 text-emerald-700">
+                  Inteligência Artificial
+                </Badge>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Brain className="h-4 w-4 text-emerald-600" />
+                  Análise DISC Revolucionária
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Primeira plataforma brasileira com DISC + IA</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Identificação precisa dos 4 perfis comportamentais</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Insights personalizados de desenvolvimento</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Relatórios detalhados em PDF</span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Target className="h-4 w-4 text-emerald-600" />
+                  Recursos Inteligentes
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Recomendações de carreira personalizadas</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Análise de compatibilidade em equipes</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Estilos de liderança identificados</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Dashboard de gamificação DISC</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <Alert className="border-emerald-200 bg-emerald-50">
+              <Sparkles className="h-4 w-4 text-emerald-600" />
+              <AlertTitle className="text-emerald-700">Oferta de Lançamento</AlertTitle>
+              <AlertDescription className="text-emerald-600">
+                Primeira análise DISC totalmente gratuita para todos os usuários! 
+                Descubra seu perfil comportamental único com tecnologia de ponta.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+
+        {/* Versão anterior */}
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  v2.1.0 - PWA e Otimizações Avançadas
+                </CardTitle>
+                <CardDescription className="text-base">
+                  15 de Janeiro de 2025
+                </CardDescription>
+              </div>
+              <div className="text-right">
+                <Badge variant="outline" className="text-sm">
+                  Progressive Web App
+                </Badge>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Smartphone className="h-4 w-4 text-blue-600" />
+                  Progressive Web App (PWA)
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Funciona offline com sincronização automática</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Instalação como app nativo no celular</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Notificações push para atualizações importantes</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Performance 3x mais rápida</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-blue-600" />
+                  Otimizações de Performance
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Redução de 50% no tempo de carregamento</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Infraestrutura Cloud otimizada</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Servidores dedicados de alta performance</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {updates.map((update, index) => (
               <Card key={index} className="relative overflow-hidden">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -136,7 +292,7 @@ export const Changelog = () => {
                     )}
                   </div>
                 </CardHeader>
-                
+
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {update.items.map((item, itemIndex) => {
