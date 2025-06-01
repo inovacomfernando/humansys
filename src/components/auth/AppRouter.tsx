@@ -239,6 +239,7 @@ export const AppRouter = () => {
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
         <Route path="/surveys" element={<ProtectedRoute><ModernSurveys /></ProtectedRoute>} />
+        <Route path="/disc" element={<ProtectedRoute><Disc /></ProtectedRoute>} />
 
         {/* 404 page for unmatched routes */}
         <Route path="*" element={<NotFound />} />

@@ -150,13 +150,13 @@ export const Dashboard = () => {
               </div>
               
               <div className="flex items-center space-x-3 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow"
-                   onClick={() => navigate('/training')}>
+                   onClick={() => navigate('/app/disc')}>
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-green-600" />
+                  <Brain className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-medium">PWA Móvel</h4>
-                  <p className="text-sm text-muted-foreground">Acesso offline</p>
+                  <h4 className="font-medium">Análise DISC</h4>
+                  <p className="text-sm text-muted-foreground">Perfil comportamental</p>
                 </div>
               </div>
             </div>
@@ -266,6 +266,10 @@ export const Dashboard = () => {
                 <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/goals')}>
                   <Target className="h-4 w-4 mr-2" />
                   Definir Meta
+                </Button>
+                <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/app/disc')}>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Análise DISC
                 </Button>
               </div>
             </Widget>
