@@ -15,6 +15,7 @@ import { CollaboratorActions } from '@/components/collaborators/CollaboratorActi
 import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { StorageDebugPanel } from '@/components/collaborators/StorageDebugPanel';
 
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -431,6 +432,11 @@ export const Collaborators = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Debug Panel - apenas em desenvolvimento */}
+        {process.env.NODE_ENV === 'development' && (
+          <StorageDebugPanel />
         )}
       </div>
     </DashboardLayout>

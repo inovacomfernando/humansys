@@ -1,24 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import { supabase } from '@/integrations/supabase/client';
+import { replitStorage, StoredCollaborator } from '@/services/replitStorageService';
 
-export interface Collaborator {
-  id: string;
-  user_id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  status: 'active' | 'inactive' | 'vacation';
-  phone?: string;
-  location?: string;
-  join_date: string;
-  created_at: string;
-  updated_at: string;
-}
+export interface Collaborator extends StoredCollaborator {}
 
 export const useCollaborators = () => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -29,11 +16,11 @@ export const useCollaborators = () => {
   const { executeQuery } = useSupabaseQuery();
 
   const fetchCollaborators = async () => {
-    console.log('useCollaborators: Iniciando fetchCollaborators');
-    console.log('useCollaborators: User ID:', user?.id);
+    console.log('🔄 useCollaborators: Iniciando fetchCollaborators com Replit Storage');
+    console.log('👤 useCollaborators: User ID:', user?.id);
 
     if (!user?.id) {
-      console.log('useCollaborators: Usuário não autenticado, limpando lista');
+      console.log('❌ useCollaborators: Usuário não autenticado, limpando lista');
       setCollaborators([]);
       setIsLoading(false);
       setError(null);
@@ -44,114 +31,82 @@ export const useCollaborators = () => {
     setError(null);
 
     try {
-      // Primeiro, vamos verificar se a tabela existe e tem dados
-      const { data: tableCheck, error: tableError } = await supabase
-        .from('collaborators')
-        .select('count', { count: 'exact', head: true });
+      // 1. Carregar dados do Replit Object Storage (fonte primária)
+      console.log('📂 Carregando dados do Replit Object Storage...');
+      const storageData = await replitStorage.loadCollaborators(user.id);
 
-      console.log('Table check result:', { tableCheck, tableError });
-
-      // Agora buscar os dados
-      const { data: result, error: queryError } = await supabase
-        .from('collaborators')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      console.log('Query result:', { result, queryError, userIdUsed: user.id });
-
-      if (queryError) {
-        console.error('Erro na query:', queryError);
-        setError(`Erro ao buscar colaboradores: ${queryError.message}`);
-        setCollaborators([]);
-      } else if (result && Array.isArray(result)) {
-        const formattedData: Collaborator[] = result.map((item: any) => ({
-          ...item,
-          status: (item.status as 'active' | 'inactive' | 'vacation') || 'active',
-          join_date: item.join_date || item.created_at,
-        }));
-        
-        console.log('useCollaborators: Colaboradores formatados:', formattedData);
-        setCollaborators(formattedData);
+      if (storageData.length > 0) {
+        console.log(`✅ Dados carregados do storage: ${storageData.length} colaboradores`);
+        setCollaborators(storageData);
         setError(null);
-        
+
         toast({
-          title: "Colaboradores carregados",
-          description: `${formattedData.length} colaborador(es) encontrado(s)`
+          title: "Dados carregados",
+          description: `${storageData.length} colaborador(es) carregado(s) do storage local`
         });
-      } else {
-        console.log('useCollaborators: Nenhum resultado ou resultado inválido');
-        setCollaborators([]);
-        setError(null);
       }
+
+      // 2. Tentar sincronizar com Supabase em background (opcional)
+      try {
+        console.log('🔄 Tentando sincronizar com Supabase...');
+        const { data: supabaseData, error: queryError } = await supabase
+          .from('collaborators')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (!queryError && supabaseData && Array.isArray(supabaseData)) {
+          console.log(`📡 Dados do Supabase: ${supabaseData.length} colaboradores`);
+
+          const formattedSupabaseData: Collaborator[] = supabaseData.map((item: any) => ({
+            ...item,
+            status: (item.status as 'active' | 'inactive' | 'vacation') || 'active',
+            join_date: item.join_date || item.created_at,
+          }));
+
+          // Sincronizar dados
+          await replitStorage.syncWithSupabase(user.id, formattedSupabaseData);
+
+          // Atualizar estado se há novos dados
+          if (formattedSupabaseData.length > storageData.length) {
+            setCollaborators(formattedSupabaseData);
+            console.log('🔄 Estado atualizado com dados do Supabase');
+          }
+        } else {
+          console.log('⚠️ Supabase não disponível, usando apenas dados locais');
+        }
+      } catch (syncError) {
+        console.log('⚠️ Erro na sincronização com Supabase (continuando com dados locais):', syncError);
+      }
+
+      // Se não há dados em lugar nenhum
+      if (storageData.length === 0) {
+        console.log('📭 Nenhum colaborador encontrado');
+        setCollaborators([]);
+      }
+
     } catch (error: any) {
-      console.error('useCollaborators: Erro inesperado:', error);
-      setError(`Erro inesperado: ${error.message}`);
-      setCollaborators([]);
+      console.error('❌ useCollaborators: Erro crítico:', error);
+      setError(`Erro ao carregar dados: ${error.message}`);
+
+      // Em caso de erro crítico, tentar carregar dados em cache local
+      try {
+        const fallbackData = JSON.parse(localStorage.getItem('collaborators_fallback') || '[]');
+        if (fallbackData.length > 0) {
+          setCollaborators(fallbackData);
+          console.log('🔄 Dados de fallback carregados do localStorage');
+        }
+      } catch {
+        setCollaborators([]);
+      }
     }
 
     setIsLoading(false);
   };
 
   useEffect(() => {
-    console.log('useCollaborators: useEffect executado, user?.id:', user?.id);
+    console.log('🎯 useCollaborators: useEffect executado, user?.id:', user?.id);
     fetchCollaborators();
-
-    // Configurar subscription de tempo real
-    if (user?.id) {
-      const channel = supabase
-        .channel('collaborators-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'collaborators',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('Realtime update received:', payload);
-            
-            switch (payload.eventType) {
-              case 'INSERT':
-                const newCollaborator: Collaborator = {
-                  ...payload.new as any,
-                  status: payload.new.status as 'active' | 'inactive' | 'vacation',
-                };
-                setCollaborators(prev => {
-                  // Verificar se já existe para evitar duplicatas
-                  const exists = prev.find(c => c.id === newCollaborator.id);
-                  if (!exists) {
-                    return [newCollaborator, ...prev];
-                  }
-                  return prev;
-                });
-                break;
-                
-              case 'UPDATE':
-                const updatedCollaborator: Collaborator = {
-                  ...payload.new as any,
-                  status: payload.new.status as 'active' | 'inactive' | 'vacation',
-                };
-                setCollaborators(prev => 
-                  prev.map(c => c.id === updatedCollaborator.id ? updatedCollaborator : c)
-                );
-                break;
-                
-              case 'DELETE':
-                setCollaborators(prev => 
-                  prev.filter(c => c.id !== payload.old.id)
-                );
-                break;
-            }
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
   }, [user?.id]);
 
   const createCollaborator = async (collaboratorData: {
@@ -174,125 +129,136 @@ export const useCollaborators = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
-      const dataToInsert = {
-        ...collaboratorData,
+      // Criar novo colaborador
+      const newCollaborator: Collaborator = {
+        id: `collab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         user_id: user.id,
-        status: collaboratorData.status || 'active' as const,
+        name: collaboratorData.name,
+        email: collaboratorData.email,
+        role: collaboratorData.role,
+        department: collaboratorData.department,
+        status: collaboratorData.status || 'active',
+        phone: collaboratorData.phone || '',
+        location: collaboratorData.location || '',
         join_date: collaboratorData.join_date || new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
-      console.log('Criando colaborador com dados:', dataToInsert);
+      console.log('🆕 Criando colaborador:', newCollaborator);
 
-      const { data: result, error } = await supabase
-        .from('collaborators')
-        .insert([dataToInsert])
-        .select()
-        .single();
+      // 1. Salvar no Replit Storage (fonte primária)
+      const saveSuccess = await replitStorage.addCollaborator(user.id, newCollaborator);
 
-      if (error) {
-        console.error('Erro ao criar colaborador:', error);
-        toast({
-          title: "Erro",
-          description: `Falha ao criar colaborador: ${error.message}`,
-          variant: "destructive"
-        });
-        setIsLoading(false);
-        return null;
-      }
-
-      if (result) {
-        const formattedData: Collaborator = {
-          ...result,
-          status: result.status as 'active' | 'inactive' | 'vacation',
-        };
-
-        console.log('Colaborador criado com sucesso:', formattedData);
-        
+      if (saveSuccess) {
         // Atualizar estado local imediatamente
-        setCollaborators(prev => [formattedData, ...prev]);
-        
-        // Recarregar dados do servidor para garantir sincronização
-        setTimeout(() => {
-          fetchCollaborators();
-        }, 500);
-        
+        setCollaborators(prev => [newCollaborator, ...prev]);
+
+        // Backup no localStorage
+        localStorage.setItem('collaborators_fallback', JSON.stringify([newCollaborator, ...collaborators]));
+
         toast({
-          title: "Sucesso",
-          description: "Colaborador criado e sincronizado com sucesso."
+          title: "✅ Sucesso",
+          description: "Colaborador criado e salvo no storage local!"
         });
-        
+
+        // 2. Tentar salvar no Supabase em background (opcional)
+        try {
+          const { error } = await supabase
+            .from('collaborators')
+            .insert([newCollaborator]);
+
+          if (!error) {
+            console.log('✅ Colaborador também salvo no Supabase');
+          } else {
+            console.log('⚠️ Erro ao salvar no Supabase (dados mantidos localmente):', error);
+          }
+        } catch (supabaseError) {
+          console.log('⚠️ Supabase indisponível (dados mantidos localmente)');
+        }
+
         setIsLoading(false);
-        return formattedData;
+        return newCollaborator;
+      } else {
+        throw new Error('Falha ao salvar no storage local');
       }
     } catch (error: any) {
-      console.error('Erro inesperado ao criar colaborador:', error);
+      console.error('❌ Erro ao criar colaborador:', error);
       toast({
         title: "Erro",
-        description: `Erro inesperado: ${error.message}`,
+        description: `Falha ao criar colaborador: ${error.message}`,
         variant: "destructive"
       });
       setIsLoading(false);
       return null;
     }
-    
-    setIsLoading(false);
-    return null;
   };
 
   const updateCollaborator = async (id: string, updates: Partial<Collaborator>) => {
     if (!user?.id) return;
 
-    const result = await executeQuery(
-      () => supabase
-        .from('collaborators')
-        .update(updates)
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select()
-        .single(),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
+    try {
+      const success = await replitStorage.updateCollaborator(user.id, id, updates);
 
-    if (result) {
-      const typedResult = result as any;
-      const formattedData: Collaborator = {
-        ...typedResult,
-        status: typedResult.status as 'active' | 'inactive' | 'vacation',
-      };
+      if (success) {
+        setCollaborators(prev => 
+          prev.map(c => c.id === id ? { ...c, ...updates, updated_at: new Date().toISOString() } : c)
+        );
 
-      setCollaborators(prev => 
-        prev.map(c => c.id === id ? { ...c, ...formattedData } : c)
-      );
+        toast({
+          title: "Sucesso",
+          description: "Colaborador atualizado com sucesso."
+        });
 
-      toast({
-        title: "Sucesso",
-        description: "Colaborador atualizado com sucesso."
-      });
+        // Tentar atualizar no Supabase em background
+        try {
+          await supabase
+            .from('collaborators')
+            .update(updates)
+            .eq('id', id)
+            .eq('user_id', user.id);
+        } catch {
+          console.log('⚠️ Atualização do Supabase falhou (dados mantidos localmente)');
+        }
 
-      return formattedData;
+        return true;
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar colaborador:', error);
     }
   };
 
   const deleteCollaborator = async (id: string) => {
     if (!user?.id) return;
 
-    const result = await executeQuery(
-      () => supabase
-        .from('collaborators')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
+    try {
+      const success = await replitStorage.deleteCollaborator(user.id, id);
 
-    if (result !== null) {
-      setCollaborators(prev => prev.filter(c => c.id !== id));
-      toast({
-        title: "Sucesso",
-        description: "Colaborador removido com sucesso."
-      });
+      if (success) {
+        setCollaborators(prev => prev.filter(c => c.id !== id));
+
+        toast({
+          title: "Sucesso",
+          description: "Colaborador removido com sucesso."
+        });
+
+        // Tentar remover do Supabase em background
+        try {
+          await supabase
+            .from('collaborators')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id);
+        } catch {
+          console.log('⚠️ Remoção do Supabase falhou (dados mantidos localmente)');
+        }
+
+        return true;
+      }
+    } catch (error) {
+      console.error('Erro ao remover colaborador:', error);
     }
   };
 
