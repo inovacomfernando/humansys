@@ -131,12 +131,16 @@ export const Collaborators = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && collaborators.length === 0) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <p className="text-muted-foreground">Carregando colaboradores...</p>
+          <Button variant="outline" onClick={handleRetry} size="sm">
+            <RefreshCw className="mr-2 h-3 w-3" />
+            Tentar Novamente
+          </Button>
         </div>
       </DashboardLayout>
     );

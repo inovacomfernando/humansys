@@ -16,11 +16,11 @@ export const useCollaborators = () => {
   const { executeQuery } = useSupabaseQuery();
 
   const fetchCollaborators = async () => {
-    console.log('🔄 useCollaborators: Iniciando fetchCollaborators com Replit Storage');
+    console.log('🔄 useCollaborators: Iniciando fetchCollaborators');
     console.log('👤 useCollaborators: User ID:', user?.id);
 
     if (!user?.id) {
-      console.log('❌ useCollaborators: Usuário não autenticado, limpando lista');
+      console.log('❌ useCollaborators: Usuário não autenticado');
       setCollaborators([]);
       setIsLoading(false);
       setError(null);
@@ -31,73 +31,94 @@ export const useCollaborators = () => {
     setError(null);
 
     try {
-      // 1. Carregar dados do Replit Object Storage (fonte primária)
-      console.log('📂 Carregando dados do Replit Object Storage...');
-      const storageData = await replitStorage.loadCollaborators(user.id);
+      // Primeiro, tentar carregar do Supabase
+      console.log('📡 Tentando carregar do Supabase...');
+      const { data: supabaseData, error: queryError } = await supabase
+        .from('collaborators')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-      if (storageData.length > 0) {
-        console.log(`✅ Dados carregados do storage: ${storageData.length} colaboradores`);
-        setCollaborators(storageData);
-        setError(null);
+      if (!queryError && supabaseData && Array.isArray(supabaseData)) {
+        console.log(`✅ Dados do Supabase: ${supabaseData.length} colaboradores`);
 
-        toast({
-          title: "Dados carregados",
-          description: `${storageData.length} colaborador(es) carregado(s) do storage local`
-        });
-      }
+        const formattedData: Collaborator[] = supabaseData.map((item: any) => ({
+          id: item.id,
+          user_id: item.user_id,
+          name: item.name || '',
+          email: item.email || '',
+          role: item.role || '',
+          department: item.department || '',
+          status: (item.status as 'active' | 'inactive' | 'vacation') || 'active',
+          phone: item.phone || '',
+          location: item.location || '',
+          join_date: item.join_date || item.created_at || new Date().toISOString(),
+          created_at: item.created_at || new Date().toISOString(),
+          updated_at: item.updated_at || new Date().toISOString(),
+        }));
 
-      // 2. Tentar sincronizar com Supabase em background (opcional)
-      try {
-        console.log('🔄 Tentando sincronizar com Supabase...');
-        const { data: supabaseData, error: queryError } = await supabase
-          .from('collaborators')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (!queryError && supabaseData && Array.isArray(supabaseData)) {
-          console.log(`📡 Dados do Supabase: ${supabaseData.length} colaboradores`);
-
-          const formattedSupabaseData: Collaborator[] = supabaseData.map((item: any) => ({
-            ...item,
-            status: (item.status as 'active' | 'inactive' | 'vacation') || 'active',
-            join_date: item.join_date || item.created_at,
-          }));
-
-          // Sincronizar dados
-          await replitStorage.syncWithSupabase(user.id, formattedSupabaseData);
-
-          // Atualizar estado se há novos dados
-          if (formattedSupabaseData.length > storageData.length) {
-            setCollaborators(formattedSupabaseData);
-            console.log('🔄 Estado atualizado com dados do Supabase');
-          }
-        } else {
-          console.log('⚠️ Supabase não disponível, usando apenas dados locais');
+        setCollaborators(formattedData);
+        
+        // Salvar no storage local como backup
+        try {
+          await replitStorage.saveCollaborators(user.id, formattedData);
+          localStorage.setItem('collaborators_fallback', JSON.stringify(formattedData));
+        } catch (storageError) {
+          console.log('⚠️ Erro ao salvar backup:', storageError);
         }
-      } catch (syncError) {
-        console.log('⚠️ Erro na sincronização com Supabase (continuando com dados locais):', syncError);
-      }
 
-      // Se não há dados em lugar nenhum
-      if (storageData.length === 0) {
-        console.log('📭 Nenhum colaborador encontrado');
-        setCollaborators([]);
+        console.log('✅ Colaboradores carregados do Supabase e salvos localmente');
+        setError(null);
+        
+      } else {
+        // Se Supabase falhar, tentar storage local
+        console.log('⚠️ Supabase indisponível, tentando storage local...');
+        const storageData = await replitStorage.loadCollaborators(user.id);
+        
+        if (storageData.length > 0) {
+          console.log(`📂 Dados do storage local: ${storageData.length} colaboradores`);
+          setCollaborators(storageData);
+          setError(null);
+        } else {
+          // Tentar localStorage como último recurso
+          try {
+            const fallbackData = JSON.parse(localStorage.getItem('collaborators_fallback') || '[]');
+            if (fallbackData.length > 0) {
+              console.log(`🔄 Dados do localStorage: ${fallbackData.length} colaboradores`);
+              setCollaborators(fallbackData);
+              setError(null);
+            } else {
+              console.log('📭 Nenhum colaborador encontrado em nenhuma fonte');
+              setCollaborators([]);
+              setError(null);
+            }
+          } catch {
+            setCollaborators([]);
+            setError(null);
+          }
+        }
       }
 
     } catch (error: any) {
       console.error('❌ useCollaborators: Erro crítico:', error);
-      setError(`Erro ao carregar dados: ${error.message}`);
-
-      // Em caso de erro crítico, tentar carregar dados em cache local
+      
+      // Tentar fontes de backup
       try {
-        const fallbackData = JSON.parse(localStorage.getItem('collaborators_fallback') || '[]');
-        if (fallbackData.length > 0) {
+        const storageData = await replitStorage.loadCollaborators(user.id);
+        if (storageData.length > 0) {
+          setCollaborators(storageData);
+          setError(null);
+          console.log('🔄 Fallback para storage local funcionou');
+        } else {
+          const fallbackData = JSON.parse(localStorage.getItem('collaborators_fallback') || '[]');
           setCollaborators(fallbackData);
-          console.log('🔄 Dados de fallback carregados do localStorage');
+          if (fallbackData.length === 0) {
+            setError('Nenhum dado encontrado. Tente adicionar um colaborador.');
+          }
         }
       } catch {
         setCollaborators([]);
+        setError('Erro ao carregar dados. Tente novamente.');
       }
     }
 
@@ -131,17 +152,17 @@ export const useCollaborators = () => {
     setIsLoading(true);
 
     try {
-      // Criar novo colaborador
+      // Criar novo colaborador com ID único
       const newCollaborator: Collaborator = {
         id: `collab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         user_id: user.id,
-        name: collaboratorData.name,
-        email: collaboratorData.email,
-        role: collaboratorData.role,
-        department: collaboratorData.department,
+        name: collaboratorData.name.trim(),
+        email: collaboratorData.email.trim(),
+        role: collaboratorData.role.trim(),
+        department: collaboratorData.department.trim(),
         status: collaboratorData.status || 'active',
-        phone: collaboratorData.phone || '',
-        location: collaboratorData.location || '',
+        phone: collaboratorData.phone?.trim() || '',
+        location: collaboratorData.location?.trim() || '',
         join_date: collaboratorData.join_date || new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -149,48 +170,67 @@ export const useCollaborators = () => {
 
       console.log('🆕 Criando colaborador:', newCollaborator);
 
-      // 1. Salvar no Replit Storage (fonte primária)
-      const saveSuccess = await replitStorage.addCollaborator(user.id, newCollaborator);
+      // 1. Atualizar UI imediatamente para melhor UX
+      setCollaborators(prev => [newCollaborator, ...prev]);
+      
+      // 2. Tentar salvar no Supabase primeiro
+      try {
+        const { data, error } = await supabase
+          .from('collaborators')
+          .insert([newCollaborator])
+          .select()
+          .single();
 
-      if (saveSuccess) {
-        // Atualizar estado local imediatamente
-        setCollaborators(prev => [newCollaborator, ...prev]);
-
-        // Backup no localStorage
-        localStorage.setItem('collaborators_fallback', JSON.stringify([newCollaborator, ...collaborators]));
-
-        toast({
-          title: "✅ Sucesso",
-          description: "Colaborador criado e salvo no storage local!"
-        });
-
-        // 2. Tentar salvar no Supabase em background (opcional)
-        try {
-          const { error } = await supabase
-            .from('collaborators')
-            .insert([newCollaborator]);
-
-          if (!error) {
-            console.log('✅ Colaborador também salvo no Supabase');
-          } else {
-            console.log('⚠️ Erro ao salvar no Supabase (dados mantidos localmente):', error);
-          }
-        } catch (supabaseError) {
-          console.log('⚠️ Supabase indisponível (dados mantidos localmente)');
+        if (!error && data) {
+          console.log('✅ Colaborador salvo no Supabase');
+          
+          // Salvar no storage local como backup
+          await replitStorage.addCollaborator(user.id, data);
+          localStorage.setItem('collaborators_fallback', JSON.stringify([data, ...collaborators]));
+          
+          toast({
+            title: "✅ Sucesso",
+            description: "Colaborador criado com sucesso!"
+          });
+          
+          setIsLoading(false);
+          return data;
+        } else {
+          throw new Error(error?.message || 'Erro ao salvar no Supabase');
         }
-
-        setIsLoading(false);
-        return newCollaborator;
-      } else {
-        throw new Error('Falha ao salvar no storage local');
+      } catch (supabaseError: any) {
+        console.log('⚠️ Erro no Supabase, salvando apenas localmente:', supabaseError);
+        
+        // Salvar no storage local como fallback
+        const saveSuccess = await replitStorage.addCollaborator(user.id, newCollaborator);
+        
+        if (saveSuccess) {
+          localStorage.setItem('collaborators_fallback', JSON.stringify([newCollaborator, ...collaborators]));
+          
+          toast({
+            title: "✅ Sucesso",
+            description: "Colaborador criado (salvo localmente)"
+          });
+          
+          setIsLoading(false);
+          return newCollaborator;
+        } else {
+          throw new Error('Falha ao salvar localmente');
+        }
       }
+
     } catch (error: any) {
       console.error('❌ Erro ao criar colaborador:', error);
+      
+      // Reverter mudança na UI se falhou completamente
+      setCollaborators(prev => prev.filter(c => c.id !== newCollaborator.id));
+      
       toast({
         title: "Erro",
         description: `Falha ao criar colaborador: ${error.message}`,
         variant: "destructive"
       });
+      
       setIsLoading(false);
       return null;
     }
