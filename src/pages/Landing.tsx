@@ -265,18 +265,13 @@ export const Landing = () => {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 py-20 md:py-32">
         <div className="container relative z-10">
           <div className="mx-auto max-w-4xl text-center animate-fade-in">
-            <div className="flex items-center space-x-4 mb-8">
-          <DynamicBadge 
-            texts={[
-              '🚀 Novo: Founder Dashboard', 
-              '🎯 Cache Inteligente', 
-              '⚡ Performance Otimizada',
-              '💾 Persistência Melhorada',
-              '🔄 Sincronização Automática'
-            ]} 
-            interval={4000} 
-          />
-        </div>
+            <div className="flex justify-center mb-8">
+              <div className="relative">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg animate-pulse">
+                  🚀 Novo: Founder Dashboard com IA Preditiva
+                </div>
+              </div>
+            </div>
             <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
               Transforme sua
               <span className="text-primary"> Gestão de Pessoas</span>
@@ -321,10 +316,12 @@ export const Landing = () => {
       <section className="py-20 md:py-32 bg-gradient-to-r from-purple-50 to-blue-50">
         <div className="container">
           <div className="mx-auto max-w-2xl text-center mb-16">
-            <DynamicBadge className="mb-4">
-              <Sparkles className="mr-1 h-3 w-3" />
-              Lançamento Oficial
-            </DynamicBadge>
+            <div className="flex justify-center mb-4">
+              <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-purple-300 animate-pulse">
+                <Sparkles className="mr-1 h-3 w-3 inline" />
+                Lançamento Oficial
+              </div>
+            </div>
             <h2 className="text-3xl font-bold md:text-4xl">
               <Crown className="inline h-8 w-8 mr-2 text-yellow-500" />
               Novo Founder Dashboard
@@ -450,11 +447,50 @@ export const Landing = () => {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => (
-              <FeatureCard
-                key={index}
-                {...feature}
-                onClick={handleFeatureClick}
-              />
+              <div key={index} className="group relative">
+                <div className="relative overflow-hidden bg-background border rounded-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
+                  {/* Animated border on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" 
+                       style={{
+                         background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.3) 50%, transparent 100%)',
+                         animation: 'none'
+                       }}>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-300 rounded-lg"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <feature.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      {feature.isNew && (
+                        <div className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                          Novo
+                        </div>
+                      )}
+                    </div>
+                    
+                    <h3 className="font-semibold mb-2 text-foreground group-hover:text-primary transition-colors">
+                      {feature.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      {feature.description}
+                    </p>
+                    
+                    {feature.realImpact && (
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center text-green-600">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          {feature.realImpact.metric}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {feature.realImpact.example}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -476,10 +512,10 @@ export const Landing = () => {
             {plans.map((plan, index) => (
               <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
                 {plan.popular && (
-                  <DynamicBadge className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Star className="mr-1 h-3 w-3" />
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg border border-orange-300">
+                    <Star className="mr-1 h-3 w-3 inline" />
                     Mais Popular
-                  </DynamicBadge>
+                  </div>
                 )}
 
                 <CardHeader className="text-center pb-2">
