@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DiscDashboard } from '@/components/disc/DiscDashboard';
 import { DiscAssessment } from '@/components/disc/DiscAssessment';
@@ -19,13 +19,13 @@ export const Disc = () => {
   const [currentReport, setCurrentReport] = useState<DiscReport | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleStartAssessment = () => {
+  const handleStartAssessment = useCallback(() => {
     setCurrentView('assessment');
     setCurrentProfile(null);
     setCurrentReport(null);
-  };
+  }, []);
 
-  const handleAssessmentComplete = async (answers: DiscAnswer[]) => {
+  const handleAssessmentComplete = useCallback(async (answers: DiscAnswer[]) => {
     if (isProcessing) return;
     
     setIsProcessing(true);
@@ -63,15 +63,15 @@ export const Disc = () => {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [isProcessing, user?.id, toast]);
 
-  const handleCancelAssessment = () => {
+  const handleCancelAssessment = useCallback(() => {
     setCurrentView('dashboard');
     setCurrentProfile(null);
     setCurrentReport(null);
-  };
+  }, []);
 
-  const handleViewProfile = (profile: DiscProfile) => {
+  const handleViewProfile = useCallback((profile: DiscProfile) => {
     try {
       const report = discService.generateReport(profile);
       setCurrentProfile(profile);
@@ -85,87 +85,9 @@ export const Disc = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [toast]);
 
-  const handleDownloadReport = () => {
-    if (!currentProfile || !currentReport) {
-      toast({
-        title: "Erro",
-        description: "Nenhum relatório disponível para download.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const reportContent = generateReportHTML(currentProfile, currentReport);
-      const blob = new Blob([reportContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `disc-profile-${currentProfile.primary_style}-${new Date().toISOString().split('T')[0]}.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Download Iniciado",
-        description: "Seu relatório está sendo baixado."
-      });
-    } catch (error) {
-      console.error('Erro ao fazer download:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível fazer o download do relatório.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleShareResults = async () => {
-    if (!currentProfile) {
-      toast({
-        title: "Erro",
-        description: "Nenhum perfil disponível para compartilhar.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const shareText = `Acabei de descobrir que tenho perfil ${currentProfile.primary_style} (${getStyleName(currentProfile.primary_style)}) na análise DISC! 🧠✨`;
-      
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Meu Perfil DISC',
-          text: shareText,
-          url: window.location.href
-        });
-      } else {
-        await navigator.clipboard.writeText(shareText);
-        toast({
-          title: "Copiado!",
-          description: "Texto copiado para a área de transferência."
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao compartilhar:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível compartilhar os resultados.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleBackToList = () => {
-    setCurrentView('dashboard');
-    setCurrentProfile(null);
-    setCurrentReport(null);
-  };
-
-  const getStyleName = (style: string) => {
+  const getStyleName = useCallback((style: string) => {
     const names = {
       D: 'Dominante',
       I: 'Influente', 
@@ -173,9 +95,19 @@ export const Disc = () => {
       C: 'Consciencioso'
     };
     return names[style as keyof typeof names] || style;
-  };
+  }, []);
 
-  const generateReportHTML = (profile: DiscProfile, report: DiscReport): string => {
+  const getStyleColor = useCallback((style: string) => {
+    const colors = {
+      D: '#dc2626',
+      I: '#eab308',
+      S: '#16a34a',
+      C: '#2563eb'
+    };
+    return colors[style as keyof typeof colors] || '#6b7280';
+  }, []);
+
+  const generateReportHTML = useCallback((profile: DiscProfile, report: DiscReport): string => {
     return `
       <!DOCTYPE html>
       <html>
@@ -267,43 +199,134 @@ export const Disc = () => {
       </body>
       </html>
     `;
-  };
+  }, [getStyleName, getStyleColor]);
 
-  const getStyleColor = (style: string) => {
-    const colors = {
-      D: '#dc2626',
-      I: '#eab308',
-      S: '#16a34a', 
-      C: '#2563eb'
-    };
-    return colors[style as keyof typeof colors] || '#6b7280';
-  };
+  const handleDownloadReport = useCallback(() => {
+    if (!currentProfile || !currentReport) {
+      toast({
+        title: "Erro",
+        description: "Nenhum relatório disponível para download.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const reportContent = generateReportHTML(currentProfile, currentReport);
+      const blob = new Blob([reportContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `disc-profile-${currentProfile.primary_style}-${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Iniciado",
+        description: "Seu relatório está sendo baixado."
+      });
+    } catch (error) {
+      console.error('Erro ao fazer download:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível fazer o download do relatório.",
+        variant: "destructive"
+      });
+    }
+  }, [currentProfile, currentReport, generateReportHTML, toast]);
+
+  const handleShareResults = useCallback(async () => {
+    if (!currentProfile) {
+      toast({
+        title: "Erro",
+        description: "Nenhum perfil disponível para compartilhar.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const shareText = `Acabei de descobrir que tenho perfil ${currentProfile.primary_style} (${getStyleName(currentProfile.primary_style)}) na análise DISC! 🧠✨`;
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Meu Perfil DISC',
+          text: shareText,
+          url: window.location.href
+        });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Copiado!",
+          description: "Texto copiado para a área de transferência."
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível compartilhar os resultados.",
+        variant: "destructive"
+      });
+    }
+  }, [currentProfile, getStyleName, toast]);
+
+  const handleBackToList = useCallback(() => {
+    setCurrentView('dashboard');
+    setCurrentProfile(null);
+    setCurrentReport(null);
+  }, []);
+
+  const renderCurrentView = useMemo(() => {
+    switch (currentView) {
+      case 'dashboard':
+        return (
+          <DiscDashboard
+            onStartAssessment={handleStartAssessment}
+            onViewProfile={handleViewProfile}
+          />
+        );
+      case 'assessment':
+        return (
+          <DiscAssessment
+            onComplete={handleAssessmentComplete}
+            onCancel={handleCancelAssessment}
+          />
+        );
+      case 'results':
+        if (currentProfile && currentReport) {
+          return (
+            <DiscResults
+              profile={currentProfile}
+              report={currentReport}
+              onDownloadReport={handleDownloadReport}
+              onShareResults={handleShareResults}
+              onBackToList={handleBackToList}
+            />
+          );
+        }
+        return null;
+      default:
+        return null;
+    }
+  }, [
+    currentView,
+    currentProfile,
+    currentReport,
+    handleStartAssessment,
+    handleViewProfile,
+    handleAssessmentComplete,
+    handleCancelAssessment,
+    handleDownloadReport,
+    handleShareResults,
+    handleBackToList
+  ]);
 
   return (
     <DashboardLayout>
-      {currentView === 'dashboard' && (
-        <DiscDashboard
-          onStartAssessment={handleStartAssessment}
-          onViewProfile={handleViewProfile}
-        />
-      )}
-
-      {currentView === 'assessment' && (
-        <DiscAssessment
-          onComplete={handleAssessmentComplete}
-          onCancel={handleCancelAssessment}
-        />
-      )}
-
-      {currentView === 'results' && currentProfile && currentReport && (
-        <DiscResults
-          profile={currentProfile}
-          report={currentReport}
-          onDownloadReport={handleDownloadReport}
-          onShareResults={handleShareResults}
-          onBackToList={handleBackToList}
-        />
-      )}
+      {renderCurrentView}
     </DashboardLayout>
   );
 };
