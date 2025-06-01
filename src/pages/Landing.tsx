@@ -342,7 +342,7 @@ export const Landing = () => {
             <p className="mt-4 text-lg text-muted-foreground">
               Descubra perfis comportamentais com inteligência artificial e transforme sua gestão de pessoas
             </p>
-          </div>
+          </div></div>
 
           <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
             <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-emerald-300 bg-gradient-to-br from-emerald-50 to-green-50">
@@ -607,7 +607,7 @@ export const Landing = () => {
                       </Badge>
                     )}
                   </div>
-
+                  
                   <CardTitle className="text-lg">
                     {feature.title}
                   </CardTitle>
@@ -615,7 +615,7 @@ export const Landing = () => {
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
-
+                
                 <CardContent>
                   {feature.realImpact && (
                     <div className="space-y-2 text-xs">
@@ -970,6 +970,8 @@ export const Landing = () => {
                 </div>
               </CardContent>
             </Card>
+
+            
           </div>
         </div>
       </section>
