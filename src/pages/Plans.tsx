@@ -143,7 +143,7 @@ export const Plans = () => {
               <div className="flex items-center space-x-2 font-medium text-purple-700 mb-2">
                 <Brain className="h-5 w-5" />
                 <span>Inteligência Artificial</span>
-                <DynamicBadge>Novo</DynamicBadge>
+                <Badge className="bg-green-500 text-white">Novo</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Analytics preditiva, recomendações inteligentes e insights automáticos para decisões estratégicas.
@@ -156,7 +156,7 @@ export const Plans = () => {
               <div className="flex items-center space-x-2 font-medium text-yellow-700 mb-2">
                 <Trophy className="h-5 w-5" />
                 <span>Sistema de Gamificação</span>
-                <DynamicBadge>Novo</DynamicBadge>
+                <Badge className="bg-green-500 text-white">Novo</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Aumente o engajamento com badges, pontos, leaderboards e prêmios virtuais para sua equipe.
@@ -169,7 +169,7 @@ export const Plans = () => {
               <div className="flex items-center space-x-2 font-medium text-blue-700 mb-2">
                 <Smartphone className="h-5 w-5" />
                 <span>Experiência Mobile (PWA)</span>
-                <DynamicBadge>Novo</DynamicBadge>
+                <Badge className="bg-green-500 text-white">Novo</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 Acesse suas informações de qualquer lugar com nosso aplicativo progressivo para dispositivos móveis.
@@ -182,10 +182,10 @@ export const Plans = () => {
           {plans.map((plan, index) => (
             <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
               {plan.popular && (
-                <DynamicBadge className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Star className="mr-1 h-3 w-3" />
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg border border-orange-300">
+                  <Star className="mr-1 h-3 w-3 inline" />
                   Mais Popular
-                </DynamicBadge>
+                </div>
               )}
               
               <CardHeader className="text-center pb-2">
