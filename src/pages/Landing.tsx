@@ -690,17 +690,7 @@ export const Landing = () => {
               </CardContent>
             </Card>
 
-            {/* Lista de Benefícios com Ícones Melhorados */}
-            <div className="grid gap-4 md:grid-cols-2">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center space-x-4 p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/20 hover:bg-white/80 transition-all duration-300">
-                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-lg font-medium">{benefit}</span>
-                </div>
-              ))}
-            </div>
+            
           </div>
         </div>
       </section>
