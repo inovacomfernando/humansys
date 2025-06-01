@@ -43,27 +43,51 @@ export const useCollaborators = () => {
     setIsLoading(true);
     setError(null);
 
-    const result = await executeQuery<Collaborator[]>(
-      () => supabase
+    try {
+      // Primeiro, vamos verificar se a tabela existe e tem dados
+      const { data: tableCheck, error: tableError } = await supabase
+        .from('collaborators')
+        .select('count', { count: 'exact', head: true });
+
+      console.log('Table check result:', { tableCheck, tableError });
+
+      // Agora buscar os dados
+      const { data: result, error: queryError } = await supabase
         .from('collaborators')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false }),
-      { maxRetries: 3, requireAuth: true, timeout: 8000 }
-    );
+        .order('created_at', { ascending: false });
 
-    if (result && Array.isArray(result)) {
-      const formattedData: Collaborator[] = result.map((item: any) => ({
-        ...item,
-        status: item.status as 'active' | 'inactive' | 'vacation',
-      }));
-      
-      setCollaborators(formattedData);
-      setError(null);
-      console.log('useCollaborators: Colaboradores carregados com sucesso:', formattedData.length);
-    } else {
+      console.log('Query result:', { result, queryError, userIdUsed: user.id });
+
+      if (queryError) {
+        console.error('Erro na query:', queryError);
+        setError(`Erro ao buscar colaboradores: ${queryError.message}`);
+        setCollaborators([]);
+      } else if (result && Array.isArray(result)) {
+        const formattedData: Collaborator[] = result.map((item: any) => ({
+          ...item,
+          status: (item.status as 'active' | 'inactive' | 'vacation') || 'active',
+          join_date: item.join_date || item.created_at,
+        }));
+        
+        console.log('useCollaborators: Colaboradores formatados:', formattedData);
+        setCollaborators(formattedData);
+        setError(null);
+        
+        toast({
+          title: "Colaboradores carregados",
+          description: `${formattedData.length} colaborador(es) encontrado(s)`
+        });
+      } else {
+        console.log('useCollaborators: Nenhum resultado ou resultado inválido');
+        setCollaborators([]);
+        setError(null);
+      }
+    } catch (error: any) {
+      console.error('useCollaborators: Erro inesperado:', error);
+      setError(`Erro inesperado: ${error.message}`);
       setCollaborators([]);
-      setError('Falha ao carregar colaboradores');
     }
 
     setIsLoading(false);
@@ -93,35 +117,54 @@ export const useCollaborators = () => {
       return;
     }
 
-    const dataToInsert = {
-      ...collaboratorData,
-      user_id: user.id,
-      status: collaboratorData.status || 'active' as const,
-    };
+    try {
+      const dataToInsert = {
+        ...collaboratorData,
+        user_id: user.id,
+        status: collaboratorData.status || 'active' as const,
+        join_date: collaboratorData.join_date || new Date().toISOString(),
+      };
 
-    const result = await executeQuery(
-      () => supabase
+      console.log('Criando colaborador com dados:', dataToInsert);
+
+      const { data: result, error } = await supabase
         .from('collaborators')
         .insert([dataToInsert])
         .select()
-        .single(),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
+        .single();
 
-    if (result) {
-      const typedResult = result as any;
-      const formattedData: Collaborator = {
-        ...typedResult,
-        status: typedResult.status as 'active' | 'inactive' | 'vacation',
-      };
+      if (error) {
+        console.error('Erro ao criar colaborador:', error);
+        toast({
+          title: "Erro",
+          description: `Falha ao criar colaborador: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
+      }
 
-      setCollaborators(prev => [formattedData, ...prev]);
+      if (result) {
+        const formattedData: Collaborator = {
+          ...result,
+          status: result.status as 'active' | 'inactive' | 'vacation',
+        };
+
+        console.log('Colaborador criado com sucesso:', formattedData);
+        setCollaborators(prev => [formattedData, ...prev]);
+        toast({
+          title: "Sucesso",
+          description: "Colaborador criado com sucesso."
+        });
+        
+        return formattedData;
+      }
+    } catch (error: any) {
+      console.error('Erro inesperado ao criar colaborador:', error);
       toast({
-        title: "Sucesso",
-        description: "Colaborador criado com sucesso."
+        title: "Erro",
+        description: `Erro inesperado: ${error.message}`,
+        variant: "destructive"
       });
-      
-      return formattedData;
     }
   };
 

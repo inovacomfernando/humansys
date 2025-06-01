@@ -108,8 +108,9 @@ export const Collaborators = () => {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Carregando colaboradores...</p>
         </div>
       </DashboardLayout>
     );
@@ -123,12 +124,25 @@ export const Collaborators = () => {
           <div>
             <h1 className="text-3xl font-bold">Colaboradores</h1>
             <p className="text-muted-foreground">
-              Gerencie todos os colaboradores da empresa
+              Gerencie todos os colaboradores da empresa ({collaborators.length} encontrados)
             </p>
+            {process.env.NODE_ENV === 'development' && (
+              <p className="text-xs text-blue-600 mt-1">
+                Debug: User ID: {user?.id}, Carregados: {collaborators.length}
+              </p>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
             <ConnectionStatus />
+            <Button 
+              variant="outline" 
+              onClick={handleRetry}
+              className="mr-2"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
             <Dialog open={isAddingCollaborator} onOpenChange={setIsAddingCollaborator}>
               <DialogTrigger asChild>
                 <Button>
@@ -363,11 +377,31 @@ export const Collaborators = () => {
                 <p className="text-muted-foreground mb-4">
                   {searchTerm ? 'Tente ajustar sua busca' : 'Comece adicionando seu primeiro colaborador'}
                 </p>
+                
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="text-xs text-left bg-gray-50 p-4 rounded-lg mb-4 max-w-md mx-auto">
+                    <h4 className="font-semibold mb-2">Debug Info:</h4>
+                    <p>Total colaboradores: {collaborators.length}</p>
+                    <p>Filtrados: {filteredCollaborators.length}</p>
+                    <p>Busca: "{searchTerm}"</p>
+                    <p>User ID: {user?.id}</p>
+                    <p>Loading: {isLoading.toString()}</p>
+                    <p>Error: {error || 'nenhum'}</p>
+                  </div>
+                )}
+                
                 {!searchTerm && (
-                  <Button onClick={() => setIsAddingCollaborator(true)}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Adicionar Primeiro Colaborador
-                  </Button>
+                  <div className="space-y-2">
+                    <Button onClick={() => setIsAddingCollaborator(true)}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Adicionar Primeiro Colaborador
+                    </Button>
+                    <br />
+                    <Button variant="outline" onClick={handleRetry} size="sm">
+                      <RefreshCw className="mr-2 h-3 w-3" />
+                      Verificar Novamente
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardContent>

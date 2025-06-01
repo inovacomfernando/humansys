@@ -164,6 +164,39 @@ export const createTablesSQL = async () => {
     DROP POLICY IF EXISTS "Users can insert own transactions" ON credit_transactions;
     CREATE POLICY "Users can insert own transactions" ON credit_transactions
       FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+    -- Tabela de colaboradores
+    CREATE TABLE IF NOT EXISTS collaborators (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      role TEXT NOT NULL,
+      department TEXT NOT NULL,
+      status TEXT CHECK (status IN ('active', 'inactive', 'vacation')) DEFAULT 'active',
+      phone TEXT,
+      location TEXT,
+      join_date DATE DEFAULT CURRENT_DATE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      UNIQUE(user_id, email)
+    );
+
+    -- RLS para colaboradores
+    ALTER TABLE collaborators ENABLE ROW LEVEL SECURITY;
+    DROP POLICY IF EXISTS "Users can view own collaborators" ON collaborators;
+    CREATE POLICY "Users can view own collaborators" ON collaborators FOR SELECT USING (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can insert own collaborators" ON collaborators;
+    CREATE POLICY "Users can insert own collaborators" ON collaborators FOR INSERT WITH CHECK (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can update own collaborators" ON collaborators;
+    CREATE POLICY "Users can update own collaborators" ON collaborators FOR UPDATE USING (auth.uid() = user_id);
+    DROP POLICY IF EXISTS "Users can delete own collaborators" ON collaborators;
+    CREATE POLICY "Users can delete own collaborators" ON collaborators FOR DELETE USING (auth.uid() = user_id);
+
+    -- Índices para melhorar performance
+    CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id);
+    CREATE INDEX IF NOT EXISTS idx_collaborators_status ON collaborators(status);
+    CREATE INDEX IF NOT EXISTS idx_collaborators_email ON collaborators(email);
   `;
 
   const { error } = await supabase.rpc('exec_sql', { sql_query: sql });
