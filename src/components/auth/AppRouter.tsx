@@ -184,7 +184,7 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute>
               <Certificates />
-            ProtectedRoute>
+            </ProtectedRoute>
           } 
         />
 
