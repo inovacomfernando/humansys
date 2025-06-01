@@ -5,68 +5,48 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://hdugxslfoujddlbkvvak.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhkdWd4c2xmb3VqZGRsYmt2dmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgyNjMwMzksImV4cCI6MjA2MzgzOTAzOX0.V1CflAVNQGZyjl36gs4mzHY1HxvzrD1_nwXc4zPTTRw";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+// Singleton instance to prevent multiple clients
+const createSupabaseClient = () => {
+  if (typeof window === 'undefined') return null;
 
-// Create singleton instance to avoid multiple GoTrueClient instances
-let supabaseInstance: any = null;
-
-export const supabase = supabaseInstance || (supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage,
-    storageKey: 'supabase.auth.token',
-    flowType: 'pkce'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'lovable-hr-dashboard'
-    }
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 2
-    }
-  }
-}));
-
-// Função auxiliar para verificar conectividade - versão corrigida
-export const checkSupabaseConnection = async (): Promise<boolean> => {
-  try {
-    // Verificar conectividade básica primeiro
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/`, {
-      method: 'HEAD',
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage,
+      storageKey: 'supabase.auth.token',
+      flowType: 'pkce'
+    },
+    global: {
       headers: {
-        'apikey': SUPABASE_PUBLISHABLE_KEY,
-        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+        'X-Client-Info': 'lovable-hr-dashboard'
       }
-    });
-
-    if (!response.ok) {
-      console.warn('Supabase HEAD request failed:', response.status);
-      return false;
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 2
+      }
     }
+  });
+};
 
-    // Verificar se conseguimos fazer uma query simples
+// Create singleton instance
+export const supabase = createSupabaseClient();
+
+// Função auxiliar para verificar conectividade
+export const checkSupabaseConnection = async (): Promise<boolean> => {
+  if (!supabase) return false;
+
+  try {
     const { error } = await supabase
       .from('profiles')
       .select('id')
       .limit(1);
 
-    if (error) {
-      console.warn('Supabase query test failed:', error.message);
-      // Se o erro é de autenticação, ainda consideramos conectado
-      if (error.message.includes('JWT') || error.message.includes('auth')) {
-        return true;
-      }
-      return false;
-    }
-
-    return true;
+    return !error;
   } catch (error) {
-    console.error('Connection check failed:', error);
+    console.warn('Connection check failed:', error);
     return false;
   }
 };
