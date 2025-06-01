@@ -29,7 +29,8 @@ import {
   Video,
   Crown,
   DollarSign,
-  TrendingDown
+  TrendingDown,
+  CreditCard
 } from 'lucide-react';
 import { useDebounceNavigation } from '@/hooks/useDebounceNavigation';
 import { FeatureCard } from '@/components/landing/FeatureCard';
@@ -553,6 +554,139 @@ export const Landing = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Sistema de Créditos */}
+      <section className="py-12 md:py-20 bg-gradient-to-r from-emerald-50 to-green-50">
+        <div className="container">
+          <div className="mx-auto max-w-6xl">
+            <div className="text-center mb-16">
+              <div className="flex justify-center mb-4">
+                <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-emerald-300">
+                  <CreditCard className="mr-1 h-3 w-3 inline" />
+                  Sistema de Créditos
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold md:text-4xl">
+                Gestão Inteligente de Créditos
+              </h2>
+              <p className="mt-4 text-lg text-muted-foreground">
+                Sistema transparente e flexível para controlar o cadastro de colaboradores
+              </p>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-3 mb-12">
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-xl">1 Crédito = 1 Colaborador</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-muted-foreground mb-4">
+                    Sistema simples: cada colaborador cadastrado consome 1 crédito
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Cadastro completo</span>
+                      <Badge variant="outline">1 crédito</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Onboarding incluído</span>
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Gamificação ativa</span>
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300 border-primary">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                    <Shield className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <CardTitle className="text-xl">Planos Flexíveis</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-muted-foreground mb-4">
+                    Escolha o plano ideal para o tamanho da sua empresa
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Inicial</span>
+                      <Badge className="bg-green-100 text-green-800">10 créditos</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Crescimento</span>
+                      <Badge className="bg-blue-100 text-blue-800">50 créditos</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Profissional</span>
+                      <Badge className="bg-purple-100 text-purple-800">500 créditos</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
+                    <BarChart3 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <CardTitle className="text-xl">Controle Total</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <p className="text-muted-foreground mb-4">
+                    Acompanhe o uso de créditos em tempo real no dashboard
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Histórico completo</span>
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Alertas automáticos</span>
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Upgrade fácil</span>
+                      <Check className="h-4 w-4 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="text-center">
+              <Card className="inline-block bg-gradient-to-r from-emerald-500 to-green-500 text-white p-6">
+                <CardContent className="pt-0">
+                  <h3 className="text-xl font-bold mb-2">🎁 Teste Grátis com Créditos Ilimitados</h3>
+                  <p className="mb-4">Experimente todas as funcionalidades por 30 dias sem limitações</p>
+                  <Button 
+                    variant="secondary" 
+                    size="lg"
+                    onClick={() => debouncedNavigate('/checkout', { 
+                      state: { 
+                        selectedPlan: 'Teste Grátis', 
+                        selectedPrice: 'Grátis',
+                        selectedBilling: 'trial' 
+                      } 
+                    })}
+                  >
+                    Começar Teste Grátis
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>

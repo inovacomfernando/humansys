@@ -4,7 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Book, Video, Download, ExternalLink, Brain, Trophy, Smartphone } from 'lucide-react';
+import { Book, Video, Download, ExternalLink, Brain, Trophy, Smartphone, CreditCard } from 'lucide-react';
 
 export const Documentation = () => {
   const sections = [
@@ -67,6 +67,17 @@ export const Documentation = () => {
         { title: "Sincronização de Dados", type: "guide", difficulty: "Avançado", isNew: true },
         { title: "Demo do App Mobile", type: "video", difficulty: "Iniciante", isNew: true }
       ]
+    },
+    {
+      title: "Sistema de Créditos",
+      description: "Gestão e controle de créditos para colaboradores",
+      items: [
+        { title: "Como Funcionam os Créditos", type: "guide", difficulty: "Iniciante", isNew: true },
+        { title: "Gerenciamento de Créditos", type: "guide", difficulty: "Iniciante", isNew: true },
+        { title: "Upgrade de Planos", type: "guide", difficulty: "Intermediário", isNew: true },
+        { title: "Relatórios de Uso", type: "guide", difficulty: "Intermediário", isNew: true },
+        { title: "Histórico de Transações", type: "guide", difficulty: "Avançado", isNew: true }
+      ]
     }
   ];
 
@@ -104,7 +115,7 @@ export const Documentation = () => {
           </div>
 
           {/* Novidades em Destaque */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="grid md:grid-cols-4 gap-6 mb-12">
             <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-100">
               <CardContent className="pt-6">
                 <div className="flex items-center space-x-2 font-medium text-purple-700 mb-2">
@@ -149,6 +160,22 @@ export const Documentation = () => {
                 </p>
                 <Button variant="outline" size="sm">
                   Instalar PWA
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-100">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-2 font-medium text-green-700 mb-2">
+                  <CreditCard className="h-5 w-5" />
+                  <span>Sistema de Créditos</span>
+                  <Badge className="bg-green-100 text-green-800">Novo</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Entenda como funciona o sistema de créditos para cadastro de colaboradores.
+                </p>
+                <Button variant="outline" size="sm">
+                  Ver Documentação
                 </Button>
               </CardContent>
             </Card>
@@ -240,6 +267,81 @@ export const Documentation = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+
+          {/* Seção Especial: Sistema de Créditos */}
+          <div className="mt-16">
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="h-8 w-8 text-green-600" />
+                </div>
+                <CardTitle className="text-2xl text-green-800">Como Funciona o Sistema de Créditos</CardTitle>
+                <CardDescription className="text-green-700">
+                  Sistema transparente e flexível para gestão de colaboradores
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-green-800">🎯 Conceito Simples</h4>
+                    <ul className="space-y-2 text-sm text-green-700">
+                      <li>• <strong>1 Crédito = 1 Colaborador</strong> cadastrado</li>
+                      <li>• Créditos são consumidos apenas no momento do cadastro</li>
+                      <li>• Não há limite de tempo para usar os créditos</li>
+                      <li>• Histórico completo de uso disponível</li>
+                    </ul>
+                    
+                    <h4 className="font-medium text-green-800 mt-6">📊 Planos Disponíveis</h4>
+                    <div className="space-y-1 text-sm text-green-700">
+                      <div className="flex justify-between">
+                        <span>Inicial:</span>
+                        <Badge className="bg-green-100 text-green-800">10 créditos</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Crescimento:</span>
+                        <Badge className="bg-blue-100 text-blue-800">50 créditos</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Profissional:</span>
+                        <Badge className="bg-purple-100 text-purple-800">500 créditos</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Teste Grátis:</span>
+                        <Badge className="bg-yellow-100 text-yellow-800">Ilimitado</Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-green-800">⚙️ Gerenciamento</h4>
+                    <ul className="space-y-2 text-sm text-green-700">
+                      <li>• Visualize créditos disponíveis no Dashboard</li>
+                      <li>• Configure alertas quando créditos estiverem baixos</li>
+                      <li>• Acesse em Configurações → Aba Créditos</li>
+                      <li>• Upgrade automático disponível a qualquer momento</li>
+                    </ul>
+                    
+                    <h4 className="font-medium text-green-800 mt-6">📈 Controle e Relatórios</h4>
+                    <ul className="space-y-2 text-sm text-green-700">
+                      <li>• Histórico completo de transações</li>
+                      <li>• Relatórios de uso por período</li>
+                      <li>• Projeções baseadas no uso atual</li>
+                      <li>• Alertas inteligentes personalizáveis</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="mt-8 p-4 bg-white rounded-lg border border-green-200">
+                  <h4 className="font-medium text-green-800 mb-2">💡 Dica Importante</h4>
+                  <p className="text-sm text-green-700">
+                    Durante o <strong>teste grátis de 30 dias</strong>, você tem créditos ilimitados para 
+                    cadastrar quantos colaboradores precisar. Aproveite este período para 
+                    configurar toda sua equipe e conhecer todas as funcionalidades!
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* CTA Final */}
