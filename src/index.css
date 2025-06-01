@@ -105,7 +105,7 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
@@ -357,4 +357,25 @@ input:focus, textarea:focus, select:focus {
 .highlight-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes shimmer-border {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+@keyframes progress-fill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: var(--target-width, 100%);
+  }
 }

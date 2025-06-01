@@ -558,9 +558,9 @@ export const Landing = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 md:py-32">
+      <section className="py-20 md:py-32 bg-gradient-to-br from-slate-50 to-blue-50">
         <div className="container">
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold md:text-4xl">
                 Resultados Comprovados
@@ -570,13 +570,134 @@ export const Landing = () => {
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
+            {/* Métricas Principais com Gráficos */}
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-12">
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
+                    <TrendingUp className="h-8 w-8 text-green-600" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-green-600">70%</CardTitle>
+                  <p className="text-sm text-muted-foreground">Redução no tempo de onboarding</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                      <div 
+                        className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full animate-pulse"
+                        style={{ width: '70%', animation: 'progress-fill 2s ease-in-out' }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Antes: 30 dias</span>
+                      <span>Agora: 9 dias</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-blue-600">45%</CardTitle>
+                  <p className="text-sm text-muted-foreground">Aumento na retenção de talentos</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                      <div 
+                        className="bg-gradient-to-r from-blue-400 to-blue-600 h-3 rounded-full animate-pulse"
+                        style={{ width: '45%', animation: 'progress-fill 2.5s ease-in-out' }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Turnover: -45%</span>
+                      <span>Satisfação: +60%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <CardHeader className="text-center pb-4">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
+                    <Brain className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold text-purple-600">85%</CardTitle>
+                  <p className="text-sm text-muted-foreground">Precisão da IA em previsão de turnover</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                      <div 
+                        className="bg-gradient-to-r from-purple-400 to-purple-600 h-3 rounded-full animate-pulse"
+                        style={{ width: '85%', animation: 'progress-fill 3s ease-in-out' }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Predições corretas</span>
+                      <span>Machine Learning</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Gráfico de ROI */}
+            <Card className="mb-12">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Retorno do Investimento</CardTitle>
+                <CardDescription>Economia média por empresa nos primeiros 12 meses</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-6 md:grid-cols-3">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600 mb-2">R$ 2.5M</div>
+                    <p className="text-sm text-muted-foreground">Economia em processos</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full"
+                        style={{ width: '0%', animation: 'progress-fill 2s ease-in-out forwards' }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600 mb-2">R$ 1.8M</div>
+                    <p className="text-sm text-muted-foreground">Redução em recontratações</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full"
+                        style={{ width: '0%', animation: 'progress-fill 2.5s ease-in-out forwards' }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-600 mb-2">R$ 3.2M</div>
+                    <p className="text-sm text-muted-foreground">Aumento de produtividade</p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="bg-purple-500 h-2 rounded-full"
+                        style={{ width: '0%', animation: 'progress-fill 3s ease-in-out forwards' }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Lista de Benefícios com Ícones Melhorados */}
+            <div className="grid gap-4 md:grid-cols-2">
               {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                <div key={index} className="flex items-center space-x-4 p-4 rounded-lg bg-white/50 backdrop-blur-sm border border-white/20 hover:bg-white/80 transition-all duration-300">
+                  <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
                     <Check className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-lg">{benefit}</span>
+                  <span className="text-lg font-medium">{benefit}</span>
                 </div>
               ))}
             </div>
