@@ -448,15 +448,11 @@ export const Landing = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => (
               <div key={index} className="group relative">
-                <div className="relative overflow-hidden bg-background border rounded-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
-                  {/* Animated border on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/40 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" 
-                       style={{
-                         background: 'linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.3) 50%, transparent 100%)',
-                         animation: 'none'
-                       }}>
+                <div className="relative overflow-hidden bg-background border rounded-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-transparent">
+                  {/* Animated border effect on hover */}
+                  <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    <div className="absolute inset-0 rounded-lg border-2 border-transparent bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-border animate-gradient-border"></div>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-pulse transition-all duration-300 rounded-lg"></div>
                   
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">

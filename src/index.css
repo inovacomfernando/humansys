@@ -329,9 +329,9 @@ input:focus, textarea:focus, select:focus {
 }
 
 .animate-gradient-border {
-  background: linear-gradient(-45deg, transparent, rgba(var(--primary), 0.6), transparent);
-  background-size: 400% 400%;
-  animation: gradient-border 3s ease infinite;
+  background: linear-gradient(90deg, transparent 0%, #3b82f6 25%, #8b5cf6 50%, #06b6d4 75%, transparent 100%);
+  background-size: 200% 100%;
+  animation: gradient-border 2s linear infinite;
 }
 
 /* Estilos específicos para os cards com efeito luminoso */
