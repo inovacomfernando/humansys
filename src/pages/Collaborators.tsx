@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,12 +14,26 @@ import { useCollaborators } from '@/hooks/useCollaborators';
 import { CollaboratorActions } from '@/components/collaborators/CollaboratorActions';
 import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const Collaborators = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingCollaborator, setIsAddingCollaborator] = useState(false);
   const { collaborators, isLoading, error, createCollaborator, refetch } = useCollaborators();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Auto-refresh a cada 30 segundos para garantir dados atualizados
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (user?.id && !isLoading) {
+        console.log('Auto-refresh colaboradores...');
+        refetch();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user?.id, isLoading, refetch]);
 
   const [newCollaborator, setNewCollaborator] = useState({
     name: '',
@@ -41,14 +55,25 @@ export const Collaborators = () => {
     }
 
     try {
-      await createCollaborator({
+      const result = await createCollaborator({
         ...newCollaborator,
         status: 'active' as const
       });
-      setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
-      setIsAddingCollaborator(false);
+      
+      if (result) {
+        setNewCollaborator({ name: '', email: '', role: '', department: '', phone: '', location: '' });
+        setIsAddingCollaborator(false);
+        
+        // Forçar atualização imediata da lista
+        setTimeout(() => refetch(), 100);
+        
+        toast({
+          title: "Sucesso",
+          description: "Colaborador criado com sucesso! Atualizando lista...",
+        });
+      }
     } catch (error) {
-      // Error handled in hook
+      console.error('Erro ao criar colaborador:', error);
     }
   };
 

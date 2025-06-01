@@ -296,3 +296,11 @@ const createFounderGamificationTable = async () => {
     console.log('Founder gamification table creation error:', error);
   }
 };
+// Ensure collaborators table is properly configured
+// Colaboradores - verificar estrutura da tabela
+    const { data: collaboratorsCheck, error: collaboratorsError } = await supabase
+      .from('collaborators')
+      .select('id, user_id, name, email')
+      .limit(1);
+
+    console.log('Collaborators table check:', { collaboratorsCheck, collaboratorsError });

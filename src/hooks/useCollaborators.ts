@@ -96,6 +96,62 @@ export const useCollaborators = () => {
   useEffect(() => {
     console.log('useCollaborators: useEffect executado, user?.id:', user?.id);
     fetchCollaborators();
+
+    // Configurar subscription de tempo real
+    if (user?.id) {
+      const channel = supabase
+        .channel('collaborators-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'collaborators',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Realtime update received:', payload);
+            
+            switch (payload.eventType) {
+              case 'INSERT':
+                const newCollaborator: Collaborator = {
+                  ...payload.new as any,
+                  status: payload.new.status as 'active' | 'inactive' | 'vacation',
+                };
+                setCollaborators(prev => {
+                  // Verificar se já existe para evitar duplicatas
+                  const exists = prev.find(c => c.id === newCollaborator.id);
+                  if (!exists) {
+                    return [newCollaborator, ...prev];
+                  }
+                  return prev;
+                });
+                break;
+                
+              case 'UPDATE':
+                const updatedCollaborator: Collaborator = {
+                  ...payload.new as any,
+                  status: payload.new.status as 'active' | 'inactive' | 'vacation',
+                };
+                setCollaborators(prev => 
+                  prev.map(c => c.id === updatedCollaborator.id ? updatedCollaborator : c)
+                );
+                break;
+                
+              case 'DELETE':
+                setCollaborators(prev => 
+                  prev.filter(c => c.id !== payload.old.id)
+                );
+                break;
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user?.id]);
 
   const createCollaborator = async (collaboratorData: {
@@ -114,9 +170,11 @@ export const useCollaborators = () => {
         description: "Você precisa estar logado para criar um colaborador.",
         variant: "destructive"
       });
-      return;
+      return null;
     }
 
+    setIsLoading(true);
+    
     try {
       const dataToInsert = {
         ...collaboratorData,
@@ -140,7 +198,8 @@ export const useCollaborators = () => {
           description: `Falha ao criar colaborador: ${error.message}`,
           variant: "destructive"
         });
-        return;
+        setIsLoading(false);
+        return null;
       }
 
       if (result) {
@@ -150,12 +209,21 @@ export const useCollaborators = () => {
         };
 
         console.log('Colaborador criado com sucesso:', formattedData);
+        
+        // Atualizar estado local imediatamente
         setCollaborators(prev => [formattedData, ...prev]);
+        
+        // Recarregar dados do servidor para garantir sincronização
+        setTimeout(() => {
+          fetchCollaborators();
+        }, 500);
+        
         toast({
           title: "Sucesso",
-          description: "Colaborador criado com sucesso."
+          description: "Colaborador criado e sincronizado com sucesso."
         });
         
+        setIsLoading(false);
         return formattedData;
       }
     } catch (error: any) {
@@ -165,7 +233,12 @@ export const useCollaborators = () => {
         description: `Erro inesperado: ${error.message}`,
         variant: "destructive"
       });
+      setIsLoading(false);
+      return null;
     }
+    
+    setIsLoading(false);
+    return null;
   };
 
   const updateCollaborator = async (id: string, updates: Partial<Collaborator>) => {
