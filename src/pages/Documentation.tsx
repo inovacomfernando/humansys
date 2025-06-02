@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -413,27 +414,28 @@ export const Documentation = () => {
                   { icon: Calendar, title: 'Reuniões 1:1', desc: 'Agendamento inteligente', path: '/app/meetings' },
                   { icon: Trophy, title: 'Gamificação', desc: 'Badges e conquistas', path: '/app/dashboard' }
                 ].map((feature, index) => (
-                <Card key={index} className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                      onClick={() => navigate(feature.path)}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <feature.icon className="h-6 w-6 text-primary" />
+                  <Card key={index} className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                        onClick={() => navigate(feature.path)}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                          <feature.icon className="h-6 w-6 text-primary" />
+                        </div>
+                        {feature.new && (
+                          <Badge className="bg-green-500 text-white">Novo</Badge>
+                        )}
                       </div>
-                      {feature.new && (
-                        <Badge className="bg-green-500 text-white">Novo</Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-lg">{feature.title}</CardTitle>
-                    <CardDescription>{feature.desc}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Acessar <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <CardTitle className="text-lg">{feature.title}</CardTitle>
+                      <CardDescription>{feature.desc}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button variant="outline" size="sm" className="w-full">
+                        Acessar <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </TabsContent>
 
