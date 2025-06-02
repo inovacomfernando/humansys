@@ -1,7 +1,32 @@
 
-import { Client } from 'pg';
+import { supabase } from '@/integrations/supabase/client';
 
-// Cliente PostgreSQL usando as variáveis de ambiente do Replit
+// Usar apenas Supabase para comunicação com o banco de dados
+export const executeQuery = async (query: string, params: any[] = []) => {
+  console.log('Executando query via Supabase RPC:', query);
+  try {
+    // Para queries mais complexas, usar RPC functions no Supabase
+    const { data, error } = await supabase.rpc('execute_sql', {
+      sql_query: query,
+      params: params
+    });
+    
+    if (error) {
+      console.error('Erro na query:', error);
+      throw error;
+    }
+    
+    return { rows: data || [] };
+  } catch (error) {
+    console.error('Erro ao executar query:', error);
+    throw error;
+  }
+};
+
+export const setupTables = async () => {
+  console.log('PostgreSQL setup via Supabase - tabelas já configuradas');
+  return Promise.resolve();
+};t
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false

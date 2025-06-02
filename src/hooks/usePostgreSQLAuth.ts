@@ -1,6 +1,6 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
-import { executeQuery } from '@/lib/replit-db';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: number;
@@ -41,14 +41,23 @@ export const usePostgreSQLAuth = () => {
     try {
       setIsLoading(true);
       
-      // Verificar credenciais no PostgreSQL
-      const result = await executeQuery(
-        'SELECT id, email, name FROM users WHERE email = $1 AND password_hash = $2',
-        [email, password] // Em produção, compare com hash da senha
-      );
+      // Usar Supabase Auth em vez de PostgreSQL direto
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      if (result.rows.length > 0) {
-        const userData = result.rows[0];
+      if (error) {
+        console.error('Sign in error:', error);
+        return false;
+      }
+
+      if (data.user) {
+        const userData = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.name || email.split('@')[0]
+        };
         setUser(userData);
         localStorage.setItem('auth_user', JSON.stringify(userData));
         return true;
