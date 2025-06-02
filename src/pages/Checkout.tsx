@@ -21,7 +21,7 @@ export const Checkout = () => {
 
   // Get data from state, with fallbacks
   const planData = location.state || {};
-  const { plan = 'Em Crescimento', price = '149', billing = 'monthly' } = planData;
+  const { plan = 'Teste Grátis', price = '0', billing = 'trial' } = planData;
 
   const [formData, setFormData] = useState({
     cardNumber: '',
@@ -39,8 +39,8 @@ export const Checkout = () => {
   useEffect(() => {
     if (!location.state) {
       toast({
-        title: "Plano padrão selecionado",
-        description: "Você pode alterar o plano retornando à página anterior.",
+        title: "Teste grátis selecionado",
+        description: "Comece já seu teste gratuito de 30 dias.",
         variant: "default",
       });
     }
@@ -152,6 +152,9 @@ export const Checkout = () => {
   };
 
   const formatPrice = (value: string) => {
+    if (billing === 'trial' || value === '0') {
+      return 'Grátis por 30 dias';
+    }
     const numericValue = value.replace(/\D/g, '');
     return billing === 'yearly' ? 
       `R$ ${numericValue} (${Math.round(parseInt(numericValue) / 12)} por mês)` :
