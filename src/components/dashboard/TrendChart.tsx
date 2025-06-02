@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { memo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +18,7 @@ interface TrendChartProps {
   className?: string;
 }
 
-export const TrendChart: React.FC<TrendChartProps> = ({
+export const TrendChart: React.FC<TrendChartProps> = memo(({
   data,
   color = '#22c55e',
   type = 'line',
@@ -125,4 +124,4 @@ export const TrendChart: React.FC<TrendChartProps> = ({
       </ResponsiveContainer>
     </div>
   );
-};
+});

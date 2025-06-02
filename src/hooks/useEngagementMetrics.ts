@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCollaborators } from '@/hooks/useCollaborators';
 
@@ -21,17 +21,33 @@ interface DepartmentScore {
 export const useEngagementMetrics = () => {
   const { user } = useAuth();
   const { collaborators } = useCollaborators();
-  const [metrics, setMetrics] = useState<EngagementMetrics>({
+  const [isCalculated, setIsCalculated] = useState(false);
+  
+  const metrics = useMemo<EngagementMetrics>(() => ({
     overallScore: 84,
     participationRate: 92,
     satisfactionScore: 78,
     goalCompletionRate: 67
-  });
+  }), []);
   
   const [departmentScores, setDepartmentScores] = useState<DepartmentScore[]>([]);
   const [trends, setTrends] = useState<Array<{ date: string; value: number }>>([]);
 
-  const calculateEngagementMetrics = () => {
+  // Criar um seed baseado no ID do usuário para manter consistência
+  const userSeed = useMemo(() => {
+    if (!user?.id) return 0;
+    return user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  }, [user?.id]);
+
+  // Função para gerar números "aleatórios" consistentes baseados no seed
+  const seededRandom = useCallback((seed: number, index: number = 0) => {
+    const x = Math.sin(seed + index) * 10000;
+    return x - Math.floor(x);
+  }, []);
+
+  const calculateEngagementMetrics = useCallback(() => {
+    if (!collaborators.length || !user?.id || isCalculated) return;
+
     // Agrupar colaboradores por departamento
     const deptGroups = collaborators.reduce((acc, collab) => {
       if (!acc[collab.department]) {
@@ -41,12 +57,12 @@ export const useEngagementMetrics = () => {
       return acc;
     }, {} as Record<string, any[]>);
 
-    // Calcular scores por departamento
-    const deptScores: DepartmentScore[] = Object.entries(deptGroups).map(([dept, collabs]) => {
-      const baseScore = 70 + Math.random() * 25; // Score base entre 70-95
+    // Calcular scores por departamento com valores consistentes
+    const deptScores: DepartmentScore[] = Object.entries(deptGroups).map(([dept, collabs], index) => {
+      const deptSeed = userSeed + dept.charCodeAt(0) + index;
+      const baseScore = 70 + seededRandom(deptSeed) * 25; // Score base entre 70-95
       
-      // Properly type the trend assignment
-      const randomValue = Math.random();
+      const randomValue = seededRandom(deptSeed, 1);
       let trend: 'up' | 'down' | 'stable';
       if (randomValue > 0.6) {
         trend = 'up';
@@ -56,7 +72,7 @@ export const useEngagementMetrics = () => {
         trend = 'down';
       }
       
-      const change = Math.floor(Math.random() * 10) + 1;
+      const change = Math.floor(seededRandom(deptSeed, 2) * 10) + 1;
       
       return {
         name: dept,
@@ -69,7 +85,7 @@ export const useEngagementMetrics = () => {
 
     setDepartmentScores(deptScores);
 
-    // Gerar dados de tendência
+    // Gerar dados de tendência consistentes
     const trendData = [];
     for (let i = 0; i < 6; i++) {
       const date = new Date();
@@ -77,17 +93,25 @@ export const useEngagementMetrics = () => {
       
       trendData.push({
         date: date.toISOString().split('T')[0],
-        value: 75 + Math.random() * 15 + i * 2 // Tendência crescente
+        value: Math.round(75 + seededRandom(userSeed, i + 10) * 15 + i * 2) // Tendência crescente
       });
     }
     setTrends(trendData);
-  };
+    setIsCalculated(true);
+  }, [collaborators, user?.id, userSeed, seededRandom, isCalculated]);
 
   useEffect(() => {
-    if (user && collaborators.length > 0) {
+    if (user?.id && collaborators.length > 0 && !isCalculated) {
       calculateEngagementMetrics();
     }
-  }, [user, collaborators]);
+  }, [user?.id, collaborators.length, calculateEngagementMetrics, isCalculated]);
+
+  // Reset quando o usuário muda
+  useEffect(() => {
+    setIsCalculated(false);
+    setDepartmentScores([]);
+    setTrends([]);
+  }, [user?.id]);
 
   return {
     metrics,

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useEngagementMetrics } from '@/hooks/useEngagementMetrics';
 
-export const EngagementAnalytics: React.FC = () => {
+export const EngagementAnalytics: React.FC = memo(() => {
   const { metrics, departmentScores, trends } = useEngagementMetrics();
 
   return (
@@ -174,4 +174,4 @@ export const EngagementAnalytics: React.FC = () => {
       </Card>
     </div>
   );
-};
+});
