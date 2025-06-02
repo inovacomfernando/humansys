@@ -135,9 +135,9 @@ class PostgreSQLClient {
     return new QueryBuilder(this.pool, table);
   }
 
-  // RPC method placeholder
+  // RPC method que não faz nada (remove dependência de funções não existentes)
   rpc(functionName, params = {}) {
-    console.log(`RPC call: ${functionName}`, params);
+    console.log(`RPC call ignored: ${functionName}`, params);
     return Promise.resolve({ data: null, error: null });
   }
 }
@@ -299,7 +299,7 @@ export const clearQueryCache = () => {
   console.log('Query cache cleared');
 };
 
-// Função de verificação de conectividade
+// Função de verificação de conectividade simplificada
 export const checkSupabaseConnection = async () => {
   try {
     const client = await pool.connect();
@@ -316,7 +316,6 @@ export const checkSupabaseConnection = async () => {
 export const refreshSystemData = async () => {
   try {
     clearQueryCache();
-    // Para PostgreSQL local, não precisamos recarregar a página
     console.log('✅ Sistema atualizado com sucesso!');
     return true;
   } catch (error) {
