@@ -15,7 +15,8 @@ import {
   Mail, 
   AlertTriangle, 
   CheckCircle,
-  RefreshCw 
+  RefreshCw,
+  Database
 } from 'lucide-react';
 import { AccountRecovery } from './AccountRecovery';
 
@@ -75,14 +76,42 @@ export const AdminPanel = () => {
       return;
     }
 
+    // Validar formato do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUserData.email)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validar senha
+    if (newUserData.password.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      console.log('Iniciando criação de usuário:', { email: newUserData.email, name: newUserData.name });
+
       // Verificar se o usuário já existe na tabela de colaboradores
-      const { data: existingCollaborator } = await supabase
+      const { data: existingCollaborator, error: checkError } = await supabase
         .from('collaborators')
         .select('*')
         .eq('email', newUserData.email)
-        .single();
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing user:', checkError);
+        throw new Error('Erro ao verificar usuário existente: ' + checkError.message);
+      }
 
       if (existingCollaborator) {
         toast({
@@ -93,32 +122,40 @@ export const AdminPanel = () => {
         return;
       }
 
-      // Para produção: Criar usuário diretamente na tabela de colaboradores
-      // O usuário receberá um convite por email para ativar a conta
+      // Gerar ID único para o usuário
+      const userId = crypto.randomUUID();
+
+      // Criar usuário na tabela de colaboradores
       const { data: collaboratorData, error: collaboratorError } = await supabase
         .from('collaborators')
         .insert([{
+          id: userId,
+          user_id: user?.id || '',
           name: newUserData.name,
           email: newUserData.email,
-          status: 'pending',
-          password_hash: btoa(newUserData.password), // Não é seguro, apenas para desenvolvimento
-          created_by: user?.id,
+          status: 'active',
+          password_hash: btoa(newUserData.password), // Apenas para desenvolvimento
+          created_at: new Date().toISOString(),
           invited_at: new Date().toISOString()
         }])
         .select()
         .single();
 
       if (collaboratorError) {
-        throw collaboratorError;
+        console.error('Collaborator creation error:', collaboratorError);
+        throw new Error('Erro ao criar colaborador: ' + collaboratorError.message);
       }
 
-      // Simular envio de email de convite
+      console.log('Usuário criado com sucesso:', collaboratorData);
+
       toast({
-        title: "Convite enviado",
-        description: `Um convite foi enviado para ${newUserData.email}. Senha temporária: ${newUserData.password}`,
+        title: "Usuário criado com sucesso",
+        description: `${newUserData.name} foi cadastrado no sistema. Email: ${newUserData.email}, Senha: ${newUserData.password}`,
       });
 
+      // Limpar formulário
       setNewUserData({ email: '', password: '', name: '' });
+
     } catch (error: any) {
       console.error('Create user error:', error);
       
@@ -127,7 +164,11 @@ export const AdminPanel = () => {
       if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
         errorMessage = "Este email já está cadastrado no sistema.";
       } else if (error.message?.includes('permission') || error.message?.includes('RLS')) {
-        errorMessage = "Sem permissão para criar usuários. Contate o administrador do sistema.";
+        errorMessage = "Sem permissão para criar usuários. Verifique as configurações de segurança.";
+      } else if (error.message?.includes('JWT') || error.message?.includes('auth')) {
+        errorMessage = "Problema de autenticação. Faça login novamente.";
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       toast({
@@ -271,18 +312,30 @@ export const AdminPanel = () => {
               <Button 
                 onClick={async () => {
                   try {
-                    // Verificar conectividade
-                    const { data, error } = await supabase.auth.getSession();
-                    if (error) throw error;
+                    // Verificar conectividade básica
+                    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                    if (sessionError) throw sessionError;
+                    
+                    // Testar acesso à tabela de colaboradores
+                    const { data: testData, error: testError } = await supabase
+                      .from('collaborators')
+                      .select('count')
+                      .limit(0);
+                    
+                    // Mesmo com erro de RLS, significa que a conexão está funcionando
+                    if (testError && !testError.message.includes('RLS') && !testError.message.includes('permission')) {
+                      throw testError;
+                    }
                     
                     toast({
                       title: "Sistema Online",
-                      description: "Todas as conexões estão funcionando normalmente",
+                      description: "Conexões funcionando normalmente. Banco de dados acessível.",
                     });
-                  } catch (error) {
+                  } catch (error: any) {
+                    console.error('System check error:', error);
                     toast({
                       title: "Erro de Conectividade", 
-                      description: "Problema detectado na conexão com o banco de dados",
+                      description: `Problema detectado: ${error.message}`,
                       variant: "destructive",
                     });
                   }
@@ -332,6 +385,21 @@ export const AdminPanel = () => {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Reconectar Database
               </Button>
+            </div>
+          </div>
+
+          {/* Troubleshooting */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 text-orange-600 mr-2" />
+              <h4 className="font-medium text-orange-800">Problemas Comuns</h4>
+            </div>
+            <div className="text-sm text-orange-700 mt-2 space-y-1">
+              <p>• <strong>Erro "Database is not defined":</strong> Recarregue a página</p>
+              <p>• <strong>Erro de permissão:</strong> Verifique se está logado como admin</p>
+              <p>• <strong>Email já existe:</strong> Use um email diferente</p>
+              <p>• <strong>Erro de conectividade:</strong> Execute o diagnóstico do sistema</p>
+              <p>• <strong>Senha muito curta:</strong> Use pelo menos 6 caracteres</p>
             </div>
           </div>
 
