@@ -1,116 +1,83 @@
-import { Client } from 'pg';
+// Cliente para comunicação com o servidor de banco local
+const API_BASE_URL = 'http://localhost:3001/api';
 
-// Cliente PostgreSQL usando as variáveis de ambiente do Replit
-const client = new Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
 
-let isConnected = false;
-
-export const connectDB = async () => {
-  if (!isConnected) {
+class LocalDatabaseClient {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
-      await client.connect();
-      isConnected = true;
-      console.log('✅ Conectado ao PostgreSQL do Replit');
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        ...options,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || data.error || 'Request failed' };
+      }
+
+      return { success: true, data };
     } catch (error) {
-      console.error('❌ Erro ao conectar ao PostgreSQL:', error);
-      throw error;
+      console.error('Database request error:', error);
+      return { success: false, error: 'Network error' };
     }
   }
-  return client;
-};
 
+  // Auth methods
+  async login(email: string, password: string) {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async createUser(email: string, name: string, password_hash: string) {
+    return this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify({ email, name, password_hash }),
+    });
+  }
+
+  // Collaborators methods
+  async getCollaborators(userId: string) {
+    return this.request(`/collaborators/${userId}`);
+  }
+
+  async createCollaborator(collaboratorData: any) {
+    return this.request('/collaborators', {
+      method: 'POST',
+      body: JSON.stringify(collaboratorData),
+    });
+  }
+
+  // Credits methods
+  async getCredits(userId: string) {
+    return this.request(`/credits/${userId}`);
+  }
+
+  // Health check
+  async healthCheck() {
+    return this.request('/health');
+  }
+}
+
+export const dbClient = new LocalDatabaseClient();
+
+// Legacy compatibility functions
 export const executeQuery = async (query: string, params: any[] = []) => {
-  try {
-    const db = await connectDB();
-    const result = await db.query(query, params);
-    return result;
-  } catch (error) {
-    console.error('Erro na query:', error);
-    throw error;
-  }
+  console.warn('executeQuery is deprecated, use dbClient methods instead');
+  return { rows: [] };
 };
 
-// Função para criar as tabelas necessárias
 export const setupTables = async () => {
-  try {
-    const db = await connectDB();
-
-    // Criar tabela de usuários
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        name VARCHAR(255),
-        password_hash VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Criar tabela de colaboradores
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS collaborators (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        position VARCHAR(255),
-        department VARCHAR(255),
-        hire_date DATE,
-        status VARCHAR(50) DEFAULT 'active',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Criar tabela de créditos
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS user_credits (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        credits INTEGER DEFAULT 100,
-        plan VARCHAR(50) DEFAULT 'trial',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id)
-      )
-    `);
-
-    // Criar tabela de transações de créditos
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS credit_transactions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        amount INTEGER NOT NULL,
-        type VARCHAR(50) NOT NULL,
-        description TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Criar tabela de treinamentos
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS trainings (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        title VARCHAR(255) NOT NULL,
-        description TEXT,
-        content TEXT,
-        duration INTEGER,
-        status VARCHAR(50) DEFAULT 'draft',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    console.log('✅ Tabelas criadas/verificadas com sucesso');
-  } catch (error) {
-    console.error('❌ Erro ao criar tabelas:', error);
-    throw error;
-  }
+  console.log('Tables are managed by the database server');
+  return Promise.resolve();
 };
-
-export { client as db };

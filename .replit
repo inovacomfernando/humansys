@@ -19,6 +19,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "npm run dev"
 
+[[workflows.workflow]]
+name = "Start Database Server"
+author = 43334172
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node server/database.js"
+
 [[ports]]
 localPort = 8080
 externalPort = 80

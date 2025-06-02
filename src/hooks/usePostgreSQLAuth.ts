@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { executeQuery } from '@/lib/replit-db';
+import { dbClient } from '@/lib/replit-db';
 
 interface User {
   id: number;
@@ -8,70 +8,92 @@ interface User {
   name: string;
 }
 
-interface AuthContextType {
-  user: User | null;
-  signIn: (email: string, password: string) => Promise<boolean>;
-  signOut: () => void;
-  isLoading: boolean;
-}
-
 export const usePostgreSQLAuth = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Verificar se há um usuário logado no localStorage
-    const checkAuth = () => {
+    // Check for saved user in localStorage
+    const savedUser = localStorage.getItem('auth_user');
+    if (savedUser) {
       try {
-        const savedUser = localStorage.getItem('auth_user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
-        }
+        setUser(JSON.parse(savedUser));
       } catch (error) {
-        console.error('Error checking auth:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('auth_user');
       }
-    };
-
-    checkAuth();
+    }
   }, []);
 
   const signIn = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      setError(null);
       
-      // Verificar credenciais no PostgreSQL
-      const result = await executeQuery(
-        'SELECT id, email, name FROM users WHERE email = $1 AND password_hash = $2',
-        [email, password] // Em produção, compare com hash da senha
-      );
+      // Check database server health first
+      const healthCheck = await dbClient.healthCheck();
+      if (!healthCheck.success) {
+        setError('Servidor de banco não está acessível');
+        return false;
+      }
 
-      if (result.rows.length > 0) {
-        const userData = result.rows[0];
+      const result = await dbClient.login(email, password);
+
+      if (result.success && result.data?.user) {
+        const userData = result.data.user;
         setUser(userData);
         localStorage.setItem('auth_user', JSON.stringify(userData));
         return true;
       } else {
+        setError(result.error || 'Credenciais inválidas');
         return false;
       }
     } catch (error) {
       console.error('Sign in error:', error);
+      setError('Erro de conexão com o banco');
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signOut = () => {
+  const signUp = async (email: string, password: string, name: string): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await dbClient.createUser(email, name, password);
+
+      if (result.success && result.data?.user) {
+        const userData = result.data.user;
+        setUser(userData);
+        localStorage.setItem('auth_user', JSON.stringify(userData));
+        return true;
+      } else {
+        setError(result.error || 'Erro ao criar usuário');
+        return false;
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+      setError('Erro de conexão com o banco');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = async (): Promise<void> => {
     setUser(null);
     localStorage.removeItem('auth_user');
   };
 
   return {
     user,
+    isLoading,
+    error,
     signIn,
+    signUp,
     signOut,
-    isLoading
   };
 };
