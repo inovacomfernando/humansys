@@ -266,31 +266,31 @@ export const Landing = () => {
       <Header showAuth />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-50/70 via-emerald-25/50 to-green-100/60 py-16 md:py-24">
-        <div className="container relative z-10">
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-50/70 via-emerald-25/50 to-green-100/60 py-8 sm:py-12 md:py-16 lg:py-24">
+        <div className="container relative z-10 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl text-center animate-fade-in">
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-4 sm:mb-6 lg:mb-8">
               <div className="relative">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-medium shadow-lg animate-pulse">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 sm:px-4 sm:py-2 lg:px-6 lg:py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg animate-pulse">
                   🚀 Novo: Founder Dashboard com IA Preditiva
                 </div>
               </div>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-bold tracking-tight">
               Transforme sua
               <span className="text-primary"> Gestão de Pessoas</span>
-              <span className="block text-3xl md:text-4xl lg:text-5xl mt-2 text-muted-foreground">
+              <span className="block text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl mt-2 text-muted-foreground">
                 com Inteligência Artificial
               </span>
             </h1>
-            <p className="mt-6 text-xl text-muted-foreground md:text-2xl">
+            <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground px-4 sm:px-0">
               A Humansys é uma plataforma completa com IA preditiva, gamificação e PWA. 
               Preveja turnover, engaje colaboradores e transforme seu RH.
             </p>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
+            <div className="mt-6 sm:mt-8 lg:mt-10 flex flex-col gap-3 sm:gap-4 sm:flex-row sm:justify-center px-4 sm:px-0">
               <Button 
                 size="lg" 
-                className="text-lg px-8 py-6"
+                className="text-sm sm:text-base lg:text-lg px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 w-full sm:w-auto"
                 onClick={() => debouncedNavigate('/checkout', { 
                   state: { 
                     plan: 'Teste Grátis', 
@@ -299,16 +299,16 @@ export const Landing = () => {
                   } 
                 })}
               >
-                <Zap className="mr-2 h-5 w-5" />
+                <Zap className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Começar Teste Grátis 30 Dias
               </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-8 py-6"
+                className="text-sm sm:text-base lg:text-lg px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 w-full sm:w-auto"
                 onClick={() => debouncedNavigate('/changelog')}
               >
-                <TrendingUp className="mr-2 h-5 w-5" />
+                <TrendingUp className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Ver Novidades
               </Button>
             </div>
@@ -317,19 +317,19 @@ export const Landing = () => {
       </section>
 
       {/* Screenshots Carousel Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-r from-green-25/30 via-white to-emerald-25/30">
-        <div className="container">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <div className="flex justify-center mb-4">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-blue-300">
+      <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-gradient-to-r from-green-25/30 via-white to-emerald-25/30">
+        <div className="container px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-8 sm:mb-12 lg:mb-16">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg border border-blue-300">
                 <Smartphone className="mr-1 h-3 w-3 inline" />
                 Interface Moderna
               </div>
             </div>
-            <h2 className="text-3xl font-bold md:text-4xl">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
               Visual Moderno e Intuitivo
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground px-4 sm:px-0">
               Conheça nossa interface elegante e funcional que facilita a gestão de RH
             </p>
           </div>
@@ -688,48 +688,48 @@ export const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 md:py-20">
-        <div className="container">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-3xl font-bold md:text-4xl">
+      <section className="py-8 sm:py-12 md:py-16 lg:py-20">
+        <div className="container px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-8 sm:mb-12 lg:mb-16">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
               Funcionalidades Completas
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground px-4 sm:px-0">
               Todas as ferramentas que você precisa para uma gestão de RH eficiente
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {features.map((feature, index) => (
               <Card key={index} className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <feature.icon className="h-6 w-6 text-primary" />
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
                     {feature.isNew && (
-                      <Badge className="bg-green-500 text-white">
+                      <Badge className="bg-green-500 text-white text-xs">
                         Novo
                       </Badge>
                     )}
                   </div>
 
-                  <CardTitle className="text-lg">
+                  <CardTitle className="text-base sm:text-lg">
                     {feature.title}
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-sm">
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent>
+                <CardContent className="p-4 sm:p-6 pt-0">
                   {feature.realImpact && (
                     <div className="space-y-2 text-xs">
                       <div className="flex items-center text-green-600">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        {feature.realImpact.metric}
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
+                        <span className="text-xs">{feature.realImpact.metric}</span>
                       </div>
-                      <div className="text-muted-foreground">
+                      <div className="text-muted-foreground text-xs">
                         {feature.realImpact.example}
                       </div>
                     </div>
@@ -742,62 +742,62 @@ export const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-12 md:py-20 bg-muted/50">
-        <div className="container">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-3xl font-bold md:text-4xl">
+      <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-muted/50">
+        <div className="container px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center mb-8 sm:mb-12 lg:mb-16">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
               Planos Atualizados
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground px-4 sm:px-0">
               Agora com IA, gamificação e funcionalidades premium
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3 mb-16">
+          <div className="grid gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-8 sm:mb-12 lg:mb-16">
             {plans.map((plan, index) => (
-              <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg scale-105' : ''}`}>
+              <Card key={index} className={`relative ${plan.popular ? 'border-primary shadow-lg md:scale-105' : ''}`}>
                 {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium shadow-lg border border-orange-300">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 sm:px-4 sm:py-1 rounded-full text-xs sm:text-sm font-medium shadow-lg border border-orange-300">
                     <Star className="mr-1 h-3 w-3 inline" />
                     Mais Popular
                   </div>
                 )}
 
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription className="text-base">{plan.description}</CardDescription>
+                <CardHeader className="text-center pb-2 p-4 sm:p-6">
+                  <CardTitle className="text-lg sm:text-xl lg:text-2xl">{plan.name}</CardTitle>
+                  <CardDescription className="text-sm sm:text-base">{plan.description}</CardDescription>
                 </CardHeader>
 
-                <CardContent className="text-center">
-                  <div className="mb-6">
-                    <div className="text-4xl font-bold text-primary mb-2">
+                <CardContent className="text-center p-4 sm:p-6">
+                  <div className="mb-4 sm:mb-6">
+                    <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary mb-2">
                       {plan.monthlyPrice}
-                      <span className="text-base text-muted-foreground font-normal">/mês</span>
+                      <span className="text-sm sm:text-base text-muted-foreground font-normal">/mês</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       ou {plan.yearlyPrice}/ano (2 meses grátis)
                     </div>
                   </div>
 
-                  <div className="space-y-4 mb-8">
+                  <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                     {plan.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-center text-left">
-                        <Check className="h-4 w-4 text-primary mr-3 flex-shrink-0" />
-                        <span className="text-sm">{feature}</span>
+                      <div key={featureIndex} className="flex items-start text-left">
+                        <Check className="h-4 w-4 text-primary mr-2 sm:mr-3 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm">{feature}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="space-y-2">
                     <Button 
-                      className="w-full" 
+                      className="w-full text-sm sm:text-base" 
                       variant={plan.popular ? "default" : "outline"}
                       onClick={() => handlePlanSelection(plan.name, plan.monthlyPrice, 'monthly')}
                     >
                       Contratar Mensal
                     </Button>
                     <Button 
-                      className="w-full" 
+                      className="w-full text-sm sm:text-base" 
                       variant="secondary"
                       onClick={() => handlePlanSelection(plan.name, plan.yearlyPrice, 'yearly')}
                     >

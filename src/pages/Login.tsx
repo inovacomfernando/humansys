@@ -109,82 +109,82 @@ export const Login = () => {
 
       <Header showAuth={false} />
       
-      <div className="relative z-10 container flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
+      <div className="relative z-10 container flex items-center justify-center min-h-[calc(100vh-4rem)] py-4 sm:py-8 px-4 sm:px-6">
         <div className="w-full max-w-md">
           {/* Hero section */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full mb-6 shadow-2xl shadow-green-500/20">
-              <Crown className="h-10 w-10 text-white" />
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full mb-4 sm:mb-6 shadow-2xl shadow-green-500/20">
+              <Crown className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
               Humansys
             </h1>
-            <p className="text-green-200 text-lg">
+            <p className="text-green-200 text-base sm:text-lg">
               O futuro da gestão de RH chegou
             </p>
           </div>
 
           <Card className="backdrop-blur-lg bg-white/10 border-white/20 shadow-2xl">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-white">Acesse sua conta</CardTitle>
-              <CardDescription className="text-green-200">
+            <CardHeader className="text-center p-4 sm:p-6">
+              <CardTitle className="text-xl sm:text-2xl text-white">Acesse sua conta</CardTitle>
+              <CardDescription className="text-green-200 text-sm sm:text-base">
                 Entre ou crie sua conta para começar sua jornada
               </CardDescription>
             </CardHeader>
             
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-white/10 border-white/20">
+                <TabsList className="grid w-full grid-cols-2 bg-white/10 border-white/20 h-9 sm:h-10">
                   <TabsTrigger 
                     value="login" 
-                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
+                    className="text-white text-sm sm:text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
                   >
                     Entrar
                   </TabsTrigger>
                   <TabsTrigger 
                     value="signup"
-                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
+                    className="text-white text-sm sm:text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
                   >
                     Cadastrar
                   </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="login">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email" className="text-white">Email</Label>
+                  <form onSubmit={handleLogin} className="space-y-3 sm:space-y-4">
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label htmlFor="login-email" className="text-white text-sm sm:text-base">Email</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-green-300" />
+                        <Mail className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-green-300" />
                         <Input
                           id="login-email"
                           type="email"
                           placeholder="seu@email.com"
                           value={loginData.email}
                           onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
+                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400 h-9 sm:h-10 text-sm sm:text-base"
                           required
                         />
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password" className="text-white">Senha</Label>
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label htmlFor="login-password" className="text-white text-sm sm:text-base">Senha</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-green-300" />
+                        <Lock className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-green-300" />
                         <Input
                           id="login-password"
                           type={showLoginPassword ? "text" : "password"}
                           placeholder="Sua senha"
                           value={loginData.password}
                           onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
+                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400 h-9 sm:h-10 text-sm sm:text-base"
                           required
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0 text-green-300 hover:text-white hover:bg-white/10"
+                          className="absolute right-1 top-0.5 sm:top-1 h-8 w-8 p-0 text-green-300 hover:text-white hover:bg-white/10"
                           onClick={() => setShowLoginPassword(!showLoginPassword)}
                         >
                           {showLoginPassword ? (
@@ -198,7 +198,7 @@ export const Login = () => {
                     
                     <Button 
                       type="submit" 
-                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105" 
+                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold py-2.5 sm:py-3 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105 text-sm sm:text-base" 
                       disabled={isLoading}
                     >
                       {isLoading ? (

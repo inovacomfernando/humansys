@@ -9,6 +9,109 @@
   --emerald-25: 249, 250, 251;
 }
 
+/* Responsividade global */
+* {
+  box-sizing: border-box;
+}
+
+/* Container responsivo */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 3rem;
+  }
+}
+
+/* Textos responsivos */
+.text-responsive-xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+@media (min-width: 640px) {
+  .text-responsive-xl {
+    font-size: 2rem;
+    line-height: 2.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .text-responsive-xl {
+    font-size: 2.5rem;
+    line-height: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-responsive-xl {
+    font-size: 3rem;
+    line-height: 3.5rem;
+  }
+}
+
+/* Buttons responsivos */
+.btn-responsive {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .btn-responsive {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+}
+
+/* Cards responsivos */
+.card-responsive {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .card-responsive {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-responsive {
+    padding: 2rem;
+  }
+}
+
+/* Grid responsivo */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
