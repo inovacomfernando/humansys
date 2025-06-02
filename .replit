@@ -35,7 +35,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd server && node database.js"
+args = "node server/database.js"
 
 [[ports]]
 localPort = 3001

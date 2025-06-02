@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { dbClient } from '@/lib/replit-db';
 
@@ -54,21 +53,27 @@ export const usePostgreSQLAuth = () => {
   const signIn = async (email: string, password: string) => {
     try {
       console.log('🔐 Tentando fazer login:', { email });
-      
+
+      // Primeiro verificar se o servidor está rodando
+      const healthCheck = await dbClient.healthCheck();
+      if (!healthCheck.success) {
+        throw new Error('Servidor de banco de dados não está rodando. Por favor, inicie o workflow "Database Server".');
+      }
+
       const response = await dbClient.login(email, password);
-      
+
       console.log('📡 Resposta do servidor:', response);
-      
+
       if (response.success && response.data?.user) {
         const user = response.data.user;
         localStorage.setItem('postgres_user', JSON.stringify(user));
-        
+
         setAuthState({
           user,
           isLoading: false,
           isAuthenticated: true
         });
-        
+
         console.log('✅ Login realizado com sucesso:', user);
         return { user, error: null };
       } else {
@@ -86,22 +91,22 @@ export const usePostgreSQLAuth = () => {
   const signUp = async (email: string, password: string, name: string) => {
     try {
       console.log('Iniciando criação de usuário:', { email, name });
-      
+
       // Simular hash de senha (em produção usar bcrypt)
       const password_hash = btoa(password); // Base64 básico para teste
-      
+
       const response = await dbClient.createUser(email, name, password_hash);
-      
+
       if (response.success && response.data?.user) {
         const user = response.data.user;
         localStorage.setItem('postgres_user', JSON.stringify(user));
-        
+
         setAuthState({
           user,
           isLoading: false,
           isAuthenticated: true
         });
-        
+
         return { user, error: null };
       } else {
         return { user: null, error: new Error(response.error || 'Erro ao criar usuário') };
