@@ -1,7 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -20,7 +23,21 @@ import {
   Briefcase,
   Crown,
   ClipboardList,
-  Brain
+  Brain,
+  Search,
+  Zap,
+  TrendingUp,
+  Shield,
+  ChevronDown,
+  ChevronRight,
+  Activity,
+  Database,
+  Bot,
+  Sparkles,
+  Building,
+  UserCheck,
+  GraduationCap,
+  LineChart
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -28,9 +45,28 @@ interface SidebarProps {
   className?: string;
 }
 
+interface MenuSection {
+  title: string;
+  icon: React.ComponentType<any>;
+  items: MenuItem[];
+  collapsible?: boolean;
+}
+
+interface MenuItem {
+  icon: React.ComponentType<any>;
+  label: string;
+  path: string;
+  badge?: string;
+  badgeColor?: string;
+  description?: string;
+  isNew?: boolean;
+  isPro?: boolean;
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isFounder, setIsFounder] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<string[]>(['core', 'management']);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,89 +93,262 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
     checkFounderRole();
   }, [user?.id]);
 
-  const getMenuItems = () => {
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionKey) 
+        ? prev.filter(key => key !== sectionKey)
+        : [...prev, sectionKey]
+    );
+  };
+
+  const getMenuSections = (): MenuSection[] => {
     const isFounderPath = location.pathname.startsWith('/founder');
 
     if (isFounderPath && isFounder) {
       return [
-        { icon: Crown, label: 'Dashboard Founder', path: '/founder/dashboard' },
-        { icon: Home, label: 'Dashboard Principal', path: '/app/dashboard' },
+        {
+          title: 'Founder Suite',
+          icon: Crown,
+          items: [
+            { icon: Crown, label: 'Dashboard Founder', path: '/founder/dashboard', badge: 'Pro', badgeColor: 'bg-yellow-500', description: 'Métricas estratégicas' },
+            { icon: Home, label: 'Dashboard Principal', path: '/app/dashboard', description: 'Visão operacional' },
+          ]
+        }
       ];
     }
 
-    return [
-      { icon: Home, label: 'Dashboard', path: '/app/dashboard' },
-      ...(isFounder ? [{ icon: Crown, label: 'Dashboard Founder', path: '/founder/dashboard' }] : []),
-      { icon: Users, label: 'Colaboradores', path: '/app/collaborators' },
-      { icon: UserPlus, label: 'Recrutamento', path: '/app/recruitment' },
-      { icon: Briefcase, label: 'Onboarding', path: '/app/onboarding' },
-      { icon: MessageSquare, label: 'Feedback', path: '/app/feedback' },
-      { icon: Calendar, label: 'Reuniões 1:1', path: '/app/meetings' },
-      { icon: Target, label: 'Metas & PDI', path: '/app/goals' },
-      { icon: BookOpen, label: 'Treinamentos', path: '/app/training' },
-      { icon: Award, label: 'Certificados', path: '/app/certificates' },
-      { icon: ClipboardList, label: 'Pesquisas', path: '/app/surveys' },
-      { icon: Brain, label: 'Análise DISC', path: '/app/disc', badge: 'Novo' },
-      { icon: BarChart3, label: 'Analytics', path: '/app/analytics' },
-      { icon: FileText, label: 'Documentos', path: '/app/documents' },
-      { icon: Settings, label: 'Configurações', path: '/app/settings' },
+    const sections: MenuSection[] = [
+      {
+        title: 'Core',
+        icon: Activity,
+        items: [
+          { icon: Home, label: 'Dashboard', path: '/app/dashboard', description: 'Visão geral da empresa' },
+          ...(isFounder ? [{ 
+            icon: Crown, 
+            label: 'Dashboard Founder', 
+            path: '/founder/dashboard', 
+            badge: 'Pro', 
+            badgeColor: 'bg-yellow-500',
+            description: 'Métricas estratégicas',
+            isPro: true
+          }] : []),
+        ]
+      },
+      {
+        title: 'Gestão de Pessoas',
+        icon: Users,
+        items: [
+          { icon: Users, label: 'Colaboradores', path: '/app/collaborators', description: 'Gestão completa da equipe' },
+          { icon: UserPlus, label: 'Recrutamento', path: '/app/recruitment', description: 'Processo seletivo' },
+          { icon: Briefcase, label: 'Onboarding', path: '/app/onboarding', description: 'Integração de novos membros' },
+          { icon: UserCheck, label: 'Feedback', path: '/app/feedback', description: 'Avaliações e feedback' },
+        ]
+      },
+      {
+        title: 'Desenvolvimento',
+        icon: TrendingUp,
+        items: [
+          { icon: Calendar, label: 'Reuniões 1:1', path: '/app/meetings', description: 'Acompanhamento individual' },
+          { icon: Target, label: 'Metas & PDI', path: '/app/goals', description: 'Objetivos e desenvolvimento' },
+          { icon: BookOpen, label: 'Treinamentos', path: '/app/training', description: 'Capacitação da equipe' },
+          { icon: Award, label: 'Certificados', path: '/app/certificates', description: 'Reconhecimentos e certificações' },
+        ]
+      },
+      {
+        title: 'Inteligência & Analytics',
+        icon: Brain,
+        items: [
+          { icon: Brain, label: 'Análise DISC', path: '/app/disc', badge: 'IA', badgeColor: 'bg-purple-500', description: 'Perfil comportamental com IA', isNew: true },
+          { icon: ClipboardList, label: 'Pesquisas', path: '/app/surveys', description: 'Engajamento e satisfação' },
+          { icon: BarChart3, label: 'Analytics', path: '/app/analytics', description: 'Relatórios avançados' },
+        ]
+      },
+      {
+        title: 'Documentação & Config',
+        icon: Settings,
+        items: [
+          { icon: FileText, label: 'Documentos', path: '/app/documents', description: 'Gestão de documentos' },
+          { icon: Settings, label: 'Configurações', path: '/app/settings', description: 'Personalização do sistema' },
+        ]
+      }
     ];
+
+    return sections;
   };
 
-  const menuItems = getMenuItems();
+  const menuSections = getMenuSections();
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className={cn(
-      "relative flex flex-col h-full bg-card border-r transition-all duration-300",
-      collapsed ? "w-16" : "w-64",
+      "relative flex flex-col h-full bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300 shadow-lg",
+      collapsed ? "w-16" : "w-72",
       className
     )}>
-      {/* Toggle Button */}
-      <div className="flex items-center justify-between p-4 border-b">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
         {!collapsed && (
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            {location.pathname.startsWith('/founder') && isFounder && (
-              <Crown className="h-5 w-5 text-yellow-500" />
-            )}
-            Menu
-          </h2>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center">
+              <Sparkles className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-white">HumanSys</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">RH Inteligente</p>
+            </div>
+          </div>
         )}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8"
+          className="h-8 w-8 hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           <Menu className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Menu Items */}
-      <nav className="flex-1 p-2 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Button
-              key={item.path}
-              variant={isActive(item.path) ? "secondary" : "ghost"}
-              className={cn(
-                "w-full justify-start h-10 relative",
-                collapsed && "justify-center"
-              )}
-              onClick={() => navigate(item.path)}
-            >
-              <Icon className={cn("h-4 w-4", !collapsed && "mr-2")} />
-              {!collapsed && <span>{item.label}</span>}
-              {!collapsed && item.badge && (
-                <Badge className="ml-auto bg-green-500 text-white">
-                  {item.badge}
-                </Badge>
-              )}
-            </Button>
-          );
-        })}
-      </nav>
+      {/* Search Bar */}
+      {!collapsed && (
+        <div className="p-3 border-b border-slate-200 dark:border-slate-700">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar funcionalidade..."
+              className="w-full pl-10 pr-4 py-2 text-sm bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Menu Sections */}
+      <ScrollArea className="flex-1 px-2 py-3">
+        <div className="space-y-2">
+          {menuSections.map((section) => {
+            const SectionIcon = section.icon;
+            const isExpanded = expandedSections.includes(section.title.toLowerCase().replace(/\s+/g, ''));
+            const sectionKey = section.title.toLowerCase().replace(/\s+/g, '');
+
+            return (
+              <div key={section.title} className="space-y-1">
+                {/* Section Header */}
+                {!collapsed && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => toggleSection(sectionKey)}
+                    className="w-full justify-between h-8 px-3 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+                  >
+                    <div className="flex items-center gap-2">
+                      <SectionIcon className="h-4 w-4" />
+                      {section.title}
+                    </div>
+                    {isExpanded ? (
+                      <ChevronDown className="h-3 w-3" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3" />
+                    )}
+                  </Button>
+                )}
+
+                {/* Section Items */}
+                {(collapsed || isExpanded) && (
+                  <div className={cn("space-y-1", !collapsed && "ml-2")}>
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = isActive(item.path);
+                      
+                      return (
+                        <div key={item.path} className="relative group">
+                          <Button
+                            variant={active ? "secondary" : "ghost"}
+                            className={cn(
+                              "w-full justify-start h-10 text-sm relative overflow-hidden transition-all duration-200",
+                              collapsed ? "justify-center px-2" : "px-3",
+                              active 
+                                ? "bg-gradient-to-r from-primary/10 to-blue-50 dark:from-primary/20 dark:to-blue-900/20 text-primary border-l-2 border-primary shadow-sm" 
+                                : "hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white",
+                              item.isPro && "relative"
+                            )}
+                            onClick={() => navigate(item.path)}
+                          >
+                            <Icon className={cn(
+                              "h-4 w-4 flex-shrink-0",
+                              !collapsed && "mr-3",
+                              active && "text-primary"
+                            )} />
+                            
+                            {!collapsed && (
+                              <div className="flex-1 text-left">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium">{item.label}</span>
+                                  <div className="flex items-center gap-1">
+                                    {item.isNew && (
+                                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                    )}
+                                    {item.badge && (
+                                      <Badge 
+                                        className={cn(
+                                          "text-white text-xs px-2 py-0.5 h-5",
+                                          item.badgeColor || "bg-primary"
+                                        )}
+                                      >
+                                        {item.badge}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                {item.description && (
+                                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    {item.description}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+
+                            {item.isPro && !collapsed && (
+                              <Sparkles className="absolute top-1 right-1 h-3 w-3 text-yellow-500" />
+                            )}
+                          </Button>
+
+                          {/* Tooltip for collapsed state */}
+                          {collapsed && (
+                            <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-slate-900 dark:bg-slate-700 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                              <div className="font-medium">{item.label}</div>
+                              {item.description && (
+                                <div className="text-xs text-slate-300 mt-1">{item.description}</div>
+                              )}
+                              <div className="absolute right-full top-1/2 transform -translate-y-1/2 border-4 border-transparent border-r-slate-900 dark:border-r-slate-700" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!collapsed && <Separator className="my-2" />}
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="p-3 border-t border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700">
+          <div className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
+            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+              <Bot className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="text-xs font-medium text-slate-900 dark:text-white">IA Assistant</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">Online e pronto para ajudar</div>
+            </div>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
