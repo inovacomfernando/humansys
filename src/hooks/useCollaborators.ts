@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
@@ -20,66 +21,165 @@ export interface Collaborator {
 }
 
 export const useCollaborators = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { executeQuery } = useSupabaseQuery();
 
-  const fetchCollaborators = useCallback(async () => {
-    // Para PostgreSQL local, sempre usar o ID fixo do usuário de teste
-    const userId = '5b43d42f-f5e1-46bf-9a95-e6de48163a81';
+  const fetchCollaborators = async () => {
+    console.log('useCollaborators: Iniciando fetchCollaborators');
+    console.log('useCollaborators: User ID:', user?.id);
+    console.log('useCollaborators: User Email:', user?.email);
 
-    try {
-      console.log('🔍 Buscando colaboradores para user_id:', userId);
-
-      const { data, error } = await supabase
-        .from('collaborators')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('❌ Erro ao buscar colaboradores:', error);
-        toast({
-          title: "Erro ao carregar colaboradores",
-          description: error.message,
-          variant: "destructive"
-        });
-        return [];
-      }
-
-      console.log('✅ Colaboradores encontrados:', data?.length || 0);
-      console.log('📋 Dados dos colaboradores:', data);
-      return data || [];
-    } catch (error) {
-      console.error('❌ Erro inesperado ao buscar colaboradores:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Não foi possível carregar os colaboradores",
-        variant: "destructive"
-      });
-      return [];
+    if (!user?.id) {
+      console.log('useCollaborators: Usuário não autenticado, limpando lista');
+      setCollaborators([]);
+      setIsLoading(false);
+      setError(null);
+      return;
     }
-  }, [toast]);
+
+    setIsLoading(true);
+    setError(null);
+
+    // Implementar retry com backoff
+    const maxRetries = 3;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`useCollaborators: Tentativa ${attempt}/${maxRetries}`);
+
+        // Verificar sessão antes da query
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('useCollaborators: Erro de sessão:', sessionError);
+          throw new Error('Erro de autenticação');
+        }
+
+        if (!session) {
+          console.error('useCollaborators: Sessão não encontrada');
+          throw new Error('Sessão expirada');
+        }
+
+        // Query com timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout na consulta')), 8000)
+        );
+
+        const queryPromise = supabase
+          .from('collaborators')
+          .select(`
+            id,
+            user_id,
+            name,
+            email,
+            role,
+            department,
+            status,
+            phone,
+            location,
+            join_date,
+            created_at,
+            updated_at
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        const { data: result, error: queryError } = await Promise.race([
+          queryPromise,
+          timeoutPromise
+        ]) as any;
+
+        console.log('Query result:', { 
+          result, 
+          queryError, 
+          userIdUsed: user.id,
+          userEmail: user.email,
+          resultCount: result?.length || 0,
+          attempt
+        });
+
+        if (queryError) {
+          lastError = queryError;
+          console.error(`Erro na query (tentativa ${attempt}):`, queryError);
+          
+          // Se é erro de RLS ou autorização, não tentar novamente
+          if (queryError.code === 'PGRST301' || 
+              queryError.message?.includes('permission') ||
+              queryError.message?.includes('RLS')) {
+            throw queryError;
+          }
+          
+          // Para outros erros, tentar novamente
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+            continue;
+          }
+          
+          throw queryError;
+        }
+
+        // Sucesso - formatar dados
+        const formattedData: Collaborator[] = (result || []).map((item: any) => ({
+          id: item.id,
+          user_id: item.user_id,
+          name: item.name || '',
+          email: item.email || '',
+          role: item.role || '',
+          department: item.department || '',
+          status: (item.status as 'active' | 'inactive' | 'vacation') || 'active',
+          phone: item.phone || '',
+          location: item.location || '',
+          join_date: item.join_date || item.created_at,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        }));
+        
+        console.log('useCollaborators: Colaboradores formatados:', formattedData);
+        setCollaborators(formattedData);
+        setError(null);
+        setIsLoading(false);
+        
+        if (formattedData.length > 0) {
+          toast({
+            title: "Colaboradores carregados",
+            description: `${formattedData.length} colaborador(es) encontrado(s)`
+          });
+        }
+        
+        return; // Sucesso, sair do loop
+        
+      } catch (error: any) {
+        lastError = error;
+        console.error(`useCollaborators: Erro na tentativa ${attempt}:`, error);
+        
+        if (attempt === maxRetries) {
+          // Última tentativa falhou
+          setError(`Erro ao carregar colaboradores: ${error.message}`);
+          setCollaborators([]);
+          
+          toast({
+            title: "Erro ao carregar colaboradores",
+            description: "Tente atualizar a página ou verificar sua conexão",
+            variant: "destructive"
+          });
+        } else {
+          // Aguardar antes da próxima tentativa
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+        }
+      }
+    }
+
+    setIsLoading(false);
+  };
 
   useEffect(() => {
     console.log('useCollaborators: useEffect executado, user?.id:', user?.id);
-    const getCollaborators = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      const fetchedCollaborators = await fetchCollaborators();
-      setCollaborators(fetchedCollaborators);
-      setIsLoading(false);
-
-      if (!fetchedCollaborators) {
-        setError("Failed to fetch collaborators.");
-      }
-    };
-
-    getCollaborators();
+    fetchCollaborators();
 
     // Configurar subscription de tempo real
     if (user?.id) {
@@ -91,11 +191,11 @@ export const useCollaborators = () => {
             event: '*',
             schema: 'public',
             table: 'collaborators',
-            filter: `user_id=eq.5b43d42f-f5e1-46bf-9a95-e6de48163a81`
+            filter: `user_id=eq.${user.id}`
           },
           (payload) => {
             console.log('Realtime update received:', payload);
-
+            
             switch (payload.eventType) {
               case 'INSERT':
                 const newCollaborator: Collaborator = {
@@ -111,19 +211,19 @@ export const useCollaborators = () => {
                   return prev;
                 });
                 break;
-
+                
               case 'UPDATE':
                 const updatedCollaborator: Collaborator = {
                   ...payload.new as any,
                   status: payload.new.status as 'active' | 'inactive' | 'vacation',
                 };
-                setCollaborators(prev =>
+                setCollaborators(prev => 
                   prev.map(c => c.id === updatedCollaborator.id ? updatedCollaborator : c)
                 );
                 break;
-
+                
               case 'DELETE':
-                setCollaborators(prev =>
+                setCollaborators(prev => 
                   prev.filter(c => c.id !== payload.old.id)
                 );
                 break;
@@ -136,7 +236,7 @@ export const useCollaborators = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [user?.id, fetchCollaborators]);
+  }, [user?.id]);
 
   const createCollaborator = async (collaboratorData: {
     name: string;
@@ -158,11 +258,11 @@ export const useCollaborators = () => {
     }
 
     setIsLoading(true);
-
+    
     try {
       const dataToInsert = {
         ...collaboratorData,
-        user_id: '5b43d42f-f5e1-46bf-9a95-e6de48163a81', // Usar ID fixo
+        user_id: user.id,
         status: collaboratorData.status || 'active' as const,
         join_date: collaboratorData.join_date || new Date().toISOString(),
       };
@@ -193,20 +293,20 @@ export const useCollaborators = () => {
         };
 
         console.log('Colaborador criado com sucesso:', formattedData);
-
+        
         // Atualizar estado local imediatamente
         setCollaborators(prev => [formattedData, ...prev]);
-
+        
         // Recarregar dados do servidor para garantir sincronização
         setTimeout(() => {
           fetchCollaborators();
         }, 500);
-
+        
         toast({
           title: "Sucesso",
           description: "Colaborador criado e sincronizado com sucesso."
         });
-
+        
         setIsLoading(false);
         return formattedData;
       }
@@ -220,7 +320,7 @@ export const useCollaborators = () => {
       setIsLoading(false);
       return null;
     }
-
+    
     setIsLoading(false);
     return null;
   };
@@ -233,7 +333,7 @@ export const useCollaborators = () => {
         .from('collaborators')
         .update(updates)
         .eq('id', id)
-        .eq('user_id', '5b43d42f-f5e1-46bf-9a95-e6de48163a81') // Usar ID fixo
+        .eq('user_id', user.id)
         .select()
         .single(),
       { maxRetries: 2, requireAuth: true, timeout: 5000 }
@@ -246,7 +346,7 @@ export const useCollaborators = () => {
         status: typedResult.status as 'active' | 'inactive' | 'vacation',
       };
 
-      setCollaborators(prev =>
+      setCollaborators(prev => 
         prev.map(c => c.id === id ? { ...c, ...formattedData } : c)
       );
 
@@ -267,7 +367,7 @@ export const useCollaborators = () => {
         .from('collaborators')
         .delete()
         .eq('id', id)
-        .eq('user_id', '5b43d42f-f5e1-46bf-9a95-e6de48163a81'), // Usar ID fixo
+        .eq('user_id', user.id),
       { maxRetries: 2, requireAuth: true, timeout: 5000 }
     );
 
