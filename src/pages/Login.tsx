@@ -77,24 +77,33 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Background with animated gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
-        <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/20 via-purple-500/20 to-cyan-500/20 animate-pulse"></div>
+      {/* Background with immersive green gradients */}
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900">
+        <div className="absolute inset-0 bg-gradient-to-tr from-green-500/30 via-emerald-500/20 to-teal-500/25 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-bl from-lime-600/10 via-green-600/15 to-emerald-800/20"></div>
         
-        {/* Floating elements */}
-        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-20 blur-3xl animate-bounce" style={{ animationDuration: '6s' }}></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-20 blur-3xl animate-bounce" style={{ animationDelay: '2s', animationDuration: '8s' }}></div>
-        <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+        {/* Floating elements with green theme */}
+        <div className="absolute top-20 left-20 w-80 h-80 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full opacity-25 blur-3xl animate-bounce" style={{ animationDuration: '7s' }}></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-20 blur-3xl animate-bounce" style={{ animationDelay: '2s', animationDuration: '9s' }}></div>
+        <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-gradient-to-r from-lime-400 to-emerald-400 rounded-full opacity-15 blur-3xl animate-pulse" style={{ animationDuration: '5s' }}></div>
+        <div className="absolute top-10 right-1/3 w-64 h-64 bg-gradient-to-r from-teal-400 to-green-500 rounded-full opacity-20 blur-3xl animate-bounce" style={{ animationDelay: '3s', animationDuration: '8s' }}></div>
+        <div className="absolute bottom-1/3 left-10 w-56 h-56 bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full opacity-18 blur-3xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '6s' }}></div>
         
-        {/* Sparkle effects */}
+        {/* Sparkle effects with green theme */}
         <div className="absolute top-1/4 left-1/4">
-          <Sparkles className="h-6 w-6 text-yellow-300 animate-pulse" />
+          <Sparkles className="h-6 w-6 text-lime-300 animate-pulse" />
         </div>
         <div className="absolute top-3/4 right-1/4">
-          <Star className="h-4 w-4 text-pink-300 animate-ping" />
+          <Star className="h-4 w-4 text-emerald-300 animate-ping" />
         </div>
         <div className="absolute top-1/3 right-1/3">
-          <Zap className="h-5 w-5 text-cyan-300 animate-bounce" />
+          <Zap className="h-5 w-5 text-green-300 animate-bounce" />
+        </div>
+        <div className="absolute bottom-1/4 left-1/3">
+          <Sparkles className="h-5 w-5 text-teal-300 animate-pulse" style={{ animationDelay: '1s' }} />
+        </div>
+        <div className="absolute top-1/5 right-1/5">
+          <Star className="h-3 w-3 text-lime-400 animate-ping" style={{ animationDelay: '2s' }} />
         </div>
       </div>
 
@@ -104,13 +113,13 @@ export const Login = () => {
         <div className="w-full max-w-md">
           {/* Hero section */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mb-6 shadow-2xl">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full mb-6 shadow-2xl shadow-green-500/20">
               <Crown className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
               Humansys
             </h1>
-            <p className="text-purple-200 text-lg">
+            <p className="text-green-200 text-lg">
               O futuro da gestão de RH chegou
             </p>
           </div>
@@ -118,7 +127,7 @@ export const Login = () => {
           <Card className="backdrop-blur-lg bg-white/10 border-white/20 shadow-2xl">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl text-white">Acesse sua conta</CardTitle>
-              <CardDescription className="text-purple-200">
+              <CardDescription className="text-green-200">
                 Entre ou crie sua conta para começar sua jornada
               </CardDescription>
             </CardHeader>
@@ -128,13 +137,13 @@ export const Login = () => {
                 <TabsList className="grid w-full grid-cols-2 bg-white/10 border-white/20">
                   <TabsTrigger 
                     value="login" 
-                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
                   >
                     Entrar
                   </TabsTrigger>
                   <TabsTrigger 
                     value="signup"
-                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
                   >
                     Cadastrar
                   </TabsTrigger>
@@ -145,14 +154,14 @@ export const Login = () => {
                     <div className="space-y-2">
                       <Label htmlFor="login-email" className="text-white">Email</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-purple-300" />
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-green-300" />
                         <Input
                           id="login-email"
                           type="email"
                           placeholder="seu@email.com"
                           value={loginData.email}
                           onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-purple-200 backdrop-blur-sm focus:bg-white/20 focus:border-purple-400"
+                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
                           required
                         />
                       </div>
@@ -161,21 +170,21 @@ export const Login = () => {
                     <div className="space-y-2">
                       <Label htmlFor="login-password" className="text-white">Senha</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-300" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-green-300" />
                         <Input
                           id="login-password"
                           type={showLoginPassword ? "text" : "password"}
                           placeholder="Sua senha"
                           value={loginData.password}
                           onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-purple-200 backdrop-blur-sm focus:bg-white/20 focus:border-purple-400"
+                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
                           required
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0 text-purple-300 hover:text-white hover:bg-white/10"
+                          className="absolute right-1 top-1 h-8 w-8 p-0 text-green-300 hover:text-white hover:bg-white/10"
                           onClick={() => setShowLoginPassword(!showLoginPassword)}
                         >
                           {showLoginPassword ? (
@@ -189,7 +198,7 @@ export const Login = () => {
                     
                     <Button 
                       type="submit" 
-                      className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
+                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105" 
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -207,14 +216,14 @@ export const Login = () => {
                     <div className="space-y-2">
                       <Label htmlFor="signup-name" className="text-white">Nome completo</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-purple-300" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-green-300" />
                         <Input
                           id="signup-name"
                           type="text"
                           placeholder="Seu nome completo"
                           value={signupData.name}
                           onChange={(e) => setSignupData(prev => ({ ...prev, name: e.target.value }))}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-purple-200 backdrop-blur-sm focus:bg-white/20 focus:border-purple-400"
+                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
                           required
                         />
                       </div>
@@ -223,14 +232,14 @@ export const Login = () => {
                     <div className="space-y-2">
                       <Label htmlFor="signup-email" className="text-white">Email</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-purple-300" />
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-green-300" />
                         <Input
                           id="signup-email"
                           type="email"
                           placeholder="seu@email.com"
                           value={signupData.email}
                           onChange={(e) => setSignupData(prev => ({ ...prev, email: e.target.value }))}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-purple-200 backdrop-blur-sm focus:bg-white/20 focus:border-purple-400"
+                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
                           required
                         />
                       </div>
@@ -239,14 +248,14 @@ export const Login = () => {
                     <div className="space-y-2">
                       <Label htmlFor="signup-password" className="text-white">Senha</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-purple-300" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-green-300" />
                         <Input
                           id="signup-password"
                           type={showSignupPassword ? "text" : "password"}
                           placeholder="Crie uma senha segura"
                           value={signupData.password}
                           onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
-                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-purple-200 backdrop-blur-sm focus:bg-white/20 focus:border-purple-400"
+                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
                           required
                           minLength={6}
                         />
@@ -254,7 +263,7 @@ export const Login = () => {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0 text-purple-300 hover:text-white hover:bg-white/10"
+                          className="absolute right-1 top-1 h-8 w-8 p-0 text-green-300 hover:text-white hover:bg-white/10"
                           onClick={() => setShowSignupPassword(!showSignupPassword)}
                         >
                           {showSignupPassword ? (
@@ -297,7 +306,7 @@ export const Login = () => {
               <div className="mt-6 text-center">
                 <Button 
                   variant="link" 
-                  className="p-0 h-auto text-sm text-purple-200 hover:text-white transition-colors"
+                  className="p-0 h-auto text-sm text-green-200 hover:text-white transition-colors"
                 >
                   Esqueceu sua senha?
                 </Button>
@@ -306,22 +315,22 @@ export const Login = () => {
               {/* Features highlight */}
               <div className="mt-6 grid grid-cols-3 gap-3 text-center">
                 <div className="flex flex-col items-center space-y-1">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full flex items-center justify-center">
                     <Zap className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-xs text-blue-200">IA Avançada</span>
+                  <span className="text-xs text-emerald-200">IA Avançada</span>
                 </div>
                 <div className="flex flex-col items-center space-y-1">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-lime-400 rounded-full flex items-center justify-center">
                     <Star className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-xs text-purple-200">Gamificação</span>
+                  <span className="text-xs text-green-200">Gamificação</span>
                 </div>
                 <div className="flex flex-col items-center space-y-1">
-                  <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-red-400 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-full flex items-center justify-center">
                     <Sparkles className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-xs text-orange-200">Analytics</span>
+                  <span className="text-xs text-teal-200">Analytics</span>
                 </div>
               </div>
             </CardContent>
