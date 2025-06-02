@@ -1,434 +1,290 @@
-
 import React, { useState, useEffect } from 'react';
-import { Header } from '@/components/layout/Header';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Loader2, Mail, Lock, User, Eye, EyeOff, Sparkles, Crown, Zap, Star, Wifi, WifiOff, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Eye, EyeOff, Sparkles, CheckCircle } from 'lucide-react';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
 
 export const Login = () => {
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [signupData, setSignupData] = useState({ name: '', email: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const { signIn, signUp } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { signIn, signUp, user } = useSupabaseAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  // Verificar conectividade ao carregar a página
   useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const { data, error } = await Promise.race([
-          supabase.from('collaborators').select('count').limit(1),
-          new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout')), 5000)
-          )
-        ]);
-        
-        setConnectionStatus('online');
-        console.log('✅ Conectividade OK');
-      } catch (error) {
-        setConnectionStatus('offline');
-        console.error('❌ Problema de conectividade:', error);
-      }
-    };
-
-    checkConnection();
-  }, []);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (connectionStatus === 'offline') {
-      toast({
-        title: "Sem conexão",
-        description: "Verifique sua internet e tente novamente.",
-        variant: "destructive",
-      });
-      return;
+    if (user) {
+      navigate('/dashboard');
     }
-    
+  }, [user, navigate]);
+
+  const validateForm = (isSignUp: boolean) => {
+    const newErrors: Record<string, string> = {};
+
+    if (isSignUp && !formData.name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email é obrigatório';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Senha é obrigatória';
+    } else if (isSignUp && formData.password.length < 6) {
+      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent, isSignUp: boolean) => {
+    e.preventDefault();
+
+    if (!validateForm(isSignUp)) return;
+
     setIsLoading(true);
-    
+    setErrors({});
+
     try {
-      const { error } = await signIn(loginData.email, loginData.password);
-      
-      if (error) {
-        throw error;
+      if (isSignUp) {
+        const result = await signUp(formData.email, formData.password, formData.name);
+        if (result.data) {
+          navigate('/dashboard');
+        }
+      } else {
+        const result = await signIn(formData.email, formData.password);
+        if (result.data) {
+          navigate('/dashboard');
+        }
       }
-      
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao RH System",
-      });
-      navigate('/');
-    } catch (error: any) {
-      console.error('Erro detalhado do login:', error);
-      
-      let errorMessage = "Verifique suas credenciais e tente novamente.";
-      
-      if (error.message?.includes('conectividade') || error.message?.includes('Failed to fetch')) {
-        errorMessage = "Problema de conectividade. Verifique sua internet.";
-      } else if (error.message?.includes('Invalid login credentials')) {
-        errorMessage = "Email ou senha incorretos.";
-      } else if (error.message?.includes('Email not confirmed')) {
-        errorMessage = "Confirme seu email antes de fazer login.";
-      } else if (error.message?.includes('Timeout')) {
-        errorMessage = "Conexão muito lenta. Tente novamente.";
-      }
-      
-      toast({
-        title: "Erro no login",
-        description: errorMessage,
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('Erro na autenticação:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (connectionStatus === 'offline') {
-      toast({
-        title: "Sem conexão",
-        description: "Verifique sua internet e tente novamente.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      const { error } = await signUp(signupData.email, signupData.password, signupData.name);
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Seu teste grátis de 30 dias foi ativado. Bem-vindo ao RH System!",
-      });
-      navigate('/');
-    } catch (error: any) {
-      console.error('Erro detalhado do cadastro:', error);
-      
-      let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
-      
-      if (error.message?.includes('conectividade') || error.message?.includes('Failed to fetch')) {
-        errorMessage = "Problema de conectividade. Verifique sua internet.";
-      } else if (error.message?.includes('User already registered')) {
-        errorMessage = "Este email já está cadastrado. Tente fazer login.";
-      } else if (error.message?.includes('Password should be at least')) {
-        errorMessage = "A senha deve ter pelo menos 6 caracteres.";
-      } else if (error.message?.includes('Timeout')) {
-        errorMessage = "Conexão muito lenta. Tente novamente.";
-      }
-      
-      toast({
-        title: "Erro no cadastro",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
+
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+              <h2 className="text-xl font-semibold">Você já está logado!</h2>
+              <p className="text-muted-foreground">Redirecionando para o dashboard...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background with immersive green gradients */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-green-900 to-teal-900">
-        <div className="absolute inset-0 bg-gradient-to-tr from-green-500/30 via-emerald-500/20 to-teal-500/25 animate-pulse"></div>
-        <div className="absolute inset-0 bg-gradient-to-bl from-lime-600/10 via-green-600/15 to-emerald-800/20"></div>
-        
-        {/* Floating elements with green theme */}
-        <div className="absolute top-20 left-20 w-80 h-80 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full opacity-25 blur-3xl animate-bounce" style={{ animationDuration: '7s' }}></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-20 blur-3xl animate-bounce" style={{ animationDelay: '2s', animationDuration: '9s' }}></div>
-        <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-gradient-to-r from-lime-400 to-emerald-400 rounded-full opacity-15 blur-3xl animate-pulse" style={{ animationDuration: '5s' }}></div>
-        <div className="absolute top-10 right-1/3 w-64 h-64 bg-gradient-to-r from-teal-400 to-green-500 rounded-full opacity-20 blur-3xl animate-bounce" style={{ animationDelay: '3s', animationDuration: '8s' }}></div>
-        <div className="absolute bottom-1/3 left-10 w-56 h-56 bg-gradient-to-r from-emerald-500 to-lime-400 rounded-full opacity-18 blur-3xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '6s' }}></div>
-        
-        {/* Sparkle effects with green theme */}
-        <div className="absolute top-1/4 left-1/4">
-          <Sparkles className="h-6 w-6 text-lime-300 animate-pulse" />
-        </div>
-        <div className="absolute top-3/4 right-1/4">
-          <Star className="h-4 w-4 text-emerald-300 animate-ping" />
-        </div>
-        <div className="absolute top-1/3 right-1/3">
-          <Zap className="h-5 w-5 text-green-300 animate-bounce" />
-        </div>
-        <div className="absolute bottom-1/4 left-1/3">
-          <Sparkles className="h-5 w-5 text-teal-300 animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
-        <div className="absolute top-1/5 right-1/5">
-          <Star className="h-3 w-3 text-lime-400 animate-ping" style={{ animationDelay: '2s' }} />
-        </div>
-      </div>
-
-      <Header showAuth={false} />
-      
-      <div className="relative z-10 container flex items-center justify-center min-h-[calc(100vh-4rem)] py-8">
-        <div className="w-full max-w-md">
-          {/* Hero section */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full mb-6 shadow-2xl shadow-green-500/20">
-              <Crown className="h-10 w-10 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
-              Humansys
-            </h1>
-            <p className="text-green-200 text-lg">
-              O futuro da gestão de RH chegou
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold flex items-center justify-center">
+            <Sparkles className="h-6 w-6 mr-2 text-green-600" />
+            HumanSys
+          </CardTitle>
+          <CardDescription>
+            Plataforma completa de gestão de RH
+          </CardDescription>
+          <div className="pt-2">
+            <ConnectionStatus />
           </div>
+        </CardHeader>
 
-          <Card className="backdrop-blur-lg bg-white/10 border-white/20 shadow-2xl">
-            <CardHeader className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                {connectionStatus === 'checking' && (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin text-yellow-400" />
-                    <span className="text-xs text-yellow-200">Verificando conexão...</span>
-                  </>
-                )}
-                {connectionStatus === 'online' && (
-                  <>
-                    <Wifi className="h-4 w-4 text-green-400" />
-                    <span className="text-xs text-green-200">Sistema online</span>
-                  </>
-                )}
-                {connectionStatus === 'offline' && (
-                  <>
-                    <WifiOff className="h-4 w-4 text-red-400" />
-                    <span className="text-xs text-red-200">Problema de conexão</span>
-                  </>
-                )}
-              </div>
-              <CardTitle className="text-2xl text-white">Acesse sua conta</CardTitle>
-              <CardDescription className="text-green-200">
-                Entre ou crie sua conta para começar sua jornada
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent>
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-white/10 border-white/20">
-                  <TabsTrigger 
-                    value="login" 
-                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
-                  >
-                    Entrar
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="signup"
-                    className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-green-500 data-[state=active]:text-white"
-                  >
-                    Cadastrar
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="login">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email" className="text-white">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-green-300" />
-                        <Input
-                          id="login-email"
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={loginData.email}
-                          onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password" className="text-white">Senha</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-green-300" />
-                        <Input
-                          id="login-password"
-                          type={showLoginPassword ? "text" : "password"}
-                          placeholder="Sua senha"
-                          value={loginData.password}
-                          onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
-                          required
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0 text-green-300 hover:text-white hover:bg-white/10"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        >
-                          {showLoginPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105" 
-                      disabled={isLoading}
+        <CardContent>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Entrar</TabsTrigger>
+              <TabsTrigger value="signup">Cadastrar</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login" className="space-y-4">
+              <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="seu@email.com"
+                    className={errors.email ? 'border-red-500' : ''}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-500">{errors.email}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="login-password">Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="••••••••"
+                      className={errors.password ? 'border-red-500' : ''}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      {isLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
                       ) : (
-                        <Sparkles className="mr-2 h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       )}
-                      Entrar na Plataforma
                     </Button>
-                  </form>
-                </TabsContent>
-                
-                <TabsContent value="signup">
-                  <form onSubmit={handleSignup} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name" className="text-white">Nome completo</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-green-300" />
-                        <Input
-                          id="signup-name"
-                          type="text"
-                          placeholder="Seu nome completo"
-                          value={signupData.name}
-                          onChange={(e) => setSignupData(prev => ({ ...prev, name: e.target.value }))}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email" className="text-white">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-green-300" />
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={signupData.email}
-                          onChange={(e) => setSignupData(prev => ({ ...prev, email: e.target.value }))}
-                          className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password" className="text-white">Senha</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-green-300" />
-                        <Input
-                          id="signup-password"
-                          type={showSignupPassword ? "text" : "password"}
-                          placeholder="Crie uma senha segura"
-                          value={signupData.password}
-                          onChange={(e) => setSignupData(prev => ({ ...prev, password: e.target.value }))}
-                          className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-green-200 backdrop-blur-sm focus:bg-white/20 focus:border-green-400"
-                          required
-                          minLength={6}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0 text-green-300 hover:text-white hover:bg-white/10"
-                          onClick={() => setShowSignupPassword(!showSignupPassword)}
-                        >
-                          {showSignupPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm p-4 rounded-lg border border-green-400/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center">
-                          <Crown className="h-4 w-4 text-white" />
-                        </div>
-                        <span className="font-semibold text-green-200">🎉 Teste Premium Grátis</span>
-                      </div>
-                      <div className="text-green-100 text-sm">
-                        30 dias de acesso completo à plataforma mais avançada de RH do mercado!
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105" 
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Crown className="mr-2 h-4 w-4" />
-                      )}
-                      Começar Jornada Premium
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
-              
-              <div className="mt-6 text-center">
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-red-500">{errors.password}</p>
+                  )}
+                </div>
+
                 <Button 
-                  variant="link" 
-                  className="p-0 h-auto text-sm text-green-200 hover:text-white transition-colors"
+                  type="submit" 
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={isLoading}
                 >
-                  Esqueceu sua senha?
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Entrando...
+                    </>
+                  ) : (
+                    'Entrar'
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="signup" className="space-y-4">
+              <Alert>
+                <Sparkles className="h-4 w-4" />
+                <AlertDescription>
+                  🎉 Teste Premium Grátis - 30 dias de acesso completo à plataforma mais avançada de RH do mercado!
+                </AlertDescription>
+              </Alert>
+
+              <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-name">Nome completo</Label>
+                  <Input
+                    id="signup-name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    placeholder="Seu nome completo"
+                    className={errors.name ? 'border-red-500' : ''}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-red-500">{errors.name}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="seu@email.com"
+                    className={errors.email ? 'border-red-500' : ''}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-500">{errors.email}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="••••••••"
+                      className={errors.password ? 'border-red-500' : ''}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-red-500">{errors.password}</p>
+                  )}
+                </div>
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Criando conta...
+                    </>
+                  ) : (
+                    '🎯 Começar Jornada Premium'
+                  )}
+                </Button>
+              </form>
+
+              <div className="text-center text-sm text-muted-foreground">
+                <p>Esqueceu sua senha?</p>
+                <Button variant="link" className="p-0 h-auto text-green-600">
+                  Clique aqui para recuperar
                 </Button>
               </div>
-
-              {/* Features highlight */}
-              <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-                <div className="flex flex-col items-center space-y-1">
-                  <div className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full flex items-center justify-center">
-                    <Zap className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-xs text-emerald-200">IA Avançada</span>
-                </div>
-                <div className="flex flex-col items-center space-y-1">
-                  <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-lime-400 rounded-full flex items-center justify-center">
-                    <Star className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-xs text-green-200">Gamificação</span>
-                </div>
-                <div className="flex flex-col items-center space-y-1">
-                  <div className="w-8 h-8 bg-gradient-to-r from-teal-400 to-emerald-400 rounded-full flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 text-white" />
-                  </div>
-                  <span className="text-xs text-teal-200">Analytics</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

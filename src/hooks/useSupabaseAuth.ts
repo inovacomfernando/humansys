@@ -1,233 +1,145 @@
-
-import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+export interface AuthUser {
+  id: string;
+  email: string;
+}
 
 export const useSupabaseAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  // Detectar se é mobile
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    let mounted = true;
-    let sessionCheckInterval: NodeJS.Timeout;
-
-    // Verificar sessão atual
-    const getSession = async () => {
+    // Verificar se há usuário logado (simulado para PostgreSQL local)
+    const checkUser = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getUser();
         if (error) {
-          console.error('Error getting session:', error);
-        }
-        
-        if (mounted) {
-          // Verificar se a sessão não expirou
-          const isValidSession = session && session.expires_at && (session.expires_at * 1000) > Date.now();
-          setUser(isValidSession ? session.user : null);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error in getSession:', error);
-        if (mounted) {
+          console.error('Erro ao verificar usuário:', error);
           setUser(null);
-          setIsLoading(false);
+        } else {
+          setUser(data.user);
         }
+      } catch (err) {
+        console.error('Erro na verificação de usuário:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    getSession();
-
-    // Escutar mudanças de autenticação
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (mounted) {
-        // Para logout, limpar tudo imediatamente
-        if (event === 'SIGNED_OUT' || !session) {
-          setUser(null);
-          setIsLoading(false);
-          setIsLoggingOut(false);
-          
-          // Limpar storage local
-          localStorage.clear();
-          sessionStorage.clear();
-          
-          return;
-        }
-
-        // Verificar se a sessão é válida
-        const isValidSession = session && session.expires_at && (session.expires_at * 1000) > Date.now();
-        setUser(isValidSession ? session.user : null);
-        setIsLoading(false);
-      }
-    });
-
-    // Verificação periódica de sessão para mobile (mais frequente)
-    if (isMobile) {
-      sessionCheckInterval = setInterval(async () => {
-        if (!mounted) return;
-        
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          const isValidSession = session && session.expires_at && (session.expires_at * 1000) > Date.now();
-          
-          if (!isValidSession && user) {
-            console.log('Session expired, logging out...');
-            setUser(null);
-            localStorage.clear();
-            sessionStorage.clear();
-          }
-        } catch (error) {
-          console.error('Session check failed:', error);
-        }
-      }, 30000); // Check every 30 seconds on mobile
-    }
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-      if (sessionCheckInterval) {
-        clearInterval(sessionCheckInterval);
-      }
-    };
-  }, [isMobile, user]);
+    checkUser();
+  }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      console.log('Tentando cadastro...', { email, hasPassword: !!password, hasName: !!name });
-      
-      const { data, error } = await Promise.race([
-        supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name: name,
-              full_name: name,
-            },
-          },
-        }),
-        new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout no cadastro. Verifique sua conexão.')), 15000)
-        )
-      ]);
-      
-      console.log('Resultado do cadastro:', { data: !!data, error });
-      return { data, error };
-    } catch (error: any) {
-      console.error('Erro no cadastro:', error);
-      
-      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-        return { 
-          data: null, 
-          error: { 
-            message: 'Erro de conectividade. Verifique sua internet e tente novamente.' 
-          } 
-        };
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        name
+      });
+
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "Erro no cadastro",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { data: null, error };
       }
-      
-      if (error.message?.includes('Timeout')) {
-        return { 
-          data: null, 
-          error: { 
-            message: 'Conexão muito lenta. Tente novamente.' 
-          } 
-        };
-      }
-      
-      return { data: null, error };
+
+      setUser(data.user);
+      toast({
+        title: "Cadastro realizado!",
+        description: "Bem-vindo ao HumanSys!"
+      });
+
+      return { data, error: null };
+    } catch (err) {
+      const errorMessage = 'Erro interno no cadastro';
+      setError(errorMessage);
+      toast({
+        title: "Erro no cadastro",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      return { data: null, error: { message: errorMessage } };
+    } finally {
+      setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setIsLoading(true);
-      console.log('Tentando login...', { email, hasPassword: !!password });
-      
-      const { data, error } = await Promise.race([
-        supabase.auth.signInWithPassword({
-          email,
-          password,
-        }),
-        new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout no login. Verifique sua conexão.')), 15000)
-        )
-      ]);
-      
-      console.log('Resultado do login:', { data: !!data, error });
-      return { data, error };
-    } catch (error: any) {
-      console.error('Erro no login:', error);
-      
-      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-        return { 
-          data: null, 
-          error: { 
-            message: 'Erro de conectividade. Verifique sua internet e tente novamente.' 
-          } 
-        };
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "Erro no login",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { data: null, error };
       }
-      
-      if (error.message?.includes('Timeout')) {
-        return { 
-          data: null, 
-          error: { 
-            message: 'Conexão muito lenta. Tente novamente.' 
-          } 
-        };
-      }
-      
-      return { data: null, error };
+
+      setUser(data.user);
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo de volta!"
+      });
+
+      return { data, error: null };
+    } catch (err) {
+      const errorMessage = 'Erro interno no login';
+      setError(errorMessage);
+      toast({
+        title: "Erro no login",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      return { data: null, error: { message: errorMessage } };
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
+    setLoading(true);
     try {
-      console.log('Starting logout process...');
-      setIsLoggingOut(true);
-      setIsLoading(true);
-      
-      // Limpar tudo ANTES do logout
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      // Limpar estado imediatamente
+      await supabase.auth.signOut();
       setUser(null);
-      
-      const { error } = await supabase.auth.signOut();
-      
-      // Timeout adicional para mobile
-      if (isMobile) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
-      return { error };
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      // Mesmo com erro, considerar logout bem-sucedido
-      setUser(null);
-      localStorage.clear();
-      sessionStorage.clear();
-      return { error: null };
+      toast({
+        title: "Logout realizado",
+        description: "Até logo!"
+      });
+    } catch (err) {
+      console.error('Erro no logout:', err);
     } finally {
-      setIsLoggingOut(false);
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return {
     user,
-    isLoading: isLoading || isLoggingOut,
-    isLoggingOut,
+    loading,
+    error,
     signUp,
     signIn,
-    signOut,
+    signOut
   };
 };

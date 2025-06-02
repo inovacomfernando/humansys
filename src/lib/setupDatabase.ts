@@ -2,17 +2,17 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const setupDatabase = async () => {
   try {
-    console.log('Setting up database tables...');
+    console.log('🔧 Verificando configuração do PostgreSQL local...');
 
-    // Check if tables already exist using raw SQL
-    const { data: existingTables, error: tablesError } = await supabase
-      .rpc('check_tables_exist');
-
-    if (tablesError) {
-      console.log('Tables check error:', tablesError);
-    } else {
-      console.log('Existing tables:', existingTables);
+    // Verificar conectividade
+    const isConnected = await checkSupabaseConnection();
+    
+    if (!isConnected) {
+      console.log('❌ PostgreSQL local não está disponível');
+      return;
     }
+
+    console.log('✅ PostgreSQL local configurado e funcionando!');
 
     // Create tables using direct SQL since RPC functions don't exist
     const createTablesSQL = `
