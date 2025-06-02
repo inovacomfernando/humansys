@@ -240,7 +240,7 @@ export const Documentation = () => {
             </Card>
 
             {/* Estatísticas da Plataforma */}
-            <div className="grid gap-6 md:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-5">
               <Card className="text-center">
                 <CardContent className="p-6">
                   <Users className="h-8 w-8 text-primary mx-auto mb-2" />
@@ -251,8 +251,15 @@ export const Documentation = () => {
               <Card className="text-center">
                 <CardContent className="p-6">
                   <Brain className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">IA</div>
-                  <div className="text-sm text-muted-foreground">Insights Inteligentes</div>
+                  <div className="text-2xl font-bold">94.7%</div>
+                  <div className="text-sm text-muted-foreground">Precisão IAO</div>
+                </CardContent>
+              </Card>
+              <Card className="text-center">
+                <CardContent className="p-6">
+                  <Zap className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <div className="text-2xl font-bold">24/7</div>
+                  <div className="text-sm text-muted-foreground">IA Assistant</div>
                 </CardContent>
               </Card>
               <Card className="text-center">
@@ -312,18 +319,100 @@ export const Documentation = () => {
           </TabsContent>
 
           <TabsContent value="features" className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[
-                { icon: Brain, title: 'Análise DISC', desc: 'IA para perfil comportamental', path: '/app/disc', new: true },
-                { icon: Crown, title: 'Founder Dashboard', desc: 'Métricas estratégicas', path: '/founder/dashboard', new: true },
-                { icon: Users, title: 'Colaboradores', desc: 'Gestão completa da equipe', path: '/app/collaborators' },
-                { icon: UserPlus, title: 'Onboarding', desc: 'Integração estruturada', path: '/app/onboarding' },
-                { icon: MessageSquare, title: 'Feedback 360°', desc: 'Avaliações completas', path: '/app/feedback' },
-                { icon: Target, title: 'Metas & PDI', desc: 'Desenvolvimento individual', path: '/app/goals' },
-                { icon: Video, title: 'Treinamentos', desc: 'Plataforma de cursos', path: '/app/training' },
-                { icon: Calendar, title: 'Reuniões 1:1', desc: 'Agendamento inteligente', path: '/app/meetings' },
-                { icon: Trophy, title: 'Gamificação', desc: 'Badges e conquistas', path: '/app/dashboard' }
-              ].map((feature, index) => (
+            {/* Seção especial para Brainsys IAO V.1 e IA Assistant */}
+            <div className="mb-8">
+              <h3 className="text-xl font-semibold mb-4 text-center">🧠 Núcleo de Inteligência Artificial</h3>
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Brainsys IAO V.1 */}
+                <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10"></div>
+                  <CardHeader className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Brain className="h-8 w-8 text-white" />
+                      </div>
+                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">V.1</Badge>
+                    </div>
+                    <CardTitle className="text-xl text-purple-900 dark:text-purple-100">Brainsys IAO V.1</CardTitle>
+                    <CardDescription className="text-purple-700 dark:text-purple-300">
+                      Orquestrador de Inteligência Organizacional
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="relative space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-200">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>Análises preditivas em tempo real</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-200">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <span>Machine Learning avançado</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-purple-800 dark:text-purple-200">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                      <span>94.7% de precisão preditiva</span>
+                    </div>
+                    <Button 
+                      className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      onClick={() => navigate('/app/brainsys-iao')}
+                    >
+                      Acessar IAO <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* IA Assistant */}
+                <Card className="relative overflow-hidden bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-green-500/30">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10"></div>
+                  <CardHeader className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Zap className="h-8 w-8 text-white" />
+                      </div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <CardTitle className="text-xl text-green-900 dark:text-green-100">IA Assistant</CardTitle>
+                    <CardDescription className="text-green-700 dark:text-green-300">
+                      Assistente Inteligente 24/7
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="relative space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-green-800 dark:text-green-200">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span>Suporte instantâneo e inteligente</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-green-800 dark:text-green-200">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span>Respostas contextuais personalizadas</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-green-800 dark:text-green-200">
+                      <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
+                      <span>Integração completa com o sistema</span>
+                    </div>
+                    <Button 
+                      className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                      onClick={() => navigate('/app/dashboard')}
+                    >
+                      Falar com IA <MessageSquare className="h-4 w-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            <div className="border-t pt-6">
+              <h3 className="text-xl font-semibold mb-4 text-center">📊 Funcionalidades Principais</h3>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { icon: Brain, title: 'Análise DISC', desc: 'IA para perfil comportamental', path: '/app/disc', new: true },
+                  { icon: Crown, title: 'Founder Dashboard', desc: 'Métricas estratégicas', path: '/founder/dashboard', new: true },
+                  { icon: Users, title: 'Colaboradores', desc: 'Gestão completa da equipe', path: '/app/collaborators' },
+                  { icon: UserPlus, title: 'Onboarding', desc: 'Integração estruturada', path: '/app/onboarding' },
+                  { icon: MessageSquare, title: 'Feedback 360°', desc: 'Avaliações completas', path: '/app/feedback' },
+                  { icon: Target, title: 'Metas & PDI', desc: 'Desenvolvimento individual', path: '/app/goals' },
+                  { icon: Video, title: 'Treinamentos', desc: 'Plataforma de cursos', path: '/app/training' },
+                  { icon: Calendar, title: 'Reuniões 1:1', desc: 'Agendamento inteligente', path: '/app/meetings' },
+                  { icon: Trophy, title: 'Gamificação', desc: 'Badges e conquistas', path: '/app/dashboard' }
+                ].map((feature, index) => (
                 <Card key={index} className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                       onClick={() => navigate(feature.path)}>
                   <CardHeader>
@@ -349,6 +438,60 @@ export const Documentation = () => {
           </TabsContent>
 
           <TabsContent value="resources" className="space-y-6">
+            {/* Seção especial para recursos de IA */}
+            <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-6 w-6 text-purple-600" />
+                  Recursos de Inteligência Artificial
+                </CardTitle>
+                <CardDescription>
+                  Documentação específica sobre nossos módulos de IA
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="p-4 bg-white rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <Brain className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-purple-900">Manual Brainsys IAO V.1</h4>
+                        <Badge variant="outline" className="text-xs">PDF</Badge>
+                      </div>
+                    </div>
+                    <p className="text-sm text-purple-700 mb-3">
+                      Guia completo do Orquestrador de Inteligência Organizacional
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Manual IAO
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 bg-white rounded-lg border border-green-200">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                        <Zap className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-green-900">Tutorial IA Assistant</h4>
+                        <Badge variant="outline" className="text-xs">Vídeo</Badge>
+                      </div>
+                    </div>
+                    <p className="text-sm text-green-700 mb-3">
+                      Como usar efetivamente o assistente de IA 24/7
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Play className="h-4 w-4 mr-2" />
+                      Assistir Tutorial
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="grid gap-6 md:grid-cols-2">
               {resources.map((resource, index) => (
                 <Card key={index}>
