@@ -142,6 +142,7 @@ export const createTablesSQL = async () => {
     -- Habilitar RLS
     ALTER TABLE user_credits ENABLE ROW LEVEL SECURITY;
     ALTER TABLE credit_transactions ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE organization_users ENABLE ROW LEVEL SECURITY;
 
     -- Políticas RLS para user_credits
     DROP POLICY IF EXISTS "Users can view own credits" ON user_credits;
@@ -164,6 +165,35 @@ export const createTablesSQL = async () => {
     DROP POLICY IF EXISTS "Users can insert own transactions" ON credit_transactions;
     CREATE POLICY "Users can insert own transactions" ON credit_transactions
       FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+    -- Políticas RLS para organization_users
+    DROP POLICY IF EXISTS "Admins can view org users" ON organization_users;
+    CREATE POLICY "Admins can view org users" ON organization_users
+      FOR SELECT USING (auth.uid() = admin_user_id);
+
+    DROP POLICY IF EXISTS "Admins can insert org users" ON organization_users;
+    CREATE POLICY "Admins can insert org users" ON organization_users
+      FOR INSERT WITH CHECK (auth.uid() = admin_user_id);
+
+    DROP POLICY IF EXISTS "Admins can update org users" ON organization_users;
+    CREATE POLICY "Admins can update org users" ON organization_users
+      FOR UPDATE USING (auth.uid() = admin_user_id);
+
+    DROP POLICY IF EXISTS "Admins can delete org users" ON organization_users;
+    CREATE POLICY "Admins can delete org users" ON organization_users
+      FOR DELETE USING (auth.uid() = admin_user_id);
+
+    -- Tabela de usuários da organização
+    CREATE TABLE IF NOT EXISTS organization_users (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+      admin_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+      role TEXT CHECK (role IN ('admin', 'user')) DEFAULT 'user',
+      status TEXT CHECK (status IN ('active', 'inactive')) DEFAULT 'active',
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      UNIQUE(user_id, admin_user_id)
+    );
 
     -- Tabela de colaboradores
     CREATE TABLE IF NOT EXISTS collaborators (

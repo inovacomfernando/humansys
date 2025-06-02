@@ -27,6 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { CreditsCard } from '@/components/dashboard/CreditsCard';
 import { useCredits } from '@/hooks/useCredits';
+import { UserManagementDialog } from '@/components/settings/UserManagementDialog';
 
 export const Settings = () => {
   const { user } = useAuth();
@@ -205,6 +206,18 @@ export const Settings = () => {
                 <Separator />
                 
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Cadastro de Usuários</h4>
+                    <UserManagementDialog />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Cadastre novos usuários na plataforma usando seus créditos disponíveis
+                  </p>
+                </div>
+
+                <Separator />
+                
+                <div className="space-y-4">
                   <h4 className="font-medium">Planos Disponíveis</h4>
                   <div className="grid gap-4 md:grid-cols-3">
                     <Card className="p-4">
@@ -238,7 +251,7 @@ export const Settings = () => {
                     <Card className="p-4">
                       <div className="space-y-2">
                         <h5 className="font-medium">Profissional</h5>
-                        <p className="text-sm text-muted-foreground">Colaboradores ilimitados</p>
+                        <p className="text-sm text-muted-foreground">500 créditos para colaboradores</p>
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -256,7 +269,7 @@ export const Settings = () => {
                 <div className="space-y-4">
                   <h4 className="font-medium">Como Funcionam os Créditos</h4>
                   <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>• Cada colaborador cadastrado consome 1 crédito</p>
+                    <p>• Cada usuário cadastrado consome 1 crédito</p>
                     <p>• Os créditos são renovados a cada mudança de plano</p>
                     <p>• Durante o período de teste, você tem créditos ilimitados</p>
                     <p>• Créditos não utilizados não são transferidos entre planos</p>
@@ -269,7 +282,7 @@ export const Settings = () => {
                     <h4 className="font-medium text-blue-800">Dica</h4>
                   </div>
                   <p className="text-sm text-blue-700 mt-1">
-                    Para empresas com muitos colaboradores, recomendamos o plano Profissional que oferece 500 créditos.
+                    Para empresas com muitos usuários, recomendamos o plano Profissional que oferece 500 créditos.
                   </p>
                 </div>
               </CardContent>

@@ -1,0 +1,507 @@
+
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { 
+  UserPlus, 
+  Users, 
+  Mail, 
+  Shield, 
+  Trash2,
+  Edit,
+  MoreHorizontal,
+  AlertCircle
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/hooks/useCredits';
+import { supabase } from '@/integrations/supabase/client';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'user';
+  created_at: string;
+  last_sign_in_at?: string;
+  status: 'active' | 'inactive';
+}
+
+export const UserManagementDialog = () => {
+  const [open, setOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [newUser, setNewUser] = useState({
+    email: '',
+    name: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
+  const { user } = useAuth();
+  const { credits, useCredit } = useCredits();
+  const { toast } = useToast();
+
+  const fetchUsers = async () => {
+    if (!user?.id) return;
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('organization_users')
+        .select(`
+          id,
+          user_id,
+          role,
+          status,
+          created_at,
+          auth.users (
+            email,
+            user_metadata,
+            last_sign_in_at
+          )
+        `)
+        .eq('admin_user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        // Se a tabela não existir, criar dados de exemplo
+        const exampleUsers: User[] = [
+          {
+            id: user.id,
+            email: user.email || '',
+            name: user.email?.split('@')[0] || 'Admin',
+            role: 'admin',
+            created_at: new Date().toISOString(),
+            status: 'active'
+          }
+        ];
+        setUsers(exampleUsers);
+      } else {
+        const formattedUsers = data.map(item => ({
+          id: item.user_id,
+          email: item.auth?.users?.email || '',
+          name: item.auth?.users?.user_metadata?.name || item.auth?.users?.email?.split('@')[0] || 'Usuário',
+          role: item.role as 'admin' | 'user',
+          created_at: item.created_at,
+          last_sign_in_at: item.auth?.users?.last_sign_in_at,
+          status: item.status as 'active' | 'inactive'
+        }));
+
+        // Incluir o usuário admin atual se não estiver na lista
+        const currentUserInList = formattedUsers.find(u => u.id === user.id);
+        if (!currentUserInList) {
+          formattedUsers.unshift({
+            id: user.id,
+            email: user.email || '',
+            name: user.email?.split('@')[0] || 'Admin',
+            role: 'admin',
+            created_at: new Date().toISOString(),
+            status: 'active'
+          });
+        }
+
+        setUsers(formattedUsers);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      // Fallback para dados locais
+      const fallbackUsers: User[] = [
+        {
+          id: user.id,
+          email: user.email || '',
+          name: user.email?.split('@')[0] || 'Admin',
+          role: 'admin',
+          created_at: new Date().toISOString(),
+          status: 'active'
+        }
+      ];
+      setUsers(fallbackUsers);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!user?.id) return;
+
+    // Validações
+    if (!newUser.email || !newUser.name || !newUser.password) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newUser.password !== newUser.confirmPassword) {
+      toast({
+        title: "Senhas não conferem",
+        description: "A senha e confirmação devem ser iguais",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A senha deve ter pelo menos 6 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar créditos disponíveis
+    if (credits <= 0) {
+      toast({
+        title: "Créditos insuficientes",
+        description: "Você não tem créditos suficientes para cadastrar um novo usuário",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Usar API do Supabase Admin para criar usuário
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: newUser.email,
+        password: newUser.password,
+        user_metadata: {
+          name: newUser.name,
+          admin_user_id: user.id
+        }
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      // Inserir na tabela de organização
+      const { error: orgError } = await supabase
+        .from('organization_users')
+        .insert({
+          user_id: authData.user.id,
+          admin_user_id: user.id,
+          role: 'user',
+          status: 'active'
+        });
+
+      if (orgError) {
+        console.error('Organization insert error:', orgError);
+        // Continuar mesmo com erro na tabela de organização
+      }
+
+      // Consumir crédito
+      await useCredit(`Cadastro de usuário: ${newUser.name}`);
+
+      toast({
+        title: "Usuário criado com sucesso",
+        description: `${newUser.name} foi adicionado à sua organização`,
+      });
+
+      // Limpar formulário
+      setNewUser({
+        email: '',
+        name: '',
+        password: '',
+        confirmPassword: ''
+      });
+
+      // Atualizar lista
+      await fetchUsers();
+
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.message || "Não foi possível criar o usuário",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete || !user?.id) return;
+
+    setIsLoading(true);
+    try {
+      // Não permitir deletar o próprio admin
+      if (userToDelete.id === user.id) {
+        toast({
+          title: "Ação não permitida",
+          description: "Você não pode deletar sua própria conta",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Deletar usuário usando API admin
+      const { error: authError } = await supabase.auth.admin.deleteUser(userToDelete.id);
+
+      if (authError) {
+        throw authError;
+      }
+
+      // Remover da tabela de organização
+      const { error: orgError } = await supabase
+        .from('organization_users')
+        .delete()
+        .eq('user_id', userToDelete.id)
+        .eq('admin_user_id', user.id);
+
+      if (orgError) {
+        console.error('Organization delete error:', orgError);
+      }
+
+      toast({
+        title: "Usuário removido",
+        description: `${userToDelete.name} foi removido da organização`,
+      });
+
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      await fetchUsers();
+
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro ao remover usuário",
+        description: error.message || "Não foi possível remover o usuário",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      fetchUsers();
+    }
+  }, [open]);
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Gerenciar Usuários
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Gerenciamento de Usuários
+            </DialogTitle>
+            <DialogDescription>
+              Cadastre e gerencie usuários da sua organização. Cada usuário consome 1 crédito.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Informações de créditos */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="h-4 w-4 text-blue-600" />
+                <span className="font-medium text-blue-800">Créditos Disponíveis</span>
+              </div>
+              <p className="text-sm text-blue-700">
+                Você tem <strong>{credits}</strong> crédito(s) disponível(is) para cadastro de usuários.
+              </p>
+            </div>
+
+            {/* Formulário de novo usuário */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Cadastrar Novo Usuário</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome Completo</Label>
+                    <Input
+                      id="name"
+                      placeholder="Nome do usuário"
+                      value={newUser.name}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="email@empresa.com"
+                      value={newUser.email}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Senha</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Mínimo 6 caracteres"
+                      value={newUser.password}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirme a senha"
+                      value={newUser.confirmPassword}
+                      onChange={(e) => setNewUser(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleCreateUser}
+                  disabled={isLoading || credits <= 0}
+                  className="w-full"
+                >
+                  {isLoading ? 'Criando...' : 'Criar Usuário (1 crédito)'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            {/* Lista de usuários */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Usuários da Organização</h3>
+              
+              {isLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {users.map((userData) => (
+                    <Card key={userData.id} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarFallback>
+                              {userData.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium">{userData.name}</h4>
+                              <Badge variant={userData.role === 'admin' ? 'default' : 'secondary'}>
+                                {userData.role === 'admin' ? 'Admin' : 'Usuário'}
+                              </Badge>
+                              <Badge variant={userData.status === 'active' ? 'outline' : 'destructive'}>
+                                {userData.status === 'active' ? 'Ativo' : 'Inativo'}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Mail className="h-3 w-3" />
+                              {userData.email}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {userData.role !== 'admin' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setUserToDelete(userData);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Remover Usuário
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                  
+                  {users.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>Nenhum usuário encontrado</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <strong>{userToDelete?.name}</strong> da organização?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remover Usuário
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};

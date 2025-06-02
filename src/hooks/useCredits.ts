@@ -161,11 +161,23 @@ export const useCredits = () => {
           description: `Plano alterado para ${planType} - ${newTotalCredits} créditos`
         }]);
 
+      // Registrar usuário como admin na organização se não existir
+      await supabase
+        .from('organization_users')
+        .upsert({
+          user_id: user.id,
+          admin_user_id: user.id,
+          role: 'admin',
+          status: 'active'
+        }, {
+          onConflict: 'user_id,admin_user_id'
+        });
+
       await fetchCredits();
 
       toast({
         title: "Créditos atualizados",
-        description: `Você agora tem ${newTotalCredits} créditos para cadastro de colaboradores`,
+        description: `Você agora tem ${newTotalCredits} créditos para cadastro de usuários`,
       });
 
       return true;

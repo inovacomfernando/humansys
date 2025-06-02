@@ -22,6 +22,6 @@ export interface CreditTransaction {
 export const PLAN_CREDITS = {
   inicial: 15,
   crescimento: 75,
-  profissional: 999999, // Ilimitado no profissional
+  profissional: 500, // 500 créditos no profissional
   trial: 999999 // Ilimitado para teste
 };
