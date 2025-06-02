@@ -10,7 +10,10 @@ interface ApiResponse<T> {
 class LocalDatabaseClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const url = `${API_BASE_URL}${endpoint}`;
+      console.log('📡 Fazendo requisição:', { url, method: options.method || 'GET' });
+      
+      const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
@@ -18,7 +21,10 @@ class LocalDatabaseClient {
         ...options,
       });
 
+      console.log('📥 Resposta recebida:', { status: response.status, ok: response.ok });
+
       const data = await response.json();
+      console.log('📋 Dados da resposta:', data);
 
       if (!response.ok) {
         return { success: false, error: data.message || data.error || 'Request failed' };
@@ -26,13 +32,14 @@ class LocalDatabaseClient {
 
       return { success: true, data };
     } catch (error) {
-      console.error('Database request error:', error);
-      return { success: false, error: 'Network error' };
+      console.error('❌ Erro na requisição de banco:', error);
+      return { success: false, error: 'Erro de conexão. Verifique se o servidor está rodando.' };
     }
   }
 
   // Auth methods
   async login(email: string, password: string) {
+    console.log('🌐 Enviando requisição de login para:', `${API_BASE_URL}/auth/login`);
     return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),

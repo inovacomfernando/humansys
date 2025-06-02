@@ -1,8 +1,12 @@
 
-const express = require('express');
-const cors = require('cors');
-const Database = require('better-sqlite3');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import Database from 'better-sqlite3';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3001;
@@ -11,8 +15,15 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Criar diretório data se não existir
+import fs from 'fs';
+const dataDir = path.join(__dirname, '../data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
 // Initialize SQLite database
-const db = new Database(path.join(__dirname, '../data/app.db'));
+const db = new Database(path.join(dataDir, 'app.db'));
 
 // Create tables
 db.exec(`
@@ -62,27 +73,67 @@ db.exec(`
   );
 `);
 
+// Inserir dados de teste se não existirem
+const adminUser = db.prepare('SELECT * FROM users WHERE email = ?').get('admin@humansys.com');
+if (!adminUser) {
+  console.log('📝 Criando usuário administrador de teste...');
+  
+  // Senha simples para teste: "admin123"
+  const adminPassword = btoa('admin123'); // Base64 básico para teste
+  
+  const insertAdmin = db.prepare(`
+    INSERT INTO users (email, name, password_hash) 
+    VALUES (?, ?, ?)
+  `);
+  
+  const result = insertAdmin.run('admin@humansys.com', 'Administrador', adminPassword);
+  
+  // Criar créditos para o admin
+  const insertCredits = db.prepare(`
+    INSERT INTO user_credits (user_id, credits, plan) 
+    VALUES (?, ?, ?)
+  `);
+  insertCredits.run(result.lastInsertRowid, 1000, 'premium');
+  
+  console.log('✅ Usuário administrador criado com sucesso!');
+  console.log('📧 Email: admin@humansys.com');
+  console.log('🔑 Senha: admin123');
+}
+
 // Routes
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    database: 'connected'
+  });
 });
 
 // User routes
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
   
-  const user = db.prepare('SELECT id, email, name FROM users WHERE email = ? AND password_hash = ?')
-    .get(email, password);
+  console.log('🔐 Tentativa de login:', { email });
+  
+  // Converter senha para base64 para comparar
+  const passwordHash = btoa(password);
+  
+  const user = db.prepare('SELECT id, email, name, created_at FROM users WHERE email = ? AND password_hash = ?')
+    .get(email, passwordHash);
   
   if (user) {
+    console.log('✅ Login bem-sucedido:', user);
     res.json({ success: true, user });
   } else {
+    console.log('❌ Credenciais inválidas para:', email);
     res.status(401).json({ success: false, message: 'Invalid credentials' });
   }
 });
 
 app.post('/api/users', (req, res) => {
   const { email, name, password_hash } = req.body;
+  
+  console.log('👤 Criando novo usuário:', { email, name });
   
   try {
     const stmt = db.prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)');
@@ -92,11 +143,15 @@ app.post('/api/users', (req, res) => {
     const creditsStmt = db.prepare('INSERT INTO user_credits (user_id, credits) VALUES (?, ?)');
     creditsStmt.run(result.lastInsertRowid, 100);
     
+    const newUser = { id: result.lastInsertRowid, email, name };
+    console.log('✅ Usuário criado com sucesso:', newUser);
+    
     res.json({ 
       success: true, 
-      user: { id: result.lastInsertRowid, email, name } 
+      user: newUser
     });
   } catch (error) {
+    console.error('❌ Erro ao criar usuário:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -156,5 +211,6 @@ app.get('/api/users', (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Database server running on port ${PORT}`);
-  console.log(`📁 Database file: ${path.join(__dirname, '../data/app.db')}`);
+  console.log(`📁 Database file: ${path.join(dataDir, 'app.db')}`);
+  console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
 });

@@ -53,9 +53,11 @@ export const usePostgreSQLAuth = () => {
   // Login
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Tentando fazer login:', { email });
+      console.log('🔐 Tentando fazer login:', { email });
       
       const response = await dbClient.login(email, password);
+      
+      console.log('📡 Resposta do servidor:', response);
       
       if (response.success && response.data?.user) {
         const user = response.data.user;
@@ -67,13 +69,16 @@ export const usePostgreSQLAuth = () => {
           isAuthenticated: true
         });
         
+        console.log('✅ Login realizado com sucesso:', user);
         return { user, error: null };
       } else {
-        return { user: null, error: new Error(response.error || 'Credenciais inválidas') };
+        const errorMsg = response.error || 'Credenciais inválidas';
+        console.log('❌ Falha no login:', errorMsg);
+        return { user: null, error: new Error(errorMsg) };
       }
     } catch (error: any) {
-      console.error('Erro no login:', error);
-      return { user: null, error };
+      console.error('❌ Erro de rede no login:', error);
+      return { user: null, error: new Error('Erro de conexão com o servidor') };
     }
   };
 
