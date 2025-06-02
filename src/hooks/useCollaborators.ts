@@ -31,6 +31,7 @@ export const useCollaborators = () => {
   const fetchCollaborators = async () => {
     console.log('useCollaborators: Iniciando fetchCollaborators');
     console.log('useCollaborators: User ID:', user?.id);
+    console.log('useCollaborators: User Email:', user?.email);
 
     if (!user?.id) {
       console.log('useCollaborators: Usuário não autenticado, limpando lista');
@@ -51,14 +52,28 @@ export const useCollaborators = () => {
 
       console.log('Table check result:', { tableCheck, tableError });
 
-      // Agora buscar os dados
+      // Verificar se existem colaboradores para QUALQUER usuário (debug)
+      const { data: allCollaborators, error: allError } = await supabase
+        .from('collaborators')
+        .select('*')
+        .limit(5);
+
+      console.log('All collaborators (debug):', { allCollaborators, allError });
+
+      // Agora buscar os dados específicos do usuário
       const { data: result, error: queryError } = await supabase
         .from('collaborators')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      console.log('Query result:', { result, queryError, userIdUsed: user.id });
+      console.log('Query result:', { 
+        result, 
+        queryError, 
+        userIdUsed: user.id,
+        userEmail: user.email,
+        resultCount: result?.length || 0
+      });
 
       if (queryError) {
         console.error('Erro na query:', queryError);

@@ -23,6 +23,18 @@ export const Collaborators = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Debug info para entender o problema
+  useEffect(() => {
+    console.log('Collaborators Component Debug:', {
+      userId: user?.id,
+      userEmail: user?.email,
+      collaboratorsCount: collaborators.length,
+      isLoading,
+      error,
+      collaboratorsData: collaborators
+    });
+  }, [user, collaborators, isLoading, error]);
+
   // Auto-refresh a cada 30 segundos para garantir dados atualizados
   useEffect(() => {
     const interval = setInterval(() => {
@@ -34,6 +46,14 @@ export const Collaborators = () => {
 
     return () => clearInterval(interval);
   }, [user?.id, isLoading, refetch]);
+
+  // Força carregamento inicial quando usuário for autenticado
+  useEffect(() => {
+    if (user?.id && !isLoading && collaborators.length === 0 && !error) {
+      console.log('Forçando carregamento inicial dos colaboradores...');
+      setTimeout(() => refetch(), 100);
+    }
+  }, [user?.id, collaborators.length, isLoading, error, refetch]);
 
   const [newCollaborator, setNewCollaborator] = useState({
     name: '',
@@ -98,11 +118,27 @@ export const Collaborators = () => {
   };
 
   const handleRetry = () => {
+    console.log('Manual retry triggered by user:', user?.email);
     toast({
       title: "Tentando novamente",
       description: "Recarregando dados..."
     });
-    refetch();
+    
+    // Força um refresh completo
+    setTimeout(() => {
+      refetch();
+    }, 100);
+  };
+
+  const handleForceRefresh = () => {
+    console.log('Force refresh triggered for user:', user?.email);
+    toast({
+      title: "Atualizando dados",
+      description: "Forçando recarregamento completo..."
+    });
+    
+    // Limpa o cache e força um novo carregamento
+    window.location.reload();
   };
 
   const filteredCollaborators = collaborators.filter(collaborator =>
@@ -152,22 +188,39 @@ export const Collaborators = () => {
               Gerencie todos os colaboradores da empresa ({collaborators.length} encontrados)
             </p>
             {process.env.NODE_ENV === 'development' && (
-              <p className="text-xs text-blue-600 mt-1">
-                Debug: User ID: {user?.id}, Carregados: {collaborators.length}
-              </p>
+              <div className="text-xs text-blue-600 mt-1 space-y-1">
+                <p>Debug Info:</p>
+                <p>• User ID: {user?.id}</p>
+                <p>• User Email: {user?.email}</p>
+                <p>• Colaboradores: {collaborators.length}</p>
+                <p>• Loading: {isLoading.toString()}</p>
+                <p>• Error: {error || 'none'}</p>
+                <p>• Last Update: {new Date().toLocaleTimeString()}</p>
+              </div>
             )}
           </div>
           
           <div className="flex items-center space-x-4">
             <ConnectionStatus />
-            <Button 
-              variant="outline" 
-              onClick={handleRetry}
-              className="mr-2"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={handleRetry}
+                size="sm"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Atualizar
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleForceRefresh}
+                size="sm"
+                className="text-orange-600 hover:text-orange-700"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Força Reset
+              </Button>
+            </div>
             <Dialog open={isAddingCollaborator} onOpenChange={setIsAddingCollaborator}>
               <DialogTrigger asChild>
                 <Button>
@@ -405,13 +458,22 @@ export const Collaborators = () => {
                 
                 {process.env.NODE_ENV === 'development' && (
                   <div className="text-xs text-left bg-gray-50 p-4 rounded-lg mb-4 max-w-md mx-auto">
-                    <h4 className="font-semibold mb-2">Debug Info:</h4>
-                    <p>Total colaboradores: {collaborators.length}</p>
-                    <p>Filtrados: {filteredCollaborators.length}</p>
-                    <p>Busca: "{searchTerm}"</p>
-                    <p>User ID: {user?.id}</p>
-                    <p>Loading: {isLoading.toString()}</p>
-                    <p>Error: {error || 'nenhum'}</p>
+                    <h4 className="font-semibold mb-2">Debug Info Detalhado:</h4>
+                    <p>• Total colaboradores: {collaborators.length}</p>
+                    <p>• Filtrados: {filteredCollaborators.length}</p>
+                    <p>• Busca: "{searchTerm}"</p>
+                    <p>• User ID: {user?.id}</p>
+                    <p>• User Email: {user?.email}</p>
+                    <p>• Loading: {isLoading.toString()}</p>
+                    <p>• Error: {error || 'nenhum'}</p>
+                    <p>• Auth State: {user ? 'autenticado' : 'não autenticado'}</p>
+                    <p>• Hook Loaded: {typeof useCollaborators === 'function' ? 'sim' : 'não'}</p>
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="font-semibold">Dados brutos:</p>
+                      <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
+                        {JSON.stringify({ collaborators, user: { id: user?.id, email: user?.email } }, null, 2)}
+                      </pre>
+                    </div>
                   </div>
                 )}
                 
