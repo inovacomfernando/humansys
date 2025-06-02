@@ -1,8 +1,9 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { setupDatabase } from './lib/setupDatabase';
+import { setupTables } from './lib/replit-db';
 
 // Clear any problematic cache entries on startup
 const clearProblematicCache = () => {
@@ -31,11 +32,11 @@ const clearProblematicCache = () => {
 // Clean up on startup
 clearProblematicCache();
 
-// Initialize database on app start with better error handling
-setupDatabase()
-  .then(() => console.log('Database initialized successfully'))
+// Initialize PostgreSQL database on app start
+setupTables()
+  .then(() => console.log('✅ PostgreSQL Database initialized successfully'))
   .catch(error => {
-    console.error('Database initialization failed:', error);
+    console.error('❌ PostgreSQL Database initialization failed:', error);
     // Don't prevent app from starting
   });
 

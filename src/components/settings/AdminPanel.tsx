@@ -1,97 +1,105 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Shield, 
-  UserCheck, 
-  Key, 
-  Mail, 
+  Users, 
   AlertTriangle, 
-  CheckCircle,
-  RefreshCw,
-  Database
+  CheckCircle, 
+  Database,
+  UserPlus,
+  Mail,
+  User,
+  Eye,
+  EyeOff
 } from 'lucide-react';
-import { AccountRecovery } from './AccountRecovery';
+import { executeQuery, setupTables } from '@/lib/replit-db';
 
-export const AdminPanel = () => {
+interface User {
+  id: number;
+  email: string;
+  name: string;
+  created_at: string;
+}
+
+interface Collaborator {
+  id: number;
+  name: string;
+  email: string;
+  position?: string;
+  department?: string;
+  status: string;
+}
+
+export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [newUserData, setNewUserData] = useState({
+  const [users, setUsers] = useState<User[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Estados para criação de usuário
+  const [newUser, setNewUser] = useState({
+    name: '',
     email: '',
-    password: '',
-    name: ''
+    password: ''
   });
 
-  const handlePasswordReset = async () => {
-    if (!resetEmail) {
-      toast({
-        title: "Email obrigatório",
-        description: "Digite o email do usuário para resetar a senha.",
-        variant: "destructive",
-      });
-      return;
-    }
+  // Estados para criação de colaborador
+  const [newCollaborator, setNewCollaborator] = useState({
+    name: '',
+    email: '',
+    position: '',
+    department: ''
+  });
 
-    setIsLoading(true);
+  useEffect(() => {
+    initializeDatabase();
+    loadData();
+  }, []);
+
+  const initializeDatabase = async () => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/login`,
-      });
-
-      if (error) throw error;
-
+      await setupTables();
+      console.log('Database initialized successfully');
+    } catch (error) {
+      console.error('Database initialization failed:', error);
       toast({
-        title: "Email de reset enviado",
-        description: `Um email para resetar a senha foi enviado para ${resetEmail}`,
-      });
-      setResetEmail('');
-    } catch (error: any) {
-      console.error('Password reset error:', error);
-      toast({
-        title: "Erro ao enviar reset",
-        description: error.message || "Não foi possível enviar o email de reset.",
+        title: "Erro de Banco",
+        description: "Falha ao inicializar o banco de dados",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleCreateUser = async () => {
-    if (!newUserData.email || !newUserData.password || !newUserData.name) {
-      toast({
-        title: "Dados incompletos",
-        description: "Preencha todos os campos para criar o usuário.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const loadData = async () => {
+    try {
+      // Carregar usuários
+      const usersResult = await executeQuery('SELECT id, email, name, created_at FROM users ORDER BY created_at DESC');
+      setUsers(usersResult.rows);
 
-    // Validar formato do email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newUserData.email)) {
-      toast({
-        title: "Email inválido",
-        description: "Por favor, insira um email válido.",
-        variant: "destructive",
-      });
-      return;
+      // Carregar colaboradores
+      const collaboratorsResult = await executeQuery('SELECT * FROM collaborators ORDER BY created_at DESC');
+      setCollaborators(collaboratorsResult.rows);
+    } catch (error) {
+      console.error('Error loading data:', error);
     }
+  };
 
-    // Validar senha
-    if (newUserData.password.length < 6) {
+  const createUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.password) {
       toast({
-        title: "Senha muito curta",
-        description: "A senha deve ter pelo menos 6 caracteres.",
+        title: "Campos obrigatórios",
+        description: "Preencha todos os campos",
         variant: "destructive",
       });
       return;
@@ -99,81 +107,47 @@ export const AdminPanel = () => {
 
     setIsLoading(true);
     try {
-      console.log('Iniciando criação de usuário:', { email: newUserData.email, name: newUserData.name });
+      console.log('Iniciando criação de usuário:', { email: newUser.email, name: newUser.name });
 
-      // Verificar se o usuário já existe na tabela de colaboradores
-      const { data: existingCollaborator, error: checkError } = await supabase
-        .from('collaborators')
-        .select('*')
-        .eq('email', newUserData.email)
-        .maybeSingle();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking existing user:', checkError);
-        throw new Error('Erro ao verificar usuário existente: ' + checkError.message);
-      }
-
-      if (existingCollaborator) {
+      // Verificar se o usuário já existe
+      const existingUser = await executeQuery('SELECT id FROM users WHERE email = $1', [newUser.email]);
+      
+      if (existingUser.rows.length > 0) {
         toast({
           title: "Usuário já existe",
-          description: "Este email já está cadastrado no sistema.",
+          description: "Este email já está cadastrado",
           variant: "destructive",
         });
         return;
       }
 
-      // Gerar ID único para o usuário
-      const userId = crypto.randomUUID();
+      // Criar usuário (em produção, você deve fazer hash da senha)
+      const result = await executeQuery(
+        'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id',
+        [newUser.name, newUser.email, newUser.password] // Em produção, use hash da senha
+      );
 
-      // Criar usuário na tabela de colaboradores
-      const { data: collaboratorData, error: collaboratorError } = await supabase
-        .from('collaborators')
-        .insert([{
-          id: userId,
-          user_id: user?.id || '',
-          name: newUserData.name,
-          email: newUserData.email,
-          status: 'active',
-          password_hash: btoa(newUserData.password), // Apenas para desenvolvimento
-          created_at: new Date().toISOString(),
-          invited_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
+      const userId = result.rows[0].id;
 
-      if (collaboratorError) {
-        console.error('Collaborator creation error:', collaboratorError);
-        throw new Error('Erro ao criar colaborador: ' + collaboratorError.message);
-      }
-
-      console.log('Usuário criado com sucesso:', collaboratorData);
+      // Criar créditos iniciais para o usuário
+      await executeQuery(
+        'INSERT INTO user_credits (user_id, credits, plan) VALUES ($1, $2, $3)',
+        [userId, 100, 'trial']
+      );
 
       toast({
-        title: "Usuário criado com sucesso",
-        description: `${newUserData.name} foi cadastrado no sistema. Email: ${newUserData.email}, Senha: ${newUserData.password}`,
+        title: "Usuário criado",
+        description: `Usuário ${newUser.name} criado com sucesso`,
       });
 
-      // Limpar formulário
-      setNewUserData({ email: '', password: '', name: '' });
+      setNewUser({ name: '', email: '', password: '' });
+      loadData();
 
-    } catch (error: any) {
-      console.error('Create user error:', error);
-      
-      let errorMessage = "Não foi possível criar o usuário.";
-      
-      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
-        errorMessage = "Este email já está cadastrado no sistema.";
-      } else if (error.message?.includes('permission') || error.message?.includes('RLS')) {
-        errorMessage = "Sem permissão para criar usuários. Verifique as configurações de segurança.";
-      } else if (error.message?.includes('JWT') || error.message?.includes('auth')) {
-        errorMessage = "Problema de autenticação. Faça login novamente.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
+    } catch (error) {
+      console.error('Erro ao criar usuário:', error);
       toast({
         title: "Erro ao criar usuário",
-        description: errorMessage,
+        description: "Não foi possível criar o usuário",
         variant: "destructive",
       });
     } finally {
@@ -181,240 +155,282 @@ export const AdminPanel = () => {
     }
   };
 
+  const createCollaborator = async () => {
+    if (!newCollaborator.name || !newCollaborator.email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Nome e email são obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Buscar um usuário para associar (assumindo que existe pelo menos um)
+      const usersResult = await executeQuery('SELECT id FROM users LIMIT 1');
+      
+      if (usersResult.rows.length === 0) {
+        toast({
+          title: "Erro",
+          description: "É necessário ter pelo menos um usuário cadastrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const userId = usersResult.rows[0].id;
+
+      await executeQuery(
+        'INSERT INTO collaborators (user_id, name, email, position, department) VALUES ($1, $2, $3, $4, $5)',
+        [userId, newCollaborator.name, newCollaborator.email, newCollaborator.position, newCollaborator.department]
+      );
+
+      toast({
+        title: "Colaborador criado",
+        description: `Colaborador ${newCollaborator.name} criado com sucesso`,
+      });
+
+      setNewCollaborator({ name: '', email: '', position: '', department: '' });
+      loadData();
+
+    } catch (error) {
+      console.error('Erro ao criar colaborador:', error);
+      toast({
+        title: "Erro ao criar colaborador",
+        description: "Não foi possível criar o colaborador",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testDatabaseConnection = async () => {
+    try {
+      const result = await executeQuery('SELECT NOW() as current_time');
+      toast({
+        title: "Conexão OK",
+        description: `Banco conectado. Horário: ${result.rows[0].current_time}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro de Conexão",
+        description: "Não foi possível conectar ao banco",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <Alert>
+        <Shield className="h-4 w-4" />
+        <AlertDescription>
+          Este painel é destinado apenas para administradores. Use com cuidado.
+        </AlertDescription>
+      </Alert>
+
+      {/* Teste de Conexão */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Painel Administrativo
+            <Database className="h-5 w-5" />
+            Conexão com PostgreSQL
           </CardTitle>
-          <CardDescription>
-            Ferramentas para gerenciamento de usuários e sistema
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Este painel é destinado apenas para administradores. Use com cuidado.
-            </AlertDescription>
-          </Alert>
-
-          {/* Reset de Senha */}
+        <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Key className="h-4 w-4" />
-              <h4 className="font-medium">Resetar Senha de Usuário</h4>
+            <p className="text-sm text-muted-foreground">
+              Banco PostgreSQL do Replit configurado e funcionando
+            </p>
+            <Button onClick={testDatabaseConnection} variant="outline">
+              Testar Conexão
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Criar Usuário */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Criar Novo Usuário
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="user-name">Nome completo</Label>
+              <Input
+                id="user-name"
+                value={newUser.name}
+                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                placeholder="Nome do usuário"
+              />
             </div>
-            <div className="grid gap-3">
-              <Label htmlFor="reset-email">Email do usuário</Label>
-              <div className="flex gap-2">
+            
+            <div className="space-y-2">
+              <Label htmlFor="user-email">Email</Label>
+              <Input
+                id="user-email"
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                placeholder="email@empresa.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="user-password">Senha inicial</Label>
+              <div className="relative">
                 <Input
-                  id="reset-email"
-                  type="email"
-                  placeholder="usuario@empresa.com"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  className="flex-1"
+                  id="user-password"
+                  type={showPassword ? "text" : "password"}
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  placeholder="Senha temporária"
                 />
-                <Button 
-                  onClick={handlePasswordReset}
-                  disabled={isLoading}
-                  variant="outline"
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-auto p-1"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {isLoading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4" />
-                  )}
-                  Enviar Reset
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </div>
 
-          {/* Criar Usuário */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4" />
-              <h4 className="font-medium">Criar Novo Usuário</h4>
+          <Button 
+            onClick={createUser} 
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? 'Criando...' : 'Criar Usuário'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Criar Colaborador */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Criar Colaborador
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="collab-name">Nome</Label>
+              <Input
+                id="collab-name"
+                value={newCollaborator.name}
+                onChange={(e) => setNewCollaborator({ ...newCollaborator, name: e.target.value })}
+                placeholder="Nome do colaborador"
+              />
             </div>
-            <div className="grid gap-3">
-              <div>
-                <Label htmlFor="new-user-name">Nome completo</Label>
+            
+            <div className="space-y-2">
+              <Label htmlFor="collab-email">Email</Label>
+              <Input
+                id="collab-email"
+                type="email"
+                value={newCollaborator.email}
+                onChange={(e) => setNewCollaborator({ ...newCollaborator, email: e.target.value })}
+                placeholder="email@empresa.com"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="collab-position">Cargo</Label>
                 <Input
-                  id="new-user-name"
-                  placeholder="Nome do usuário"
-                  value={newUserData.name}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, name: e.target.value }))}
+                  id="collab-position"
+                  value={newCollaborator.position}
+                  onChange={(e) => setNewCollaborator({ ...newCollaborator, position: e.target.value })}
+                  placeholder="Cargo"
                 />
               </div>
-              <div>
-                <Label htmlFor="new-user-email">Email</Label>
-                <Input
-                  id="new-user-email"
-                  type="email"
-                  placeholder="usuario@empresa.com"
-                  value={newUserData.email}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="new-user-password">Senha inicial</Label>
-                <Input
-                  id="new-user-password"
-                  type="password"
-                  placeholder="Senha segura"
-                  value={newUserData.password}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, password: e.target.value }))}
-                />
-              </div>
-              <Button 
-                onClick={handleCreateUser}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                )}
-                Criar Usuário
-              </Button>
-            </div>
-          </div>
-
-          {/* Recuperação de Conta */}
-          <AccountRecovery />
-
-          {/* Sistema de Convites */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <Mail className="h-5 w-5 text-green-600 mr-2" />
-              <h4 className="font-medium text-green-800">Sistema de Convites</h4>
-            </div>
-            <div className="text-sm text-green-700 mt-2 space-y-1">
-              <p>• Usuários são criados com status "pendente"</p>
-              <p>• Uma senha temporária é fornecida para primeiro acesso</p>
-              <p>• O usuário deve trocar a senha no primeiro login</p>
-              <p>• Emails de convite podem ser configurados futuramente</p>
-            </div>
-          </div>
-
-          {/* Sistema de Diagnóstico */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              <h4 className="font-medium">Diagnóstico do Sistema</h4>
-            </div>
-            <div className="grid gap-3">
-              <Button 
-                onClick={async () => {
-                  try {
-                    // Verificar conectividade básica
-                    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-                    if (sessionError) throw sessionError;
-                    
-                    // Testar acesso à tabela de colaboradores
-                    const { data: testData, error: testError } = await supabase
-                      .from('collaborators')
-                      .select('count')
-                      .limit(0);
-                    
-                    // Mesmo com erro de RLS, significa que a conexão está funcionando
-                    if (testError && !testError.message.includes('RLS') && !testError.message.includes('permission')) {
-                      throw testError;
-                    }
-                    
-                    toast({
-                      title: "Sistema Online",
-                      description: "Conexões funcionando normalmente. Banco de dados acessível.",
-                    });
-                  } catch (error: any) {
-                    console.error('System check error:', error);
-                    toast({
-                      title: "Erro de Conectividade", 
-                      description: `Problema detectado: ${error.message}`,
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Verificar Status do Sistema
-              </Button>
               
-              <Button 
-                onClick={() => {
-                  // Limpar cache e recarregar
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.reload();
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reiniciar Sistema
-              </Button>
-
-              <Button 
-                onClick={async () => {
-                  try {
-                    // Tentar reestabelecer conexão
-                    await supabase.auth.refreshSession();
-                    
-                    toast({
-                      title: "Conexão Restabelecida",
-                      description: "Sistema reconectado com sucesso",
-                    });
-                  } catch (error) {
-                    toast({
-                      title: "Erro de Reconexão",
-                      description: "Não foi possível restabelecer a conexão",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reconectar Database
-              </Button>
+              <div className="space-y-2">
+                <Label htmlFor="collab-department">Departamento</Label>
+                <Input
+                  id="collab-department"
+                  value={newCollaborator.department}
+                  onChange={(e) => setNewCollaborator({ ...newCollaborator, department: e.target.value })}
+                  placeholder="Departamento"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Troubleshooting */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <AlertTriangle className="h-5 w-5 text-orange-600 mr-2" />
-              <h4 className="font-medium text-orange-800">Problemas Comuns</h4>
-            </div>
-            <div className="text-sm text-orange-700 mt-2 space-y-1">
-              <p>• <strong>Erro "Database is not defined":</strong> Recarregue a página</p>
-              <p>• <strong>Erro de permissão:</strong> Verifique se está logado como admin</p>
-              <p>• <strong>Email já existe:</strong> Use um email diferente</p>
-              <p>• <strong>Erro de conectividade:</strong> Execute o diagnóstico do sistema</p>
-              <p>• <strong>Senha muito curta:</strong> Use pelo menos 6 caracteres</p>
-            </div>
-          </div>
+          <Button 
+            onClick={createCollaborator} 
+            disabled={isLoading}
+            className="w-full"
+          >
+            {isLoading ? 'Criando...' : 'Criar Colaborador'}
+          </Button>
+        </CardContent>
+      </Card>
 
-          {/* Informações do Sistema */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
-              <h4 className="font-medium text-blue-800">Dicas para Produção</h4>
-            </div>
-            <div className="text-sm text-blue-700 mt-2 space-y-1">
-              <p>• Use senhas fortes para todos os usuários</p>
-              <p>• Monitore logs de acesso regularmente</p>
-              <p>• Mantenha backups regulares dos dados</p>
-              <p>• Configure notificações de segurança</p>
-            </div>
+      {/* Lista de Usuários */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Usuários Cadastrados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {users.length === 0 ? (
+              <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
+            ) : (
+              users.map((user) => (
+                <div key={user.id} className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                  <Badge variant="secondary">ID: {user.id}</Badge>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Lista de Colaboradores */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Colaboradores Cadastrados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {collaborators.length === 0 ? (
+              <p className="text-muted-foreground">Nenhum colaborador cadastrado</p>
+            ) : (
+              collaborators.map((collaborator) => (
+                <div key={collaborator.id} className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <p className="font-medium">{collaborator.name}</p>
+                    <p className="text-sm text-muted-foreground">{collaborator.email}</p>
+                    {collaborator.position && (
+                      <p className="text-xs text-muted-foreground">{collaborator.position}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={collaborator.status === 'active' ? 'default' : 'secondary'}>
+                      {collaborator.status}
+                    </Badge>
+                    <Badge variant="outline">ID: {collaborator.id}</Badge>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
