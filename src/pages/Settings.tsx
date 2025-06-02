@@ -22,13 +22,15 @@ import {
   Settings as SettingsIcon,
   AlertTriangle,
   CheckCircle,
-  CreditCard
+  CreditCard,
+  RefreshCw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CreditsCard } from '@/components/dashboard/CreditsCard';
 import { useCredits } from '@/hooks/useCredits';
 import { UserManagementDialog } from '@/components/settings/UserManagementDialog';
 import { AdminPanel } from '@/components/settings/AdminPanel';
+import { SystemRecovery } from '@/components/debug/SystemRecovery';
 
 export const Settings = () => {
   const { user } = useAuth();
@@ -126,6 +128,10 @@ export const Settings = () => {
             <TabsTrigger value="admin" className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
               Admin
+            </TabsTrigger>
+            <TabsTrigger value="recovery" className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Sistema
             </TabsTrigger>
             <TabsTrigger value="advanced" className="flex items-center gap-2">
               <SettingsIcon className="h-4 w-4" />
@@ -536,6 +542,10 @@ export const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="recovery" className="space-y-6">
+            <SystemRecovery />
           </TabsContent>
 
           <TabsContent value="admin" className="space-y-6">

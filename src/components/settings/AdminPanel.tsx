@@ -261,6 +261,80 @@ export const AdminPanel = () => {
             </div>
           </div>
 
+          {/* Sistema de Diagnóstico */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              <h4 className="font-medium">Diagnóstico do Sistema</h4>
+            </div>
+            <div className="grid gap-3">
+              <Button 
+                onClick={async () => {
+                  try {
+                    // Verificar conectividade
+                    const { data, error } = await supabase.auth.getSession();
+                    if (error) throw error;
+                    
+                    toast({
+                      title: "Sistema Online",
+                      description: "Todas as conexões estão funcionando normalmente",
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Erro de Conectividade", 
+                      description: "Problema detectado na conexão com o banco de dados",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Verificar Status do Sistema
+              </Button>
+              
+              <Button 
+                onClick={() => {
+                  // Limpar cache e recarregar
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.reload();
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Reiniciar Sistema
+              </Button>
+
+              <Button 
+                onClick={async () => {
+                  try {
+                    // Tentar reestabelecer conexão
+                    await supabase.auth.refreshSession();
+                    
+                    toast({
+                      title: "Conexão Restabelecida",
+                      description: "Sistema reconectado com sucesso",
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Erro de Reconexão",
+                      description: "Não foi possível restabelecer a conexão",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                <Database className="h-4 w-4 mr-2" />
+                Reconectar Database
+              </Button>
+            </div>
+          </div>
+
           {/* Informações do Sistema */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center">
