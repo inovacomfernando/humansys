@@ -29,6 +29,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const navigate = useNavigate();
   const { user, signOut, isLoggingOut } = useAuth();
+  const { theme, effectiveTheme, setTheme, companyLogo } = useTheme();
   const location = useLocation();
   const { toast } = useToast();
 
