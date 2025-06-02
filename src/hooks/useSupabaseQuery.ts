@@ -50,19 +50,8 @@ export const useSupabaseQuery = () => {
     setIsLoading(true);
     let lastError: any = null;
 
-    // Verificar conectividade melhorada
-    console.log('useSupabaseQuery: Verificando conectividade...');
-    const isConnected = await checkSupabaseConnection();
-    if (!isConnected) {
-      console.error('useSupabaseQuery: Sem conectividade com Supabase');
-      setIsLoading(false);
-      toast({
-        title: "Erro de Conectividade",
-        description: "Não foi possível conectar ao servidor. Verifique sua conexão.",
-        variant: "destructive"
-      });
-      return null;
-    }
+    // Pular verificação de conectividade desnecessária para reduzir HEAD requests
+    console.log('useSupabaseQuery: Executando query diretamente...');
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {

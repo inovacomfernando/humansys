@@ -45,22 +45,7 @@ export const useCollaborators = () => {
     setError(null);
 
     try {
-      // Primeiro, vamos verificar se a tabela existe e tem dados
-      const { data: tableCheck, error: tableError } = await supabase
-        .from('collaborators')
-        .select('count', { count: 'exact', head: true });
-
-      console.log('Table check result:', { tableCheck, tableError });
-
-      // Verificar se existem colaboradores para QUALQUER usuário (debug)
-      const { data: allCollaborators, error: allError } = await supabase
-        .from('collaborators')
-        .select('*')
-        .limit(5);
-
-      console.log('All collaborators (debug):', { allCollaborators, allError });
-
-      // Agora buscar os dados específicos do usuário
+      // Buscar os dados específicos do usuário diretamente
       const { data: result, error: queryError } = await supabase
         .from('collaborators')
         .select('*')
