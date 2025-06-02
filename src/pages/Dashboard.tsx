@@ -35,11 +35,12 @@ export const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isFounder, setIsFounder] = useState(false);
+  const [isIAAssistantOpen, setIsIAAssistantOpen] = useState(false);
 
   useEffect(() => {
     const checkFounderRole = async () => {
       if (!user?.id) return;
-      
+
       try {
         const { data } = await supabase
           .from('user_roles')
@@ -47,7 +48,7 @@ export const Dashboard = () => {
           .eq('user_id', user.id)
           .eq('role', 'founder')
           .maybeSingle();
-        
+
         setIsFounder(!!data);
       } catch (error) {
         console.log('Error checking founder role:', error);
@@ -56,12 +57,12 @@ export const Dashboard = () => {
 
     checkFounderRole();
   }, [user?.id]);
-  
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <UpdateBanner />
-        
+
         {/* Brainsys IAO V.1 Module */}
         <Card className="relative overflow-hidden bg-gradient-to-r from-purple-900/90 via-blue-900/90 to-indigo-900/90 border-purple-500/20 backdrop-blur-sm">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 opacity-30"></div>
@@ -104,7 +105,7 @@ export const Dashboard = () => {
               <div className="flex flex-col space-y-2">
                 <Button 
                   className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  onClick={() => navigate('/app/brainsys-iao')}
+                  onClick={() => setIsIAAssistantOpen(true)}
                 >
                   <Zap className="h-4 w-4 mr-2" />
                   Acessar IAO
@@ -115,7 +116,7 @@ export const Dashboard = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Quick Insights Preview */}
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
@@ -126,7 +127,7 @@ export const Dashboard = () => {
                 <div className="text-lg font-bold text-white">94.7%</div>
                 <div className="text-xs text-purple-200">Precisão dos Insights</div>
               </div>
-              
+
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-purple-200">Recomendações</span>
@@ -135,7 +136,7 @@ export const Dashboard = () => {
                 <div className="text-lg font-bold text-white">12</div>
                 <div className="text-xs text-purple-200">Ações Sugeridas</div>
               </div>
-              
+
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-purple-200">Economia</span>
@@ -223,7 +224,7 @@ export const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">Previsões de turnover</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow"
                    onClick={() => navigate('/onboarding')}>
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -234,7 +235,7 @@ export const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">Badges e conquistas</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-3 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow"
                    onClick={() => navigate('/app/disc')}>
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -361,6 +362,13 @@ export const Dashboard = () => {
             </Widget>
           </div>
         </div>
+
+        {/* IA Assistant Dialog */}
+        {/* Assuming IAAssistantDialog is a component you have */}
+        {/* <IAAssistantDialog 
+          open={isIAAssistantOpen} 
+          onOpenChange={setIsIAAssistantOpen} 
+        /> */}
       </div>
     </DashboardLayout>
   );
