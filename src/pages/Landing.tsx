@@ -722,8 +722,8 @@ export const Landing = () => {
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
               <div className="flex justify-center mb-4">
-                <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4py-2 rounded-full text-sm font-medium shadow-lg border border-emerald-300">
-                  <CreditCard className="mr-1 h-3 w-3 inline" />
+                <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-emerald-300">
+                  <CreditCard className="mr-2 h-4 w-4 inline" />
                   Sistema de Créditos
                 </div>
               </div>
