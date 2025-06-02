@@ -101,18 +101,18 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
             <img 
               src={companyLogo} 
               alt="Humansys" 
-              className="h-12 w-auto cursor-pointer transition-transform duration-200 hover:scale-105" 
+              className="h-16 w-auto cursor-pointer transition-transform duration-200 hover:scale-105" 
               onClick={() => navigate('/')}
             />
           ) : (
             <div 
-              className="flex items-center space-x-2 cursor-pointer group" 
+              className="flex items-center space-x-3 cursor-pointer group" 
               onClick={() => navigate('/')}
             >
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                <span className="text-white font-bold text-sm">H</span>
+              <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                <span className="text-white font-bold text-lg">H</span>
               </div>
-              <span className="font-bold text-xl transition-colors duration-200">Humansys</span>
+              <span className="font-bold text-2xl transition-colors duration-200">Humansys</span>
             </div>
           )}
 
