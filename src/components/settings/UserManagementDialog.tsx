@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   UserPlus, 
   Users, 
@@ -16,12 +18,18 @@ import {
   Trash2,
   Edit,
   MoreHorizontal,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Key,
+  Settings,
+  Lock
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -38,6 +46,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/hooks/useCredits';
 import { supabase } from '@/integrations/supabase/client';
+import { PermissionsForm } from './PermissionsForm';
 
 interface User {
   id: string;
@@ -47,6 +56,24 @@ interface User {
   created_at: string;
   last_sign_in_at?: string;
   status: 'active' | 'inactive';
+  password?: string;
+  permissions?: UserPermissions;
+}
+
+interface UserPermissions {
+  dashboard: boolean;
+  colaboradores: boolean;
+  treinamentos: boolean;
+  reunioes: boolean;
+  metas: boolean;
+  feedbacks: boolean;
+  pesquisas: boolean;
+  documentos: boolean;
+  certificados: boolean;
+  onboarding: boolean;
+  disc: boolean;
+  analytics: boolean;
+  recruitment: boolean;
 }
 
 export const UserManagementDialog = () => {
@@ -61,10 +88,105 @@ export const UserManagementDialog = () => {
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState<{[key: string]: boolean}>({});
+  const [newPassword, setNewPassword] = useState('');
+
+  const defaultPermissions: UserPermissions = {
+    dashboard: true,
+    colaboradores: false,
+    treinamentos: false,
+    reunioes: false,
+    metas: false,
+    feedbacks: false,
+    pesquisas: false,
+    documentos: false,
+    certificados: false,
+    onboarding: false,
+    disc: false,
+    analytics: false,
+    recruitment: false,
+  };
 
   const { user } = useAuth();
   const { credits, useCredit } = useCredits();
   const { toast } = useToast();
+
+  const generateRandomPassword = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const togglePasswordVisibility = (userId: string) => {
+    setShowPassword(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
+  };
+
+  const handleResetPassword = async () => {
+    if (!editingUser) return;
+
+    const newRandomPassword = generateRandomPassword();
+    setNewPassword(newRandomPassword);
+
+    try {
+      // Simular reset de senha
+      const updatedUsers = users.map(u => 
+        u.id === editingUser.id 
+          ? { ...u, password: newRandomPassword }
+          : u
+      );
+      setUsers(updatedUsers);
+
+      toast({
+        title: "Senha resetada com sucesso",
+        description: `Nova senha gerada: ${newRandomPassword}`,
+      });
+
+      setResetPasswordDialogOpen(false);
+      setEditingUser(null);
+    } catch (error) {
+      toast({
+        title: "Erro ao resetar senha",
+        description: "Não foi possível resetar a senha",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdatePermissions = async (permissions: UserPermissions) => {
+    if (!editingUser) return;
+
+    try {
+      const updatedUsers = users.map(u => 
+        u.id === editingUser.id 
+          ? { ...u, permissions }
+          : u
+      );
+      setUsers(updatedUsers);
+
+      toast({
+        title: "Permissões atualizadas",
+        description: `Permissões de ${editingUser.name} foram atualizadas`,
+      });
+
+      setPermissionsDialogOpen(false);
+      setEditingUser(null);
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar permissões",
+        description: "Não foi possível atualizar as permissões",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchUsers = async () => {
     if (!user?.id) return;
@@ -104,7 +226,23 @@ export const UserManagementDialog = () => {
             name: user.email?.split('@')[0] || 'Admin',
             role: 'admin',
             created_at: new Date().toISOString(),
-            status: 'active'
+            status: 'active',
+            password: '••••••••',
+            permissions: {
+              dashboard: true,
+              colaboradores: true,
+              treinamentos: true,
+              reunioes: true,
+              metas: true,
+              feedbacks: true,
+              pesquisas: true,
+              documentos: true,
+              certificados: true,
+              onboarding: true,
+              disc: true,
+              analytics: true,
+              recruitment: true,
+            }
           }
         ];
 
@@ -115,7 +253,9 @@ export const UserManagementDialog = () => {
             name: collab.name,
             role: 'user' as const,
             created_at: collab.created_at,
-            status: collab.status as 'active' | 'inactive'
+            status: collab.status as 'active' | 'inactive',
+            password: generateRandomPassword(),
+            permissions: defaultPermissions
           }));
           allUsers.push(...collaboratorUsers);
         }
@@ -141,7 +281,23 @@ export const UserManagementDialog = () => {
             name: user.email?.split('@')[0] || 'Admin',
             role: 'admin',
             created_at: new Date().toISOString(),
-            status: 'active'
+            status: 'active',
+            password: '••••••••',
+            permissions: {
+              dashboard: true,
+              colaboradores: true,
+              treinamentos: true,
+              reunioes: true,
+              metas: true,
+              feedbacks: true,
+              pesquisas: true,
+              documentos: true,
+              certificados: true,
+              onboarding: true,
+              disc: true,
+              analytics: true,
+              recruitment: true,
+            }
           });
         }
 
@@ -157,7 +313,23 @@ export const UserManagementDialog = () => {
           name: user.email?.split('@')[0] || 'Admin',
           role: 'admin',
           created_at: new Date().toISOString(),
-          status: 'active'
+          status: 'active',
+          password: '••••••••',
+          permissions: {
+            dashboard: true,
+            colaboradores: true,
+            treinamentos: true,
+            reunioes: true,
+            metas: true,
+            feedbacks: true,
+            pesquisas: true,
+            documentos: true,
+            certificados: true,
+            onboarding: true,
+            disc: true,
+            analytics: true,
+            recruitment: true,
+          }
         }
       ];
       setUsers(fallbackUsers);
@@ -248,7 +420,7 @@ export const UserManagementDialog = () => {
 
       toast({
         title: "Usuário criado com sucesso",
-        description: `${newUser.name} foi adicionado à sua organização. As credenciais de acesso serão enviadas por email.`,
+        description: `${newUser.name} foi adicionado à sua organização. Senha: ${newUser.password}`,
       });
 
       // Limpar formulário
@@ -465,17 +637,50 @@ export const UserManagementDialog = () => {
                               <Mail className="h-3 w-3" />
                               {userData.email}
                             </div>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Lock className="h-3 w-3" />
+                              {showPassword[userData.id] ? userData.password : '••••••••'}
+                            </div>
                           </div>
                         </div>
                         
-                        {userData.role !== 'admin' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() => togglePasswordVisibility(userData.id)}
+                            >
+                              {showPassword[userData.id] ? (
+                                <EyeOff className="h-4 w-4 mr-2" />
+                              ) : (
+                                <Eye className="h-4 w-4 mr-2" />
+                              )}
+                              {showPassword[userData.id] ? 'Ocultar Senha' : 'Ver Senha'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingUser(userData);
+                                setResetPasswordDialogOpen(true);
+                              }}
+                            >
+                              <Key className="h-4 w-4 mr-2" />
+                              Resetar Senha
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingUser(userData);
+                                setPermissionsDialogOpen(true);
+                              }}
+                            >
+                              <Shield className="h-4 w-4 mr-2" />
+                              Gerenciar Permissões
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {userData.role !== 'admin' && (
                               <DropdownMenuItem
                                 onClick={() => {
                                   setUserToDelete(userData);
@@ -486,9 +691,9 @@ export const UserManagementDialog = () => {
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Remover Usuário
                               </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </Card>
                   ))}
@@ -530,6 +735,55 @@ export const UserManagementDialog = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog de reset de senha */}
+      <AlertDialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-blue-600" />
+              Resetar Senha
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso irá gerar uma nova senha aleatória para <strong>{editingUser?.name}</strong>.
+              A nova senha será exibida e deverá ser compartilhada com o usuário.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetPassword}>
+              Gerar Nova Senha
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de gerenciamento de permissões */}
+      <Dialog open={permissionsDialogOpen} onOpenChange={setPermissionsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Gerenciar Permissões - {editingUser?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Configure quais funcionalidades este usuário pode acessar
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              {editingUser && (
+                <PermissionsForm 
+                  user={editingUser}
+                  onSave={handleUpdatePermissions}
+                  onCancel={() => setPermissionsDialogOpen(false)}
+                />
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
