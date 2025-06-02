@@ -262,7 +262,7 @@ export const Landing = () => {
       <Header showAuth />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 py-16 md:py-24">
+      <section className="relative overflow-hidden bg-gradient-to-br from-green-50/70 via-emerald-25/50 to-green-100/60 py-16 md:py-24">
         <div className="container relative z-10">
           <div className="mx-auto max-w-4xl text-center animate-fade-in">
             <div className="flex justify-center mb-8">
@@ -313,7 +313,7 @@ export const Landing = () => {
       </section>
 
       {/* Screenshots Carousel Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-r from-slate-50 to-gray-50">
+      <section className="py-12 md:py-20 bg-gradient-to-r from-green-25/30 via-white to-emerald-25/30">
         <div className="container">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <div className="flex justify-center mb-4">
@@ -472,7 +472,7 @@ export const Landing = () => {
       </section>
 
       {/* Novidades Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-r from-purple-50 to-blue-50">
+      <section className="py-12 md:py-20 bg-gradient-to-r from-green-25/40 via-emerald-25/30 to-green-50/50">
         <div className="container">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <div className="flex justify-center mb-4">
@@ -809,7 +809,7 @@ export const Landing = () => {
       </section>
 
       {/* Sistema de Créditos */}
-      <section className="py-12 md:py-20 bg-gradient-to-r from-emerald-50 to-green-50">
+      <section className="py-12 md:py-20 bg-gradient-to-r from-emerald-25/35 via-green-25/25 to-emerald-50/45">
         <div className="container">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
@@ -942,7 +942,7 @@ export const Landing = () => {
       </section>
 
       {/* Análise DISC Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-r from-indigo-50 to-purple-50">
+      <section className="py-12 md:py-20 bg-gradient-to-r from-green-25/30 via-emerald-25/20 to-green-50/35">
         <div className="container">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">
@@ -1139,7 +1139,7 @@ export const Landing = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-br from-slate-50 to-blue-50">
+      <section className="py-12 md:py-20 bg-gradient-to-br from-green-25/25 via-white to-emerald-50/40">
         <div className="container">
           <div className="mx-auto max-w-6xl">
             <div className="text-center mb-16">

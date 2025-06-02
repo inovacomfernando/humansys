@@ -3,6 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Cores customizadas para verde suavizado */
+:root {
+  --green-25: 248, 250, 252;
+  --emerald-25: 249, 250, 251;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
