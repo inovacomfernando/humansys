@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -132,6 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
             description: 'Métricas estratégicas',
             isPro: true
           }] : []),
+          { icon: Brain, label: 'Brainsys IAO V.1', path: '/app/brainsys-iao', description: 'Orquestrador de IA', isNew: true },
         ]
       },
       {
@@ -257,7 +257,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const active = isActive(item.path);
-                      
+
                       return (
                         <div key={item.path} className="relative group">
                           <Button
@@ -277,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                               !collapsed && "mr-3",
                               active && "text-green-600"
                             )} />
-                            
+
                             {!collapsed && (
                               <div className="flex-1 text-left">
                                 <div className="flex items-center justify-between">

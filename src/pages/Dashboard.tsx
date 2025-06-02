@@ -62,6 +62,92 @@ export const Dashboard = () => {
       <div className="space-y-6">
         <UpdateBanner />
         
+        {/* Brainsys IAO V.1 Module */}
+        <Card className="relative overflow-hidden bg-gradient-to-r from-purple-900/90 via-blue-900/90 to-indigo-900/90 border-purple-500/20 backdrop-blur-sm">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23a855f7" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+          <CardContent className="relative p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center animate-pulse shadow-lg shadow-purple-500/30">
+                    <Brain className="h-8 w-8 text-white animate-bounce" style={{ animationDuration: '2s' }} />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full"></div>
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2 mb-1">
+                    <h2 className="text-2xl font-bold text-white">Brainsys IAO V.1</h2>
+                    <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none animate-pulse">
+                      BETA
+                    </Badge>
+                  </div>
+                  <p className="text-purple-100 text-sm mb-2">
+                    Orquestrador de Inteligência Organizacional
+                  </p>
+                  <div className="flex items-center space-x-4 text-xs text-purple-200">
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></div>
+                      IA Preditiva Ativa
+                    </span>
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full mr-1 animate-pulse"></div>
+                      ML Learning
+                    </span>
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full mr-1 animate-pulse"></div>
+                      Memória Contextual
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col space-y-2">
+                <Button 
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  onClick={() => navigate('/app/brainsys-iao')}
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Acessar IAO
+                </Button>
+                <div className="text-right">
+                  <div className="text-xs text-purple-200">Powered by</div>
+                  <div className="text-sm font-medium text-white">Anthropic API</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Quick Insights Preview */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-purple-200">Análise Preditiva</span>
+                  <Brain className="h-3 w-3 text-purple-400" />
+                </div>
+                <div className="text-lg font-bold text-white">94.7%</div>
+                <div className="text-xs text-purple-200">Precisão dos Insights</div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-purple-200">Recomendações</span>
+                  <Target className="h-3 w-3 text-blue-400" />
+                </div>
+                <div className="text-lg font-bold text-white">12</div>
+                <div className="text-xs text-purple-200">Ações Sugeridas</div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-purple-200">Economia</span>
+                  <TrendingUp className="h-3 w-3 text-green-400" />
+                </div>
+                <div className="text-lg font-bold text-white">R$ 45.2K</div>
+                <div className="text-xs text-purple-200">Potencial/Mês</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>

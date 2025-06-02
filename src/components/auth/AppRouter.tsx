@@ -8,6 +8,7 @@ const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({
 const FounderDashboard = React.lazy(() => import('@/pages/FounderDashboard').then(module => ({ default: module.FounderDashboard })));
 const Login = React.lazy(() => import('@/pages/Login').then(module => ({ default: module.Login })));
 const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ default: module.Landing })));
+import { BrainsysIAO } from '@/pages/BrainsysIAO';
 
 // Import optimized components
 import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
@@ -235,6 +236,7 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
+              <Route path="/app/brainsys-iao" element={<ProtectedRoute><BrainsysIAO /></ProtectedRoute>} />
 
         {/* Rotas Públicas Institucionais */}
         <Route path="/about" element={<About />} />
