@@ -139,6 +139,7 @@ export const IAAssistantDialog: React.FC<IAAssistantDialogProps> = ({
 🎯 **Minhas Especialidades:**
 • Recrutamento e Seleção Estratégica
 • Saúde Mental no Trabalho
+• Equilíbrio Vida-Trabalho (Work-Life Balance)
 • Retenção de Talentos
 • Desenvolvimento de Pessoas & PDI
 • People Analytics & Predição de Churn
@@ -148,6 +149,7 @@ Estou aqui para te ajudar com insights personalizados baseados no seu perfil e n
       suggestions: [
         'Como melhorar minha performance?',
         'Estratégias de retenção de talentos',
+        'Equilíbrio vida e trabalho',
         'Desenvolver meu plano de carreira',
         'Saúde mental no trabalho',
         'Recrutamento e seleção eficaz',
@@ -204,6 +206,64 @@ Estou aqui para te ajudar com insights personalizados baseados no seu perfil e n
         'Melhorar candidate experience',
         'Aumentar diversidade no pipeline',
         'Como medir quality of hire?'
+      ];
+    }
+    
+    // EXPERTISE EM EQUILÍBRIO VIDA-TRABALHO
+    else if (message.includes('equilíbrio') || message.includes('vida e trabalho') || message.includes('work-life') || message.includes('balance') || message.includes('conciliar') || message.includes('vida pessoal') || message.includes('jornada') || message.includes('horário') || message.includes('flexibilidade')) {
+      response = `⚖️ **EQUILÍBRIO VIDA-TRABALHO**\n\n`;
+      response += `Como especialista em bem-estar organizacional, reconheço que o equilíbrio vida-trabalho é fundamental para:\n\n`;
+      
+      if (message.includes('como') || message.includes('dicas') || message.includes('estratégias')) {
+        response += `🎯 **Estratégias Eficazes para Equilíbrio:**\n`;
+        response += `• **Gestão de Tempo:** Use técnica Pomodoro e bloqueie tempos para vida pessoal\n`;
+        response += `• **Estabeleça Limites:** Defina horários claros de trabalho e desconexão\n`;
+        response += `• **Priorização:** Use matriz de Eisenhower (urgente vs importante)\n`;
+        response += `• **Delegação:** Identifique tarefas que podem ser redistribuídas\n`;
+        response += `• **Autocuidado:** Reserve tempo para exercícios, hobbies e descanso\n\n`;
+      } else if (message.includes('empresa') || message.includes('organização') || message.includes('política')) {
+        response += `🏢 **Políticas Organizacionais para Work-Life Balance:**\n`;
+        response += `• **Horário Flexível:** Flexibilidade de entrada/saída (core hours)\n`;
+        response += `• **Home Office:** Modelo híbrido 2-3 dias remotos\n`;
+        response += `• **Direito à Desconexão:** Política de não comunicação fora do expediente\n`;
+        response += `• **Licenças Especiais:** Dias de bem-estar, licença parental estendida\n`;
+        response += `• **Programas de Qualidade de Vida:** Ginástica laboral, apoio psicológico\n\n`;
+      } else {
+        response += `🌟 **Pilares do Equilíbrio Vida-Trabalho:**\n`;
+        response += `• **Flexibilidade:** Adaptação de horários e local de trabalho\n`;
+        response += `• **Autonomia:** Controle sobre como e quando realizar tarefas\n`;
+        response += `• **Limites Claros:** Separação entre tempo profissional e pessoal\n`;
+        response += `• **Apoio Organizacional:** Cultura que valoriza o bem-estar\n`;
+        response += `• **Desenvolvimento Pessoal:** Crescimento além do ambiente profissional\n\n`;
+        
+        response += `📊 **Benefícios Mensuráveis:**\n`;
+        response += `• Redução de 35% no absenteísmo\n`;
+        response += `• Aumento de 28% na produtividade\n`;
+        response += `• Melhoria de 45% na retenção de talentos\n`;
+        response += `• Diminuição de 50% nos casos de burnout\n\n`;
+      }
+
+      if (userProfile?.department === 'Liderança' || userProfile?.seniority_level === 'senior') {
+        response += `🎖️ **Para Líderes - Como Promover o Equilíbrio:**\n`;
+        response += `• Dê o exemplo: respeite seus próprios limites\n`;
+        response += `• Evite enviar mensagens fora do horário comercial\n`;
+        response += `• Reconheça e recompense resultados, não apenas horas trabalhadas\n`;
+        response += `• Implemente check-ins regulares sobre bem-estar da equipe\n\n`;
+      }
+
+      insights.push({
+        type: 'performance',
+        title: 'Plano de Equilíbrio Personalizado',
+        description: 'Estratégias específicas baseadas no seu perfil e função',
+        action: 'Criar plano de work-life balance'
+      });
+
+      suggestions = [
+        'Como estabelecer limites saudáveis?',
+        'Técnicas de gestão de tempo eficazes',
+        'Políticas de flexibilidade na empresa',
+        'Como desconectar do trabalho?',
+        'Sinais de desequilíbrio vida-trabalho'
       ];
     }
     
@@ -712,6 +772,15 @@ Estou aqui para te ajudar com insights personalizados baseados no seu perfil e n
             >
               <MessageSquare className="h-3 w-3 mr-1" />
               Recrutamento
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSuggestionClick('Como ter equilíbrio vida e trabalho?')}
+              className="text-xs"
+            >
+              <Target className="h-3 w-3 mr-1" />
+              Work-Life Balance
             </Button>
           </div>
         </div>
