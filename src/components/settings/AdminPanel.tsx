@@ -329,7 +329,7 @@ export const AdminPanel = () => {
                 variant="outline"
                 className="w-full"
               >
-                <Database className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Reconectar Database
               </Button>
             </div>
