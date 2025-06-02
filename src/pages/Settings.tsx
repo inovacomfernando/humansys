@@ -28,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import { CreditsCard } from '@/components/dashboard/CreditsCard';
 import { useCredits } from '@/hooks/useCredits';
 import { UserManagementDialog } from '@/components/settings/UserManagementDialog';
+import { AdminPanel } from '@/components/settings/AdminPanel';
 
 export const Settings = () => {
   const { user } = useAuth();
@@ -97,7 +98,7 @@ export const Settings = () => {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="profile" className="flex items-center gap-2" onClick={() => navigate('/app/profile')}>
               <User className="h-4 w-4" />
               Perfil
@@ -121,6 +122,10 @@ export const Settings = () => {
             <TabsTrigger value="integrations" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
               Integrações
+            </TabsTrigger>
+            <TabsTrigger value="admin" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Admin
             </TabsTrigger>
             <TabsTrigger value="advanced" className="flex items-center gap-2">
               <SettingsIcon className="h-4 w-4" />
@@ -531,6 +536,10 @@ export const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="admin" className="space-y-6">
+            <AdminPanel />
           </TabsContent>
 
           <TabsContent value="advanced" className="space-y-6">

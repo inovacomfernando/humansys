@@ -34,13 +34,27 @@ export const Login = () => {
       
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao RH System",
+        description: "Bem-vindo ao Humansys",
       });
       navigate('/');
     } catch (error: any) {
+      console.error('Login error:', error);
+      
+      let errorMessage = "Verifique suas credenciais e tente novamente.";
+      
+      if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = "Email ou senha incorretos. Verifique seus dados e tente novamente.";
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = "Email não confirmado. Verifique sua caixa de entrada e confirme seu email.";
+      } else if (error.message?.includes('Too many requests')) {
+        errorMessage = "Muitas tentativas de login. Aguarde alguns minutos e tente novamente.";
+      } else if (error.message?.includes('Failed to fetch')) {
+        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+      }
+      
       toast({
         title: "Erro no login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -61,13 +75,27 @@ export const Login = () => {
       
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: "Seu teste grátis de 30 dias foi ativado. Bem-vindo ao RH System!",
+        description: "Seu teste grátis de 30 dias foi ativado. Bem-vindo ao Humansys!",
       });
       navigate('/');
     } catch (error: any) {
+      console.error('Signup error:', error);
+      
+      let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
+      
+      if (error.message?.includes('User already registered')) {
+        errorMessage = "Este email já está cadastrado. Tente fazer login ou use outro email.";
+      } else if (error.message?.includes('Password should be at least')) {
+        errorMessage = "A senha deve ter pelo menos 6 caracteres.";
+      } else if (error.message?.includes('Unable to validate email')) {
+        errorMessage = "Email inválido. Verifique o formato do email.";
+      } else if (error.message?.includes('Failed to fetch')) {
+        errorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
+      }
+      
       toast({
         title: "Erro no cadastro",
-        description: error.message || "Não foi possível criar sua conta. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
