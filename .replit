@@ -29,6 +29,10 @@ task = "shell.exec"
 args = "node server/database.js"
 
 [[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
 localPort = 8080
 externalPort = 80
 
