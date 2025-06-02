@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext } from 'react';
 import { User } from '@supabase/supabase-js';
-import { usePostgreSQLAuth } from '@/hooks/usePostgreSQLAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 interface AuthContextType {
   user: User | null;
@@ -17,7 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const auth = usePostgreSQLAuth();
+  const auth = useSupabaseAuth();
 
   // Criar aliases para manter compatibilidade
   const contextValue: AuthContextType = {
