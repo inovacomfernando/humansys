@@ -2,48 +2,84 @@
 import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, Brain, Trophy, Target, Heart, Zap } from 'lucide-react';
+import { 
+  Brain, 
+  Users, 
+  Target, 
+  Award, 
+  Sparkles, 
+  Crown,
+  Shield,
+  TrendingUp,
+  Zap,
+  Heart,
+  Building,
+  Lightbulb
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const About = () => {
-  const values = [
+  const navigate = useNavigate();
+
+  const features = [
     {
       icon: Brain,
-      title: "Inovação",
-      description: "Utilizamos as mais avançadas tecnologias de IA para revolucionar a gestão de pessoas."
+      title: 'IA Avançada Integrada',
+      description: 'Brainsys IAO V.1 com análise DISC inteligente, insights preditivos e automação completa',
+      isNew: true
     },
     {
-      icon: Heart,
-      title: "Pessoas em Primeiro Lugar",
-      description: "Acreditamos que colaboradores engajados são a chave para o sucesso de qualquer empresa."
+      icon: Crown,
+      title: 'Founder Dashboard',
+      description: 'Métricas SaaS exclusivas, análise de churn e forecasting para founders',
+      isPro: true
     },
     {
-      icon: Target,
-      title: "Resultados Mensuráveis",
-      description: "Fornecemos insights e métricas que geram impacto real nos resultados do seu negócio."
+      icon: Users,
+      title: 'Gestão Completa de Pessoas',
+      description: 'Do recrutamento ao offboarding, com sistema de créditos e permissões avançadas'
     },
     {
-      icon: Trophy,
-      title: "Excelência",
-      description: "Buscamos constantemente a melhoria contínua em tudo que fazemos."
+      icon: Award,
+      title: 'Gamificação Total',
+      description: 'Sistema de badges, rankings e conquistas para maximizar o engajamento'
+    },
+    {
+      icon: Shield,
+      title: 'Segurança Empresarial',
+      description: 'Proteção contra vazamentos, watermarks e monitoramento em tempo real'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Analytics Preditivos',
+      description: 'Machine Learning para previsão de tendências e tomada de decisão estratégica'
     }
+  ];
+
+  const stats = [
+    { number: '500+', label: 'Empresas Atendidas' },
+    { number: '50k+', label: 'Colaboradores Gerenciados' },
+    { number: '99.9%', label: 'Uptime Garantido' },
+    { number: '24/7', label: 'Suporte Especializado' }
   ];
 
   const team = [
     {
-      name: "Ana Silva",
-      role: "CEO & Fundadora",
-      description: "15 anos de experiência em RH e tecnologia, ex-diretora de pessoas em startups unicórnio."
+      name: 'Equipe de IA',
+      role: 'Desenvolvimento de Inteligência Artificial',
+      description: 'Especialistas em ML e processamento de linguagem natural'
     },
     {
-      name: "Carlos Santos",
-      role: "CTO",
-      description: "Especialista em IA e Machine Learning, PhD em Ciência da Computação pela USP."
+      name: 'Equipe de Produto',
+      role: 'UX/UI e Product Management',
+      description: 'Focados na melhor experiência do usuário'
     },
     {
-      name: "Maria Oliveira",
-      role: "Head de Produto",
-      description: "10 anos desenvolvendo produtos de RH, especialista em UX e experiência do usuário."
+      name: 'Equipe de RH',
+      role: 'Consultoria Especializada',
+      description: 'Profissionais com décadas de experiência em gestão de pessoas'
     }
   ];
 
@@ -53,110 +89,156 @@ export const About = () => {
       
       <div className="container py-20">
         {/* Hero Section */}
-        <div className="mx-auto max-w-4xl text-center mb-20">
-          <h1 className="text-4xl font-bold tracking-tight md:text-5xl mb-6">
-            Sobre a HumanSys
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            Transformamos a gestão de pessoas através da tecnologia, criando ambientes de trabalho 
-            mais engajados e produtivos com o poder da Inteligência Artificial.
-          </p>
-        </div>
-
-        {/* Mission Section */}
-        <div className="grid gap-12 lg:grid-cols-2 mb-20">
-          <div>
-            <h2 className="text-3xl font-bold mb-6">Nossa Missão</h2>
-            <p className="text-lg text-muted-foreground mb-6">
-              Democratizar o acesso a ferramentas avançadas de gestão de pessoas, permitindo que 
-              empresas de todos os tamanhos possam identificar, desenvolver e reter seus melhores talentos.
-            </p>
-            <p className="text-lg text-muted-foreground">
-              Utilizamos Inteligência Artificial para prever tendências, gamificação para engajar 
-              colaboradores e tecnologia PWA para garantir acesso em qualquer lugar e momento.
-            </p>
-          </div>
-          <div className="bg-gradient-to-br from-primary/5 to-primary/10 p-8 rounded-lg">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-2">500+</div>
-                <div className="text-sm text-muted-foreground">Empresas Atendidas</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-2">50k+</div>
-                <div className="text-sm text-muted-foreground">Colaboradores Gerenciados</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-2">85%</div>
-                <div className="text-sm text-muted-foreground">Precisão na Previsão de Turnover</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-2">60%</div>
-                <div className="text-sm text-muted-foreground">Redução na Rotatividade</div>
-              </div>
+        <div className="text-center mb-16">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
+              <Sparkles className="h-8 w-8 text-white" />
             </div>
           </div>
-        </div>
-
-        {/* Values Section */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-bold text-center mb-12">Nossos Valores</h2>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {values.map((value, index) => (
-              <Card key={index} className="text-center">
-                <CardHeader>
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <value.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-lg">{value.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription>{value.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+          <h1 className="text-4xl font-bold tracking-tight md:text-6xl mb-6">
+            Sobre a <span className="text-green-600">HumanSys</span>
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+            Revolucionamos a gestão de pessoas com inteligência artificial avançada, 
+            oferecendo a plataforma mais completa e inovadora do mercado.
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button size="lg" onClick={() => navigate('/plans')}>
+              <Zap className="h-4 w-4 mr-2" />
+              Começar Agora
+            </Button>
+            <Button variant="outline" size="lg" onClick={() => navigate('/app/documentation')}>
+              <Lightbulb className="h-4 w-4 mr-2" />
+              Ver Documentação
+            </Button>
           </div>
         </div>
 
-        {/* Team Section */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-bold text-center mb-12">Nossa Equipe</h2>
-          <div className="grid gap-8 md:grid-cols-3">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+          {stats.map((stat, index) => (
+            <div key={index} className="text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">{stat.number}</div>
+              <div className="text-sm text-muted-foreground">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Nossa Missão */}
+        <div className="mb-16">
+          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+            <CardContent className="p-8">
+              <div className="text-center mb-8">
+                <Heart className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h2 className="text-3xl font-bold mb-4">Nossa Missão</h2>
+                <p className="text-lg text-muted-foreground max-w-4xl mx-auto">
+                  Democratizar o acesso a ferramentas avançadas de gestão de pessoas, 
+                  permitindo que empresas de todos os tamanhos tenham acesso à tecnologia 
+                  de ponta para desenvolver seus colaboradores e maximizar resultados.
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <Brain className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-semibold mb-2">Inovação Contínua</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Sempre na vanguarda da tecnologia, implementando IA e ML de forma prática
+                  </p>
+                </div>
+                <div className="text-center">
+                  <Users className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-semibold mb-2">Foco nas Pessoas</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Entendemos que o sucesso das empresas começa com pessoas engajadas
+                  </p>
+                </div>
+                <div className="text-center">
+                  <Target className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-semibold mb-2">Resultados Mensuráveis</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Todas nossas funcionalidades são baseadas em métricas e dados concretos
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Principais Funcionalidades */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8">
+            Funcionalidades Principais
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <Card key={index} className="relative hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <Icon className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">{feature.title}</CardTitle>
+                        {feature.isNew && (
+                          <Badge className="bg-green-500 text-white text-xs">NOVO</Badge>
+                        )}
+                        {feature.isPro && (
+                          <Badge className="bg-yellow-500 text-white text-xs">PRO</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Nossa Equipe */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8">Nossa Equipe</h2>
+          <div className="grid md:grid-cols-3 gap-8">
             {team.map((member, index) => (
               <Card key={index}>
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4 h-20 w-20 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center">
-                    <Users className="h-10 w-10 text-white" />
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                      <Building className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{member.name}</CardTitle>
+                      <p className="text-sm text-green-600 font-medium">{member.role}</p>
+                    </div>
                   </div>
-                  <CardTitle>{member.name}</CardTitle>
-                  <CardDescription className="font-medium text-primary">{member.role}</CardDescription>
+                  <CardDescription>{member.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-center">{member.description}</p>
-                </CardContent>
               </Card>
             ))}
           </div>
         </div>
 
-        {/* CTA Section */}
+        {/* CTA Final */}
         <div className="text-center">
-          <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-            <CardContent className="pt-8">
-              <Zap className="h-12 w-12 text-primary mx-auto mb-6" />
-              <h3 className="text-2xl font-bold mb-4">
-                Pronto para Transformar seu RH?
-              </h3>
-              <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                Junte-se às centenas de empresas que já revolucionaram sua gestão de pessoas 
-                com nossa plataforma de IA e gamificação.
+          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+            <CardContent className="p-8">
+              <h2 className="text-3xl font-bold mb-4">
+                Pronto para Revolucionar seu RH?
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
+                Junte-se a centenas de empresas que já transformaram 
+                sua gestão de pessoas com a HumanSys.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" onClick={() => window.location.href = '/plans'}>
-                  Começar Teste Grátis
+              <div className="flex justify-center gap-4">
+                <Button size="lg" onClick={() => navigate('/plans')}>
+                  <Zap className="h-4 w-4 mr-2" />
+                  Testar Grátis
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => window.location.href = '/contact'}>
-                  Falar com Especialista
+                <Button variant="outline" size="lg" onClick={() => navigate('/contact')}>
+                  Falar com Consultor
                 </Button>
               </div>
             </CardContent>
