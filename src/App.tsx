@@ -22,6 +22,7 @@ import { Careers } from '@/pages/Careers';
 import { Blog } from '@/pages/Blog';
 import NotFound from '@/pages/NotFound';
 import { SecurityProvider } from '@/components/security/SecurityProvider';
+import { PreviewProtection } from '@/components/security/PreviewProtection';
 
 import './App.css';
 
@@ -42,7 +43,8 @@ function App() {
         <ThemeProvider>
           <AuthProvider>
             <SecurityProvider>
-              <Router>
+              <PreviewProtection>
+                <Router>
                 <Routes>
                   {/* Public routes */}
                   <Route path="/" element={<Index />} />
@@ -67,7 +69,8 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <Toaster />
-              </Router>
+                </Router>
+              </PreviewProtection>
             </SecurityProvider>
           </AuthProvider>
         </ThemeProvider>

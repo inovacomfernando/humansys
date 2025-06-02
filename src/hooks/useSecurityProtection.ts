@@ -49,14 +49,20 @@ export const useSecurityProtection = () => {
   useEffect(() => {
     // Bloquear DevTools
     const blockDevTools = () => {
-      // Verificar se está no ambiente Replit
-      const isReplitEnvironment = window.location.hostname.includes('replit') || 
-                                  window.location.hostname.includes('repl.co') ||
-                                  window.location.hostname.includes('localhost') ||
-                                  window.location.hostname.includes('127.0.0.1');
+      // Verificar se está no ambiente Replit de desenvolvimento
+      const isReplitDev = window.location.hostname.includes('replit') || 
+                         window.location.hostname.includes('repl.co') ||
+                         window.location.hostname.includes('localhost') ||
+                         window.location.hostname.includes('127.0.0.1');
+      
+      // Verificar se está no preview (mesmo sendo Replit)
+      const isPreview = window.location.pathname.includes('/preview') ||
+                       window.location.search.includes('preview') ||
+                       document.referrer.includes('replit') ||
+                       window.parent !== window;
 
-      // Detectar abertura de DevTools (só em produção)
-      if (!isReplitEnvironment) {
+      // Detectar abertura de DevTools (em produção E preview)
+      if (!isReplitDev || isPreview) {
         let devtools = { open: false, orientation: null };
         const threshold = 160;
 
@@ -90,8 +96,8 @@ export const useSecurityProtection = () => {
         }, 500);
       }
 
-      // Bloquear F12, Ctrl+Shift+I, Ctrl+U, etc. (só em produção)
-      if (!isReplitEnvironment) {
+      // Bloquear F12, Ctrl+Shift+I, Ctrl+U, etc. (em produção E preview)
+      if (!isReplitDev || isPreview) {
         document.addEventListener('keydown', (e) => {
           if (
             e.key === 'F12' ||
@@ -280,17 +286,25 @@ export const useSecurityProtection = () => {
     document.addEventListener('contextmenu', blockRightClick);
     document.addEventListener('keydown', blockCopyPaste);
 
-    // Console warning (só em produção)
-    const isReplitEnvironment = window.location.hostname.includes('replit') || 
-                                window.location.hostname.includes('repl.co') ||
-                                window.location.hostname.includes('localhost') ||
-                                window.location.hostname.includes('127.0.0.1');
+    // Console warning (em produção E preview)
+    const isReplitDev = window.location.hostname.includes('replit') || 
+                       window.location.hostname.includes('repl.co') ||
+                       window.location.hostname.includes('localhost') ||
+                       window.location.hostname.includes('127.0.0.1');
+    
+    const isPreview = window.location.pathname.includes('/preview') ||
+                     window.location.search.includes('preview') ||
+                     document.referrer.includes('replit') ||
+                     window.parent !== window;
 
-    if (!isReplitEnvironment) {
+    if (!isReplitDev || isPreview) {
       console.clear();
       console.log('%c🔒 SISTEMA PROTEGIDO', 'color: red; font-size: 24px; font-weight: bold;');
       console.log('%cTodas as atividades são monitoradas e registradas.', 'color: red; font-size: 16px;');
       console.log('%cQualquer tentativa de acesso não autorizado será reportada.', 'color: red; font-size: 16px;');
+      if (isPreview) {
+        console.log('%c📱 MODO PREVIEW - Proteções Ativas', 'color: orange; font-size: 14px; font-weight: bold;');
+      }
     } else {
       console.log('%c🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
       console.log('%cSistema de segurança em modo de desenvolvimento - Proteções reduzidas', 'color: blue; font-size: 12px;');

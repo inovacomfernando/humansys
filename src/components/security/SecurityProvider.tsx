@@ -63,21 +63,31 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
         }
 
         // Verificar se está rodando em iframe (possível embedding malicioso)
-        // Exceto se for o preview do Replit
         if (window.top !== window.self) {
-          const isReplitPreview = window.location.hostname.includes('replit') || 
-                                 window.location.hostname.includes('repl.co') ||
-                                 window.parent?.location?.hostname?.includes('replit') ||
-                                 window.parent?.location?.hostname?.includes('repl.co');
+          const isReplitDev = window.location.hostname.includes('replit') || 
+                             window.location.hostname.includes('repl.co');
           
-          if (!isReplitPreview) {
+          const isLegitimateFrame = isReplitDev || 
+                                   document.referrer.includes('replit') ||
+                                   document.referrer.includes('repl.co');
+          
+          // Se não for um frame legítimo do Replit, bloquear
+          if (!isLegitimateFrame) {
             await logSecurityEvent({
               type: 'suspicious_activity',
               user_agent: navigator.userAgent,
               timestamp: new Date().toISOString(),
-              details: { reason: 'iframe_detected', hostname: window.location.hostname }
+              details: { 
+                reason: 'iframe_detected', 
+                hostname: window.location.hostname,
+                referrer: document.referrer 
+              }
             });
             setIsSecure(false);
+          } else {
+            // Mesmo sendo legítimo, ativar proteções de preview
+            console.log('%c🔒 PREVIEW PROTEGIDO', 'color: orange; font-size: 16px; font-weight: bold;');
+            console.log('%cSistema rodando em preview com proteções ativas', 'color: orange; font-size: 12px;');
           }
         }
 
