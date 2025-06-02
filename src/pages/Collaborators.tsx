@@ -13,6 +13,7 @@ import { Users, UserPlus, Search, Filter, Mail, Phone, MapPin, AlertCircle, Refr
 import { useCollaborators } from '@/hooks/useCollaborators';
 import { CollaboratorActions } from '@/components/collaborators/CollaboratorActions';
 import { ConnectionStatus } from '@/components/feedback/ConnectionStatus';
+import { ConnectionDiagnostic } from '@/components/debug/ConnectionDiagnostic';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -457,22 +458,25 @@ export const Collaborators = () => {
                 </p>
                 
                 {process.env.NODE_ENV === 'development' && (
-                  <div className="text-xs text-left bg-gray-50 p-4 rounded-lg mb-4 max-w-md mx-auto">
-                    <h4 className="font-semibold mb-2">Debug Info Detalhado:</h4>
-                    <p>• Total colaboradores: {collaborators.length}</p>
-                    <p>• Filtrados: {filteredCollaborators.length}</p>
-                    <p>• Busca: "{searchTerm}"</p>
-                    <p>• User ID: {user?.id}</p>
-                    <p>• User Email: {user?.email}</p>
-                    <p>• Loading: {isLoading.toString()}</p>
-                    <p>• Error: {error || 'nenhum'}</p>
-                    <p>• Auth State: {user ? 'autenticado' : 'não autenticado'}</p>
-                    <p>• Hook Loaded: {typeof useCollaborators === 'function' ? 'sim' : 'não'}</p>
-                    <div className="mt-2 pt-2 border-t">
-                      <p className="font-semibold">Dados brutos:</p>
-                      <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
-                        {JSON.stringify({ collaborators, user: { id: user?.id, email: user?.email } }, null, 2)}
-                      </pre>
+                  <div className="max-w-2xl mx-auto space-y-4">
+                    <ConnectionDiagnostic />
+                    <div className="text-xs text-left bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold mb-2">Debug Info Detalhado:</h4>
+                      <p>• Total colaboradores: {collaborators.length}</p>
+                      <p>• Filtrados: {filteredCollaborators.length}</p>
+                      <p>• Busca: "{searchTerm}"</p>
+                      <p>• User ID: {user?.id}</p>
+                      <p>• User Email: {user?.email}</p>
+                      <p>• Loading: {isLoading.toString()}</p>
+                      <p>• Error: {error || 'nenhum'}</p>
+                      <p>• Auth State: {user ? 'autenticado' : 'não autenticado'}</p>
+                      <p>• Hook Loaded: {typeof useCollaborators === 'function' ? 'sim' : 'não'}</p>
+                      <div className="mt-2 pt-2 border-t">
+                        <p className="font-semibold">Dados brutos:</p>
+                        <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
+                          {JSON.stringify({ collaborators, user: { id: user?.id, email: user?.email } }, null, 2)}
+                        </pre>
+                      </div>
                     </div>
                   </div>
                 )}

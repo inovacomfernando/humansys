@@ -22,8 +22,13 @@ export const supabase = supabaseInstance || (supabaseInstance = createClient<Dat
   },
   global: {
     headers: {
-      'X-Client-Info': 'lovable-hr-dashboard'
+      'X-Client-Info': 'lovable-hr-dashboard',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
     }
+  },
+  db: {
+    schema: 'public'
   },
   realtime: {
     params: {
@@ -35,29 +40,39 @@ export const supabase = supabaseInstance || (supabaseInstance = createClient<Dat
 // Função auxiliar para verificar conectividade - versão corrigida
 export const checkSupabaseConnection = async (): Promise<boolean> => {
   try {
-    // Verificar se conseguimos fazer uma query simples (sem HEAD request)
-    const { error } = await supabase
-      .from('collaborators')
-      .select('id')
-      .limit(1);
-
-    if (error) {
-      console.warn('Supabase connectivity test failed:', error.message);
-      // Se o erro é de autenticação ou RLS, ainda consideramos conectado
-      if (error.message.includes('JWT') || 
-          error.message.includes('auth') || 
-          error.message.includes('RLS') ||
-          error.message.includes('permission')) {
-        return true;
-      }
+    // Usar uma consulta mais simples e robusta
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.warn('Supabase session check failed:', sessionError.message);
       return false;
+    }
+
+    // Se há sessão, fazer uma query básica para testar a conectividade
+    if (session) {
+      const { error } = await supabase
+        .from('collaborators')
+        .select('count')
+        .limit(0);
+
+      if (error) {
+        console.warn('Supabase table access test failed:', error.message);
+        // Erros de RLS/permissão ainda indicam conectividade
+        if (error.message.includes('JWT') || 
+            error.message.includes('auth') || 
+            error.message.includes('RLS') ||
+            error.message.includes('permission') ||
+            error.code === 'PGRST301') {
+          return true;
+        }
+        return false;
+      }
     }
 
     return true;
   } catch (error) {
     console.error('Connection check failed:', error);
-    // Em caso de erro de rede, assumir conectividade
-    return true;
+    return false;
   }
 };
 

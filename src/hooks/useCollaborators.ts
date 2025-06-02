@@ -44,50 +44,134 @@ export const useCollaborators = () => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      // Buscar os dados específicos do usuário diretamente
-      const { data: result, error: queryError } = await supabase
-        .from('collaborators')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+    // Implementar retry com backoff
+    const maxRetries = 3;
+    let lastError = null;
 
-      console.log('Query result:', { 
-        result, 
-        queryError, 
-        userIdUsed: user.id,
-        userEmail: user.email,
-        resultCount: result?.length || 0
-      });
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`useCollaborators: Tentativa ${attempt}/${maxRetries}`);
 
-      if (queryError) {
-        console.error('Erro na query:', queryError);
-        setError(`Erro ao buscar colaboradores: ${queryError.message}`);
-        setCollaborators([]);
-      } else if (result && Array.isArray(result)) {
-        const formattedData: Collaborator[] = result.map((item: any) => ({
-          ...item,
+        // Verificar sessão antes da query
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('useCollaborators: Erro de sessão:', sessionError);
+          throw new Error('Erro de autenticação');
+        }
+
+        if (!session) {
+          console.error('useCollaborators: Sessão não encontrada');
+          throw new Error('Sessão expirada');
+        }
+
+        // Query com timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout na consulta')), 8000)
+        );
+
+        const queryPromise = supabase
+          .from('collaborators')
+          .select(`
+            id,
+            user_id,
+            name,
+            email,
+            role,
+            department,
+            status,
+            phone,
+            location,
+            join_date,
+            created_at,
+            updated_at
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        const { data: result, error: queryError } = await Promise.race([
+          queryPromise,
+          timeoutPromise
+        ]) as any;
+
+        console.log('Query result:', { 
+          result, 
+          queryError, 
+          userIdUsed: user.id,
+          userEmail: user.email,
+          resultCount: result?.length || 0,
+          attempt
+        });
+
+        if (queryError) {
+          lastError = queryError;
+          console.error(`Erro na query (tentativa ${attempt}):`, queryError);
+          
+          // Se é erro de RLS ou autorização, não tentar novamente
+          if (queryError.code === 'PGRST301' || 
+              queryError.message?.includes('permission') ||
+              queryError.message?.includes('RLS')) {
+            throw queryError;
+          }
+          
+          // Para outros erros, tentar novamente
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+            continue;
+          }
+          
+          throw queryError;
+        }
+
+        // Sucesso - formatar dados
+        const formattedData: Collaborator[] = (result || []).map((item: any) => ({
+          id: item.id,
+          user_id: item.user_id,
+          name: item.name || '',
+          email: item.email || '',
+          role: item.role || '',
+          department: item.department || '',
           status: (item.status as 'active' | 'inactive' | 'vacation') || 'active',
+          phone: item.phone || '',
+          location: item.location || '',
           join_date: item.join_date || item.created_at,
+          created_at: item.created_at,
+          updated_at: item.updated_at
         }));
         
         console.log('useCollaborators: Colaboradores formatados:', formattedData);
         setCollaborators(formattedData);
         setError(null);
+        setIsLoading(false);
         
-        toast({
-          title: "Colaboradores carregados",
-          description: `${formattedData.length} colaborador(es) encontrado(s)`
-        });
-      } else {
-        console.log('useCollaborators: Nenhum resultado ou resultado inválido');
-        setCollaborators([]);
-        setError(null);
+        if (formattedData.length > 0) {
+          toast({
+            title: "Colaboradores carregados",
+            description: `${formattedData.length} colaborador(es) encontrado(s)`
+          });
+        }
+        
+        return; // Sucesso, sair do loop
+        
+      } catch (error: any) {
+        lastError = error;
+        console.error(`useCollaborators: Erro na tentativa ${attempt}:`, error);
+        
+        if (attempt === maxRetries) {
+          // Última tentativa falhou
+          setError(`Erro ao carregar colaboradores: ${error.message}`);
+          setCollaborators([]);
+          
+          toast({
+            title: "Erro ao carregar colaboradores",
+            description: "Tente atualizar a página ou verificar sua conexão",
+            variant: "destructive"
+          });
+        } else {
+          // Aguardar antes da próxima tentativa
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+        }
       }
-    } catch (error: any) {
-      console.error('useCollaborators: Erro inesperado:', error);
-      setError(`Erro inesperado: ${error.message}`);
-      setCollaborators([]);
     }
 
     setIsLoading(false);
