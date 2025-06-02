@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import Database from 'better-sqlite3';
@@ -9,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -83,24 +82,24 @@ db.exec(`
 const adminUser = db.prepare('SELECT * FROM users WHERE email = ?').get('admin@humansys.com');
 if (!adminUser) {
   console.log('📝 Criando usuário administrador de teste...');
-  
+
   // Senha simples para teste: "admin123"
   const adminPassword = btoa('admin123'); // Base64 básico para teste
-  
+
   const insertAdmin = db.prepare(`
     INSERT INTO users (email, name, password_hash) 
     VALUES (?, ?, ?)
   `);
-  
+
   const result = insertAdmin.run('admin@humansys.com', 'Administrador', adminPassword);
-  
+
   // Criar créditos para o admin
   const insertCredits = db.prepare(`
     INSERT INTO user_credits (user_id, credits, plan) 
     VALUES (?, ?, ?)
   `);
   insertCredits.run(result.lastInsertRowid, 1000, 'premium');
-  
+
   console.log('✅ Usuário administrador criado com sucesso!');
   console.log('📧 Email: admin@humansys.com');
   console.log('🔑 Senha: admin123');
@@ -118,15 +117,15 @@ app.get('/api/health', (req, res) => {
 // User routes
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  
+
   console.log('🔐 Tentativa de login:', { email });
-  
+
   // Converter senha para base64 para comparar
   const passwordHash = btoa(password);
-  
+
   const user = db.prepare('SELECT id, email, name, created_at FROM users WHERE email = ? AND password_hash = ?')
     .get(email, passwordHash);
-  
+
   if (user) {
     console.log('✅ Login bem-sucedido:', user);
     res.json({ success: true, user });
@@ -138,20 +137,20 @@ app.post('/api/auth/login', (req, res) => {
 
 app.post('/api/users', (req, res) => {
   const { email, name, password_hash } = req.body;
-  
+
   console.log('👤 Criando novo usuário:', { email, name });
-  
+
   try {
     const stmt = db.prepare('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)');
     const result = stmt.run(email, name, password_hash);
-    
+
     // Create default credits
     const creditsStmt = db.prepare('INSERT INTO user_credits (user_id, credits) VALUES (?, ?)');
     creditsStmt.run(result.lastInsertRowid, 100);
-    
+
     const newUser = { id: result.lastInsertRowid, email, name };
     console.log('✅ Usuário criado com sucesso:', newUser);
-    
+
     res.json({ 
       success: true, 
       user: newUser
@@ -165,16 +164,16 @@ app.post('/api/users', (req, res) => {
 // Collaborators routes
 app.get('/api/collaborators/:userId', (req, res) => {
   const { userId } = req.params;
-  
+
   const collaborators = db.prepare('SELECT * FROM collaborators WHERE user_id = ? ORDER BY created_at DESC')
     .all(userId);
-  
+
   res.json(collaborators);
 });
 
 app.post('/api/collaborators', (req, res) => {
   const { user_id, name, email, position, department, hire_date } = req.body;
-  
+
   try {
     const stmt = db.prepare(`
       INSERT INTO collaborators (user_id, name, email, position, department, hire_date, invited_at) 
@@ -182,7 +181,7 @@ app.post('/api/collaborators', (req, res) => {
     `);
     const currentDate = new Date().toISOString();
     const result = stmt.run(user_id, name, email, position, department, hire_date, currentDate);
-    
+
     res.json({ 
       success: true, 
       collaborator: { id: result.lastInsertRowid, invited_at: currentDate, ...req.body } 
@@ -195,9 +194,9 @@ app.post('/api/collaborators', (req, res) => {
 // Credits routes
 app.get('/api/credits/:userId', (req, res) => {
   const { userId } = req.params;
-  
+
   const credits = db.prepare('SELECT * FROM user_credits WHERE user_id = ?').get(userId);
-  
+
   if (credits) {
     res.json(credits);
   } else {

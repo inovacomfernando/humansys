@@ -37,6 +37,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "node server/database.js"
 
+[[workflows.workflow]]
+name = "Test Database Connection"
+author = 43334172
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node test-connection.js"
+
 [[ports]]
 localPort = 3001
 externalPort = 3001

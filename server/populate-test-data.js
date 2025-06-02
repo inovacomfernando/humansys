@@ -1,4 +1,3 @@
-
 const Database = require('better-sqlite3');
 const path = require('path');
 
@@ -12,11 +11,23 @@ const insertCollaborator = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 
-// Dados de teste
+// Dados de teste para popular o banco
 const testUsers = [
-  { email: 'admin@humansys.com', name: 'Administrador do Sistema', password: 'admin123' },
-  { email: 'amanda@vendasimples.com.br', name: 'Amanda Motta', password: 'senha123' },
-  { email: 'joao@empresa.com', name: 'João Silva', password: 'senha123' }
+  {
+    email: 'admin@humansys.com',
+    name: 'Administrador',
+    password: 'admin123' // Será convertido para hash
+  },
+  {
+    email: 'amanda@vendasimples.com.br',
+    name: 'Amanda Motta',
+    password: 'amanda123'
+  },
+  {
+    email: 'teste@teste.com',
+    name: 'Usuario Teste',
+    password: '123456'
+  }
 ];
 
 const testCollaborators = [
@@ -32,10 +43,10 @@ try {
   testUsers.forEach((user, index) => {
     const result = insertUser.run(user.email, user.name, user.password);
     const userId = result.lastInsertRowid || index + 1;
-    
+
     // Inserir créditos
     insertCredits.run(userId, 100, 'trial');
-    
+
     console.log(`✅ Usuário criado: ${user.name} (ID: ${userId})`);
   });
 
@@ -55,7 +66,7 @@ try {
   });
 
   console.log('🎉 Dados de teste inseridos com sucesso!');
-  
+
 } catch (error) {
   console.error('❌ Erro ao inserir dados:', error);
 } finally {
