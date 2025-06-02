@@ -190,18 +190,18 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({ user, onSave, 
   const categories = Array.from(new Set(permissionsList.map(p => p.category)));
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4">
+    <div className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-2">
         {categories.map(category => {
           const categoryPermissions = permissionsList.filter(p => p.category === category);
           const allChecked = categoryPermissions.every(p => permissions[p.key]);
           const someChecked = categoryPermissions.some(p => permissions[p.key]);
 
           return (
-            <Card key={category}>
-              <CardHeader className="pb-3">
+            <Card key={category} className="h-fit">
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{category}</CardTitle>
+                  <CardTitle className="text-base">{category}</CardTitle>
                   {category !== 'Principal' && (
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -212,21 +212,21 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({ user, onSave, 
                         }}
                         onCheckedChange={(checked) => selectAllInCategory(category, checked as boolean)}
                       />
-                      <Label htmlFor={`category-${category}`} className="text-sm">
-                        Selecionar todos
+                      <Label htmlFor={`category-${category}`} className="text-xs">
+                        Todos
                       </Label>
                     </div>
                   )}
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid gap-3">
+              <CardContent className="pt-0">
+                <div className="space-y-2">
                   {categoryPermissions.map(permission => {
                     const Icon = permission.icon;
                     const isDisabled = permission.key === 'dashboard' && user.role === 'admin';
                     
                     return (
-                      <div key={permission.key} className="flex items-center space-x-3">
+                      <div key={permission.key} className="flex items-start space-x-2">
                         <Checkbox
                           id={permission.key}
                           checked={permissions[permission.key]}
@@ -234,17 +234,18 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({ user, onSave, 
                           onCheckedChange={(checked) => 
                             handlePermissionChange(permission.key, checked as boolean)
                           }
+                          className="mt-1"
                         />
-                        <div className="flex items-center space-x-2 flex-1">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          <div>
+                        <div className="flex items-start space-x-2 flex-1 min-w-0">
+                          <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
                             <Label 
                               htmlFor={permission.key} 
-                              className={`font-medium ${isDisabled ? 'text-muted-foreground' : ''}`}
+                              className={`text-sm font-medium block ${isDisabled ? 'text-muted-foreground' : ''}`}
                             >
                               {permission.label}
                             </Label>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-xs text-muted-foreground leading-tight">
                               {permission.description}
                             </p>
                           </div>
@@ -259,7 +260,7 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({ user, onSave, 
         })}
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4 border-t">
+      <div className="flex justify-end space-x-2 pt-3 border-t sticky bottom-0 bg-background">
         <Button variant="outline" onClick={onCancel}>
           Cancelar
         </Button>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -208,7 +207,7 @@ export const UserManagementDialog = () => {
       // Se falhar, buscar da tabela collaborators como fallback
       if (orgError) {
         console.log('Organization table not available, using collaborators table');
-        
+
         const { data: collabData, error: collabError } = await supabase
           .from('collaborators')
           .select('*')
@@ -383,7 +382,7 @@ export const UserManagementDialog = () => {
     try {
       // Criar usuário diretamente na tabela de colaboradores (simulação)
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // Inserir na tabela de colaboradores
       const { error: collaboratorError } = await supabase
         .from('collaborators')
@@ -605,7 +604,7 @@ export const UserManagementDialog = () => {
             {/* Lista de usuários */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Usuários da Organização</h3>
-              
+
               {isLoading ? (
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
@@ -643,7 +642,7 @@ export const UserManagementDialog = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
@@ -697,7 +696,7 @@ export const UserManagementDialog = () => {
                       </div>
                     </Card>
                   ))}
-                  
+
                   {users.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground">
                       <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -760,8 +759,8 @@ export const UserManagementDialog = () => {
 
       {/* Dialog de gerenciamento de permissões */}
       <Dialog open={permissionsDialogOpen} onOpenChange={setPermissionsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
               Gerenciar Permissões - {editingUser?.name}
@@ -770,17 +769,18 @@ export const UserManagementDialog = () => {
               Configure quais funcionalidades este usuário pode acessar
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              {editingUser && (
-                <PermissionsForm 
-                  user={editingUser}
-                  onSave={handleUpdatePermissions}
-                  onCancel={() => setPermissionsDialogOpen(false)}
-                />
-              )}
-            </div>
+
+          <div className="flex-1 overflow-y-auto pr-2">
+            {editingUser && (
+              <PermissionsForm 
+                user={editingUser}
+                onSave={handleUpdatePermissions}
+                onCancel={() => {
+                  setPermissionsDialogOpen(false);
+                  setEditingUser(null);
+                }}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
