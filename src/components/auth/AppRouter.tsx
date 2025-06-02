@@ -8,13 +8,13 @@ const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({
 const FounderDashboard = React.lazy(() => import('@/pages/FounderDashboard').then(module => ({ default: module.FounderDashboard })));
 const Login = React.lazy(() => import('@/pages/Login').then(module => ({ default: module.Login })));
 const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ default: module.Landing })));
-import { BrainsysIAO } from '@/pages/BrainsysIAO';
+const Profile = React.lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
+const SecurityManagement = React.lazy(() => import('@/pages/SecurityManagement').then(module => ({ default: module.SecurityManagement })));
 
-// Import optimized components
+// Import regular components
+import { BrainsysIAO } from '@/pages/BrainsysIAO';
 import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
 import { OptimizedRecruitment } from '@/pages/OptimizedRecruitment';
-
-// Other imports stay synchronous for now
 import Index from '@/pages/Index';
 import { Onboarding } from '@/pages/Onboarding';
 import { Training } from '@/pages/Training';
@@ -24,7 +24,6 @@ import { Analytics } from '@/pages/Analytics';
 import { Changelog } from '@/pages/Changelog';
 import { Documentation } from '@/pages/Documentation';
 import { Settings } from '@/pages/Settings';
-const Profile = React.lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
 import { Certificates } from '@/pages/Certificates';
 import { Documents } from '@/pages/Documents';
 import { Meetings } from '@/pages/Meetings';
@@ -35,7 +34,6 @@ import { Contact } from '@/pages/Contact';
 import { Help } from '@/pages/Help';
 import NotFound from '@/pages/NotFound';
 import { Disc } from '@/pages/Disc';
-const SecurityManagement = React.lazy(() => import('@/pages/SecurityManagement').then(module => ({ default: module.SecurityManagement })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -50,224 +48,49 @@ export const AppRouter = () => {
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        {/* Rota inicial - mostra landing page ou redireciona */}
+        {/* Rota inicial */}
         <Route path="/" element={<Index />} />
 
-        {/* Rota pública para landing page */}
+        {/* Rotas públicas */}
         <Route path="/home" element={<Landing />} />
-
-        <Route 
-          path="/login" 
-          element={
-            <ProtectedRoute requireAuth={false}>
-              <Login />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Rotas do App Principal */}
-        <Route 
-          path="/app/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/collaborators" 
-          element={
-            <ProtectedRoute>
-              <OptimizedCollaborators />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/recruitment" 
-          element={
-            <ProtectedRoute>
-              <OptimizedRecruitment />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/onboarding" 
-          element={
-            <ProtectedRoute>
-              <Onboarding />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/training" 
-          element={
-            <ProtectedRoute>
-              <Training />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/feedback" 
-          element={
-            <ProtectedRoute>
-              <Feedback />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/meetings" 
-          element={
-            <ProtectedRoute>
-              <Meetings />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/goals" 
-          element={
-            <ProtectedRoute>
-              <Goals />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/surveys" 
-          element={
-            <ProtectedRoute>
-              <ModernSurveys />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/analytics" 
-          element={
-            <ProtectedRoute>
-              <Analytics />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/changelog" 
-          element={
-            <ProtectedRoute>
-              <Changelog />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/settings" 
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/app/profile" 
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/certificates" 
-          element={
-            <ProtectedRoute>
-              <Certificates />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/documents" 
-          element={
-            <ProtectedRoute>
-              <Documents />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/disc" 
-          element={
-            <ProtectedRoute>
-              <Disc />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/documentation" 
-          element={
-            <ProtectedRoute>
-              <Documentation />
-            </ProtectedRoute>
-          } 
-        />
-
-        <Route 
-          path="/app/security" 
-          element={
-            <ProtectedRoute requiredRole="founder">
-              <SecurityManagement />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Rotas do Founder */}
-        <Route 
-          path="/founder/dashboard" 
-          element={
-            <ProtectedRoute requiredRole="founder">
-              <FounderDashboard />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Rotas Protegidas do App */}
-        <Route path="/app/*" element={<ProtectedRoute><Routes>
-          <Route index element={<Dashboard />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="brainsys-iao" element={<BrainsysIAO />} />
-          <Route path="collaborators" element={<OptimizedCollaborators />} />
-          <Route path="recruitment" element={<OptimizedRecruitment />} />
-          <Route path="onboarding" element={<Onboarding />} />
-          <Route path="training" element={<Training />} />
-          <Route path="feedback" element={<Feedback />} />
-          <Route path="goals" element={<Goals />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="changelog" element={<Changelog />} />
-          <Route path="documentation" element={<Documentation />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="disc" element={<Disc />} />
-          <Route path="meetings" element={<Meetings />} />
-          <Route path="documents" element={<Documents />} />
-          <Route path="certificates" element={<Certificates />} />
-          <Route path="surveys" element={<ModernSurveys />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="security-management" element={<SecurityManagement />} />
-        </Routes></ProtectedRoute>} />
-
-        {/* Rotas Públicas Institucionais */}
+        <Route path="/login" element={<ProtectedRoute requireAuth={false}><Login /></ProtectedRoute>} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/help" element={<Help />} />
         <Route path="/checkout" element={<Checkout />} />
 
-        {/* Redirects para manter compatibilidade - redirecionam para /app/[page] */}
+        {/* Rotas do Founder */}
+        <Route path="/founder/dashboard" element={<ProtectedRoute requiredRole="founder"><FounderDashboard /></ProtectedRoute>} />
+
+        {/* Rotas do App Principal - Todas as rotas /app/* ficam aqui */}
+        <Route path="/app/*" element={
+          <ProtectedRoute>
+            <Routes>
+              <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="brainsys-iao" element={<BrainsysIAO />} />
+              <Route path="collaborators" element={<OptimizedCollaborators />} />
+              <Route path="recruitment" element={<OptimizedRecruitment />} />
+              <Route path="onboarding" element={<Onboarding />} />
+              <Route path="training" element={<Training />} />
+              <Route path="feedback" element={<Feedback />} />
+              <Route path="goals" element={<Goals />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="changelog" element={<Changelog />} />
+              <Route path="documentation" element={<Documentation />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="certificates" element={<Certificates />} />
+              <Route path="documents" element={<Documents />} />
+              <Route path="meetings" element={<Meetings />} />
+              <Route path="surveys" element={<ModernSurveys />} />
+              <Route path="disc" element={<Disc />} />
+              <Route path="security-management" element={<SecurityManagement />} />
+            </Routes>
+          </ProtectedRoute>
+        } />
+
+        {/* Rotas de compatibilidade (redirecionam para /app/[page]) */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/founder-dashboard" element={<ProtectedRoute requiredRole="founder"><FounderDashboard /></ProtectedRoute>} />
         <Route path="/collaborators" element={<ProtectedRoute><OptimizedCollaborators /></ProtectedRoute>} />
@@ -279,7 +102,7 @@ export const AppRouter = () => {
         <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
         <Route path="/changelog" element={<ProtectedRoute><Changelog /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
         <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
@@ -287,7 +110,7 @@ export const AppRouter = () => {
         <Route path="/disc" element={<ProtectedRoute><Disc /></ProtectedRoute>} />
         <Route path="/documentation" element={<ProtectedRoute><Documentation /></ProtectedRoute>} />
 
-        {/* 404 page for unmatched routes */}
+        {/* 404 page */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
