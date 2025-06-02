@@ -1,32 +1,6 @@
+import { Client } from 'pg';
 
-import { supabase } from '@/integrations/supabase/client';
-
-// Usar apenas Supabase para comunicação com o banco de dados
-export const executeQuery = async (query: string, params: any[] = []) => {
-  console.log('Executando query via Supabase RPC:', query);
-  try {
-    // Para queries mais complexas, usar RPC functions no Supabase
-    const { data, error } = await supabase.rpc('execute_sql', {
-      sql_query: query,
-      params: params
-    });
-    
-    if (error) {
-      console.error('Erro na query:', error);
-      throw error;
-    }
-    
-    return { rows: data || [] };
-  } catch (error) {
-    console.error('Erro ao executar query:', error);
-    throw error;
-  }
-};
-
-export const setupTables = async () => {
-  console.log('PostgreSQL setup via Supabase - tabelas já configuradas');
-  return Promise.resolve();
-};t
+// Cliente PostgreSQL usando as variáveis de ambiente do Replit
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -63,7 +37,7 @@ export const executeQuery = async (query: string, params: any[] = []) => {
 export const setupTables = async () => {
   try {
     const db = await connectDB();
-    
+
     // Criar tabela de usuários
     await db.query(`
       CREATE TABLE IF NOT EXISTS users (

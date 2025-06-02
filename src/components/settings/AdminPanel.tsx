@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,7 @@ export const AdminPanel: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Estados para criação de usuário
   const [newUser, setNewUser] = useState({
     name: '',
@@ -111,7 +110,7 @@ export const AdminPanel: React.FC = () => {
 
       // Verificar se o usuário já existe
       const existingUser = await executeQuery('SELECT id FROM users WHERE email = $1', [newUser.email]);
-      
+
       if (existingUser.rows.length > 0) {
         toast({
           title: "Usuário já existe",
@@ -169,7 +168,7 @@ export const AdminPanel: React.FC = () => {
     try {
       // Buscar um usuário para associar (assumindo que existe pelo menos um)
       const usersResult = await executeQuery('SELECT id FROM users LIMIT 1');
-      
+
       if (usersResult.rows.length === 0) {
         toast({
           title: "Erro",
@@ -206,19 +205,27 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const [isTestingDB, setIsTestingDB] = useState(false);
   const testDatabaseConnection = async () => {
+    setIsTestingDB(true);
     try {
-      const result = await executeQuery('SELECT NOW() as current_time');
+      const { executeQuery } = await import('@/lib/replit-db');
+      const result = await executeQuery('SELECT 1 as test');
+      console.log('Teste de conexão:', result);
+
       toast({
-        title: "Conexão OK",
-        description: `Banco conectado. Horário: ${result.rows[0].current_time}`,
+        title: "Conexão bem-sucedida",
+        description: "PostgreSQL está funcionando corretamente",
       });
     } catch (error) {
+      console.error('Erro no teste:', error);
       toast({
-        title: "Erro de Conexão",
-        description: "Não foi possível conectar ao banco",
+        title: "Erro de conexão",
+        description: "Falha ao conectar com PostgreSQL",
         variant: "destructive",
       });
+    } finally {
+      setIsTestingDB(false);
     }
   };
 
@@ -270,7 +277,7 @@ export const AdminPanel: React.FC = () => {
                 placeholder="Nome do usuário"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="user-email">Email</Label>
               <Input
@@ -334,7 +341,7 @@ export const AdminPanel: React.FC = () => {
                 placeholder="Nome do colaborador"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="collab-email">Email</Label>
               <Input
@@ -356,7 +363,7 @@ export const AdminPanel: React.FC = () => {
                   placeholder="Cargo"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="collab-department">Departamento</Label>
                 <Input
