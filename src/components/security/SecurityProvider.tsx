@@ -63,14 +63,22 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
         }
 
         // Verificar se está rodando em iframe (possível embedding malicioso)
+        // Exceto se for o preview do Replit
         if (window.top !== window.self) {
-          await logSecurityEvent({
-            type: 'suspicious_activity',
-            user_agent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
-            details: { reason: 'iframe_detected' }
-          });
-          setIsSecure(false);
+          const isReplitPreview = window.location.hostname.includes('replit') || 
+                                 window.location.hostname.includes('repl.co') ||
+                                 window.parent?.location?.hostname?.includes('replit') ||
+                                 window.parent?.location?.hostname?.includes('repl.co');
+          
+          if (!isReplitPreview) {
+            await logSecurityEvent({
+              type: 'suspicious_activity',
+              user_agent: navigator.userAgent,
+              timestamp: new Date().toISOString(),
+              details: { reason: 'iframe_detected', hostname: window.location.hostname }
+            });
+            setIsSecure(false);
+          }
         }
 
       } catch (error) {

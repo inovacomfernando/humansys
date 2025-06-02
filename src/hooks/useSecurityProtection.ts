@@ -49,58 +49,68 @@ export const useSecurityProtection = () => {
   useEffect(() => {
     // Bloquear DevTools
     const blockDevTools = () => {
-      // Detectar abertura de DevTools
-      let devtools = { open: false, orientation: null };
-      const threshold = 160;
+      // Verificar se está no ambiente Replit
+      const isReplitEnvironment = window.location.hostname.includes('replit') || 
+                                  window.location.hostname.includes('repl.co') ||
+                                  window.location.hostname.includes('localhost') ||
+                                  window.location.hostname.includes('127.0.0.1');
 
-      setInterval(() => {
-        if (window.outerHeight - window.innerHeight > threshold || 
-            window.outerWidth - window.innerWidth > threshold) {
-          if (!devtools.open) {
-            devtools.open = true;
+      // Detectar abertura de DevTools (só em produção)
+      if (!isReplitEnvironment) {
+        let devtools = { open: false, orientation: null };
+        const threshold = 160;
+
+        setInterval(() => {
+          if (window.outerHeight - window.innerHeight > threshold || 
+              window.outerWidth - window.innerWidth > threshold) {
+            if (!devtools.open) {
+              devtools.open = true;
+              logSecurityEvent({
+                type: 'devtools_attempt',
+                user_agent: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                details: { window_dimensions: { inner: { width: window.innerWidth, height: window.innerHeight }, outer: { width: window.outerWidth, height: window.outerHeight } } }
+              });
+              
+              // Bloquear tela
+              document.body.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 999999; font-family: Arial;">
+                  <div style="text-align: center;">
+                    <h1>🔒 Acesso Bloqueado</h1>
+                    <p>Tentativa de inspeção detectada</p>
+                    <p>Seu IP foi registrado por motivos de segurança</p>
+                    <p>Entre em contato com o suporte se necessário</p>
+                  </div>
+                </div>
+              `;
+            }
+          } else {
+            devtools.open = false;
+          }
+        }, 500);
+      }
+
+      // Bloquear F12, Ctrl+Shift+I, Ctrl+U, etc. (só em produção)
+      if (!isReplitEnvironment) {
+        document.addEventListener('keydown', (e) => {
+          if (
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+            (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+            (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+            (e.ctrlKey && e.key === 'U')
+          ) {
+            e.preventDefault();
             logSecurityEvent({
               type: 'devtools_attempt',
               user_agent: navigator.userAgent,
               timestamp: new Date().toISOString(),
-              details: { window_dimensions: { inner: { width: window.innerWidth, height: window.innerHeight }, outer: { width: window.outerWidth, height: window.outerHeight } } }
+              details: { key_combination: `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.key}` }
             });
-            
-            // Bloquear tela
-            document.body.innerHTML = `
-              <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 999999; font-family: Arial;">
-                <div style="text-align: center;">
-                  <h1>🔒 Acesso Bloqueado</h1>
-                  <p>Tentativa de inspeção detectada</p>
-                  <p>Seu IP foi registrado por motivos de segurança</p>
-                  <p>Entre em contato com o suporte se necessário</p>
-                </div>
-              </div>
-            `;
+            return false;
           }
-        } else {
-          devtools.open = false;
-        }
-      }, 500);
-
-      // Bloquear F12, Ctrl+Shift+I, Ctrl+U, etc.
-      document.addEventListener('keydown', (e) => {
-        if (
-          e.key === 'F12' ||
-          (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-          (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-          (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-          (e.ctrlKey && e.key === 'U')
-        ) {
-          e.preventDefault();
-          logSecurityEvent({
-            type: 'devtools_attempt',
-            user_agent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
-            details: { key_combination: `${e.ctrlKey ? 'Ctrl+' : ''}${e.shiftKey ? 'Shift+' : ''}${e.key}` }
-          });
-          return false;
-        }
-      });
+        });
+      }
     };
 
     // Bloquear botão direito
@@ -270,11 +280,21 @@ export const useSecurityProtection = () => {
     document.addEventListener('contextmenu', blockRightClick);
     document.addEventListener('keydown', blockCopyPaste);
 
-    // Console warning
-    console.clear();
-    console.log('%c🔒 SISTEMA PROTEGIDO', 'color: red; font-size: 24px; font-weight: bold;');
-    console.log('%cTodas as atividades são monitoradas e registradas.', 'color: red; font-size: 16px;');
-    console.log('%cQualquer tentativa de acesso não autorizado será reportada.', 'color: red; font-size: 16px;');
+    // Console warning (só em produção)
+    const isReplitEnvironment = window.location.hostname.includes('replit') || 
+                                window.location.hostname.includes('repl.co') ||
+                                window.location.hostname.includes('localhost') ||
+                                window.location.hostname.includes('127.0.0.1');
+
+    if (!isReplitEnvironment) {
+      console.clear();
+      console.log('%c🔒 SISTEMA PROTEGIDO', 'color: red; font-size: 24px; font-weight: bold;');
+      console.log('%cTodas as atividades são monitoradas e registradas.', 'color: red; font-size: 16px;');
+      console.log('%cQualquer tentativa de acesso não autorizado será reportada.', 'color: red; font-size: 16px;');
+    } else {
+      console.log('%c🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
+      console.log('%cSistema de segurança em modo de desenvolvimento - Proteções reduzidas', 'color: blue; font-size: 12px;');
+    }
 
     return () => {
       document.removeEventListener('contextmenu', blockRightClick);
