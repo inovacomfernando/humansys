@@ -330,7 +330,7 @@ export const Checkout = () => {
                     onClick={() => setSelectedPlan(planOption.name)}
                   >
                     {planOption.popular && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium z-10">
+                      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-medium z-10 shadow-sm">
                         <Star className="mr-1 h-3 w-3 inline" />
                         Mais Popular
                       </div>
