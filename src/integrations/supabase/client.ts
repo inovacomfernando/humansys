@@ -1,21 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Configuração do Supabase
+// Configuração do Supabase com URLs validadas
 const supabaseUrl = 'https://dhtkrylkjdtpqpxgimgw.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRodGtyeWxramR0cHFweGdpbWd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU5MjY5MjgsImV4cCI6MjA1MTUwMjkyOH0.nYQGCPP-FQjnrWNq4dJIqgNKFXhvSJVg6RtyKXIcHvw';
 
-// Cliente Supabase
+// Cliente Supabase com configurações otimizadas para Replit
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: false, // Desabilitar para evitar problemas em iframe
+    storageKey: 'humansys-auth'
   },
   realtime: {
     params: {
       eventsPerSecond: 2
     }
+  },
+  global: {
+    headers: {
+      'x-client-info': 'humansys-web@1.0.0'
+    }
+  },
+  db: {
+    schema: 'public'
   }
 });
 

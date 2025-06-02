@@ -99,18 +99,47 @@ export const useSupabaseAuth = () => {
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-            full_name: name,
+      console.log('Tentando cadastro...', { email, hasPassword: !!password, hasName: !!name });
+      
+      const { data, error } = await Promise.race([
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: name,
+              full_name: name,
+            },
           },
-        },
-      });
+        }),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout no cadastro. Verifique sua conexão.')), 15000)
+        )
+      ]);
+      
+      console.log('Resultado do cadastro:', { data: !!data, error });
       return { data, error };
     } catch (error: any) {
+      console.error('Erro no cadastro:', error);
+      
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        return { 
+          data: null, 
+          error: { 
+            message: 'Erro de conectividade. Verifique sua internet e tente novamente.' 
+          } 
+        };
+      }
+      
+      if (error.message?.includes('Timeout')) {
+        return { 
+          data: null, 
+          error: { 
+            message: 'Conexão muito lenta. Tente novamente.' 
+          } 
+        };
+      }
+      
       return { data: null, error };
     }
   };
@@ -118,12 +147,41 @@ export const useSupabaseAuth = () => {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      console.log('Tentando login...', { email, hasPassword: !!password });
+      
+      const { data, error } = await Promise.race([
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        }),
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout no login. Verifique sua conexão.')), 15000)
+        )
+      ]);
+      
+      console.log('Resultado do login:', { data: !!data, error });
       return { data, error };
     } catch (error: any) {
+      console.error('Erro no login:', error);
+      
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        return { 
+          data: null, 
+          error: { 
+            message: 'Erro de conectividade. Verifique sua internet e tente novamente.' 
+          } 
+        };
+      }
+      
+      if (error.message?.includes('Timeout')) {
+        return { 
+          data: null, 
+          error: { 
+            message: 'Conexão muito lenta. Tente novamente.' 
+          } 
+        };
+      }
+      
       return { data: null, error };
     } finally {
       setIsLoading(false);

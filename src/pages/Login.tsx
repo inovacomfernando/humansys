@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Mail, Lock, User, Eye, EyeOff, Sparkles, Crown, Zap, Star } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Eye, EyeOff, Sparkles, Crown, Zap, Star, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Login = () => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
@@ -17,12 +18,45 @@ export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Verificar conectividade ao carregar a página
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { data, error } = await Promise.race([
+          supabase.from('collaborators').select('count').limit(1),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 5000)
+          )
+        ]);
+        
+        setConnectionStatus('online');
+        console.log('✅ Conectividade OK');
+      } catch (error) {
+        setConnectionStatus('offline');
+        console.error('❌ Problema de conectividade:', error);
+      }
+    };
+
+    checkConnection();
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (connectionStatus === 'offline') {
+      toast({
+        title: "Sem conexão",
+        description: "Verifique sua internet e tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -38,9 +72,23 @@ export const Login = () => {
       });
       navigate('/');
     } catch (error: any) {
+      console.error('Erro detalhado do login:', error);
+      
+      let errorMessage = "Verifique suas credenciais e tente novamente.";
+      
+      if (error.message?.includes('conectividade') || error.message?.includes('Failed to fetch')) {
+        errorMessage = "Problema de conectividade. Verifique sua internet.";
+      } else if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = "Email ou senha incorretos.";
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = "Confirme seu email antes de fazer login.";
+      } else if (error.message?.includes('Timeout')) {
+        errorMessage = "Conexão muito lenta. Tente novamente.";
+      }
+      
       toast({
         title: "Erro no login",
-        description: error.message || "Verifique suas credenciais e tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -50,6 +98,16 @@ export const Login = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (connectionStatus === 'offline') {
+      toast({
+        title: "Sem conexão",
+        description: "Verifique sua internet e tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -65,9 +123,23 @@ export const Login = () => {
       });
       navigate('/');
     } catch (error: any) {
+      console.error('Erro detalhado do cadastro:', error);
+      
+      let errorMessage = "Não foi possível criar sua conta. Tente novamente.";
+      
+      if (error.message?.includes('conectividade') || error.message?.includes('Failed to fetch')) {
+        errorMessage = "Problema de conectividade. Verifique sua internet.";
+      } else if (error.message?.includes('User already registered')) {
+        errorMessage = "Este email já está cadastrado. Tente fazer login.";
+      } else if (error.message?.includes('Password should be at least')) {
+        errorMessage = "A senha deve ter pelo menos 6 caracteres.";
+      } else if (error.message?.includes('Timeout')) {
+        errorMessage = "Conexão muito lenta. Tente novamente.";
+      }
+      
       toast({
         title: "Erro no cadastro",
-        description: error.message || "Não foi possível criar sua conta. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -126,6 +198,26 @@ export const Login = () => {
 
           <Card className="backdrop-blur-lg bg-white/10 border-white/20 shadow-2xl">
             <CardHeader className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                {connectionStatus === 'checking' && (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-yellow-400" />
+                    <span className="text-xs text-yellow-200">Verificando conexão...</span>
+                  </>
+                )}
+                {connectionStatus === 'online' && (
+                  <>
+                    <Wifi className="h-4 w-4 text-green-400" />
+                    <span className="text-xs text-green-200">Sistema online</span>
+                  </>
+                )}
+                {connectionStatus === 'offline' && (
+                  <>
+                    <WifiOff className="h-4 w-4 text-red-400" />
+                    <span className="text-xs text-red-200">Problema de conexão</span>
+                  </>
+                )}
+              </div>
               <CardTitle className="text-2xl text-white">Acesse sua conta</CardTitle>
               <CardDescription className="text-green-200">
                 Entre ou crie sua conta para começar sua jornada
