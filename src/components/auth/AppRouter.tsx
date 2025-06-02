@@ -236,7 +236,32 @@ export const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
-              <Route path="/app/brainsys-iao" element={<ProtectedRoute><BrainsysIAO /></ProtectedRoute>} />
+        
+        {/* Rotas Protegidas do App */}
+        <Route path="/app/*" element={<ProtectedRoute><Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="collaborators" element={<OptimizedCollaborators />} />
+          <Route path="recruitment" element={<OptimizedRecruitment />} />
+          <Route path="onboarding" element={<Onboarding />} />
+          <Route path="training" element={<Training />} />
+          <Route path="feedback" element={<Feedback />} />
+          <Route path="goals" element={<Goals />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="changelog" element={<Changelog />} />
+          <Route path="documentation" element={<Documentation />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="disc" element={<Disc />} />
+          <Route path="meetings" element={<Meetings />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="certificates" element={<Certificates />} />
+          {/* <Route path="modern-certificates" element={<ModernCertificates />} /> */}
+          <Route path="surveys" element={<ModernSurveys />} />
+          {/* <Route path="modern-surveys" element={<ModernSurveys />} /> */}
+          <Route path="profile" element={<Profile />} />
+          <Route path="security-management" element={<SecurityManagement />} />
+          <Route path="brainsys-iao" element={<BrainsysIAO />} />
+        </Routes></ProtectedRoute>} />
 
         {/* Rotas Públicas Institucionais */}
         <Route path="/about" element={<About />} />
