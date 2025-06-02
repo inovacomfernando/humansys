@@ -237,20 +237,11 @@ export const AppRouter = () => {
           } 
         />
         
-        {/* Rota específica para BrainsysIAO */}
-        <Route 
-          path="/app/brainsys-iao" 
-          element={
-            <ProtectedRoute>
-              <BrainsysIAO />
-            </ProtectedRoute>
-          } 
-        />
-
         {/* Rotas Protegidas do App */}
         <Route path="/app/*" element={<ProtectedRoute><Routes>
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="brainsys-iao" element={<BrainsysIAO />} />
           <Route path="collaborators" element={<OptimizedCollaborators />} />
           <Route path="recruitment" element={<OptimizedRecruitment />} />
           <Route path="onboarding" element={<Onboarding />} />
