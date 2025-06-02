@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -194,7 +193,7 @@ export const Help = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
-      
+
       <div className="container py-20">
         {/* Header */}
         <div className="text-center mb-12">
@@ -205,7 +204,7 @@ export const Help = () => {
             Encontre respostas, tutoriais e suporte especializado para 
             aproveitar ao máximo a HumanSys.
           </p>
-          
+
           {/* Busca */}
           <div className="max-w-2xl mx-auto relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -423,7 +422,7 @@ export const Help = () => {
                       a créditos ilimitados por 14 dias.
                     </p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold mb-2">A análise DISC com IA é confiável?</h4>
                     <p className="text-sm text-muted-foreground">
@@ -431,7 +430,7 @@ export const Help = () => {
                       A precisão é superior a 94% e os relatórios são revisados por especialistas em comportamento humano.
                     </p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold mb-2">Posso integrar com meu sistema atual de RH?</h4>
                     <p className="text-sm text-muted-foreground">
@@ -439,7 +438,7 @@ export const Help = () => {
                       Nossa equipe técnica pode ajudar na implementação personalizada.
                     </p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold mb-2">Como funciona a gamificação?</h4>
                     <p className="text-sm text-muted-foreground">
@@ -447,7 +446,7 @@ export const Help = () => {
                       Cada ação na plataforma gera pontos, incentivando o engajamento e criando competições saudáveis.
                     </p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold mb-2">Meus dados estão seguros?</h4>
                     <p className="text-sm text-muted-foreground">

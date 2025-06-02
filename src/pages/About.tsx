@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,7 +85,7 @@ export const About = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
-      
+
       <div className="container py-20">
         {/* Hero Section */}
         <div className="text-center mb-16">
@@ -137,7 +136,7 @@ export const About = () => {
                   de ponta para desenvolver seus colaboradores e maximizar resultados.
                 </p>
               </div>
-              
+
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <Brain className="h-8 w-8 text-green-600 mx-auto mb-3" />

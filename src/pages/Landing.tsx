@@ -300,7 +300,7 @@ export const Landing = () => {
                 })}
               >
                 <Zap className="mr-2 h-5 w-5" />
-                Começar Teste Grátis
+                Começar Teste Grátis 30 Dias
               </Button>
               <Button 
                 variant="outline" 
@@ -969,7 +969,7 @@ export const Landing = () => {
             <div className="text-center">
               <Card className="inline-block bg-gradient-to-r from-emerald-500 to-green-500 text-white p-6">
                 <CardContent className="pt-0">
-                  <h3 className="text-xl font-bold mb-2">🎁 Teste Grátis com Créditos Ilimitados</h3>
+                  <h3 className="text-xl font-bold mb-2">🎁 Teste Grátis 30 Dias com Créditos Ilimitados</h3>
                   <p className="mb-4">Experimente todas as funcionalidades por 30 dias sem limitações</p>
                   <Button 
                     variant="secondary" 
@@ -1389,7 +1389,7 @@ export const Landing = () => {
                 })}
               >
                 <Shield className="mr-2 h-5 w-5" />
-                Teste Grátis por 30 Dias
+                Teste Grátis 30 Dias
               </Button>
               <Button 
 size="lg" 

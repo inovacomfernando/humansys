@@ -266,7 +266,7 @@ export const Plans = () => {
                   </Button>
                   
                   <p className="text-xs text-center text-muted-foreground mt-3">
-                    14 dias grátis • Cancele quando quiser
+                    30 dias grátis • Cancele quando quiser
                   </p>
                 </CardContent>
               </Card>
@@ -362,7 +362,7 @@ export const Plans = () => {
             <div>
               <h3 className="font-semibold mb-2">Tem teste grátis?</h3>
               <p className="text-sm text-muted-foreground">
-                Todos os planos incluem 14 dias de teste grátis com acesso completo às 
+                Todos os planos incluem 30 dias de teste grátis com acesso completo às 
                 funcionalidades do plano escolhido.
               </p>
             </div>
@@ -390,7 +390,7 @@ export const Plans = () => {
               <div className="flex justify-center gap-4">
                 <Button size="lg" onClick={() => navigate('/checkout')}>
                   <Zap className="h-4 w-4 mr-2" />
-                  Testar 14 Dias Grátis
+                  Testar 30 Dias Grátis
                 </Button>
                 <Button variant="outline" size="lg" onClick={() => navigate('/contact')}>
                   Falar com Consultor

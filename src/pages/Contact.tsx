@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -134,7 +133,7 @@ export const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth />
-      
+
       <div className="container py-20">
         {/* Header */}
         <div className="text-center mb-16">
