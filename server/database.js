@@ -34,6 +34,7 @@ db.exec(`
     department TEXT,
     hire_date DATE,
     status TEXT DEFAULT 'active',
+    invited_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
@@ -115,14 +116,15 @@ app.post('/api/collaborators', (req, res) => {
   
   try {
     const stmt = db.prepare(`
-      INSERT INTO collaborators (user_id, name, email, position, department, hire_date) 
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO collaborators (user_id, name, email, position, department, hire_date, invited_at) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
-    const result = stmt.run(user_id, name, email, position, department, hire_date);
+    const currentDate = new Date().toISOString();
+    const result = stmt.run(user_id, name, email, position, department, hire_date, currentDate);
     
     res.json({ 
       success: true, 
-      collaborator: { id: result.lastInsertRowid, ...req.body } 
+      collaborator: { id: result.lastInsertRowid, invited_at: currentDate, ...req.body } 
     });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
@@ -139,6 +141,16 @@ app.get('/api/credits/:userId', (req, res) => {
     res.json(credits);
   } else {
     res.status(404).json({ error: 'Credits not found' });
+  }
+});
+
+// Users listing route
+app.get('/api/users', (req, res) => {
+  try {
+    const users = db.prepare('SELECT id, email, name, created_at FROM users ORDER BY created_at DESC').all();
+    res.json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

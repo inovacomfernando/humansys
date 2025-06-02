@@ -63,6 +63,11 @@ class LocalDatabaseClient {
     return this.request(`/credits/${userId}`);
   }
 
+  // Users methods
+  async getUsers() {
+    return this.request('/users');
+  }
+
   // Health check
   async healthCheck() {
     return this.request('/health');
