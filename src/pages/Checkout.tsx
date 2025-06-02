@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CreditCard, Lock, Shield, Gift } from 'lucide-react';
+import { CreditCard, Lock, Shield, Gift, Check, Star } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useCredits } from '@/hooks/useCredits';
@@ -21,8 +22,10 @@ export const Checkout = () => {
 
   // Get data from state, with fallbacks
   const planData = location.state || {};
-  const { plan = 'Teste Grátis', price = '0', billing = 'trial' } = planData;
+  const { plan = 'Inicial', price = '79', billing = 'monthly' } = planData;
 
+  const [selectedPlan, setSelectedPlan] = useState(plan);
+  const [selectedBilling, setSelectedBilling] = useState<'monthly' | 'yearly' | 'trial'>(billing);
   const [formData, setFormData] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -35,16 +38,64 @@ export const Checkout = () => {
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // If no plan data and user came directly, show default values but warn
-  useEffect(() => {
-    if (!location.state) {
-      toast({
-        title: "Teste grátis selecionado",
-        description: "Comece já seu teste gratuito de 30 dias.",
-        variant: "default",
-      });
+  // Planos disponíveis
+  const plans = [
+    {
+      name: 'Inicial',
+      description: 'Perfeito para empresas pequenas',
+      monthlyPrice: 'R$ 79',
+      yearlyPrice: 'R$ 790',
+      features: [
+        'Até 10 colaboradores',
+        'Dashboard básico',
+        'Análise DISC básica',
+        'Onboarding estruturado',
+        'Gamificação básica',
+        'Suporte por email'
+      ]
+    },
+    {
+      name: 'Em Crescimento',
+      description: 'Para empresas em expansão',
+      monthlyPrice: 'R$ 149',
+      yearlyPrice: 'R$ 1490',
+      features: [
+        'Até 50 colaboradores',
+        'Analytics avançada com IA',
+        'Gamificação completa',
+        'Reuniões 1:1 automatizadas',
+        'Feedback 360°',
+        'Relatórios personalizados',
+        'Suporte prioritário'
+      ],
+      popular: true
+    },
+    {
+      name: 'Profissional',
+      description: 'Para grandes organizações',
+      monthlyPrice: 'R$ 299',
+      yearlyPrice: 'R$ 2990',
+      features: [
+        'Colaboradores ilimitados',
+        'IA para triagem e análises preditivas',
+        'API completa',
+        'PWA para acesso mobile',
+        'Integração com sistemas externos',
+        'Consultoria especializada',
+        'Suporte 24/7'
+      ]
     }
-  }, [location.state, toast]);
+  ];
+
+  const getCurrentPlan = () => {
+    return plans.find(p => p.name === selectedPlan) || plans[0];
+  };
+
+  const getCurrentPrice = () => {
+    const plan = getCurrentPlan();
+    if (selectedBilling === 'trial') return 'Grátis';
+    return selectedBilling === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+  };
 
   const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -62,49 +113,18 @@ export const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // Determinar o tipo de plano baseado no nome
-      let planType: 'inicial' | 'crescimento' | 'profissional' | 'trial' = 'trial';
-
-      if (billing !== 'trial') {
-        switch (plan.toLowerCase()) {
-          case 'inicial':
-            planType = 'inicial';
-            break;
-          case 'em crescimento':
-            planType = 'crescimento';
-            break;
-          case 'profissional':
-            planType = 'profissional';
-            break;
-          default:
-            planType = 'trial';
-        }
-      }
-
-      // Simular ativação do plano
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Atualizar créditos se não for teste grátis
-      if (planType !== 'trial') {
-        await updateCredits(planType);
-      }
-
-      console.log('Plano ativado para:', { user: user.email, plan, planType });
-
-      const isTrialMessage = billing === 'trial';
-
       toast({
-        title: isTrialMessage ? "Teste grátis ativado!" : "Plano ativado!",
-        description: isTrialMessage 
-          ? "Você tem 30 dias para explorar todas as funcionalidades do sistema."
-          : `Plano ${plan} ativado com sucesso. Seus créditos foram atualizados.`,
+        title: "Teste grátis ativado!",
+        description: "Você tem 30 dias para explorar todas as funcionalidades do sistema.",
       });
 
       navigate('/app/dashboard');
     } catch (error) {
-      console.error('Error starting plan:', error);
+      console.error('Error starting trial:', error);
       toast({
-        title: "Erro ao ativar plano",
+        title: "Erro ao ativar teste",
         description: "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
@@ -118,27 +138,27 @@ export const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // Simular processamento do pagamento
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      console.log('Dados do pagamento:', { plan, price, billing, ...formData });
+      // Determinar tipo de plano para créditos
+      let planType: 'inicial' | 'crescimento' | 'profissional' = 'inicial';
+      switch (selectedPlan.toLowerCase()) {
+        case 'em crescimento':
+          planType = 'crescimento';
+          break;
+        case 'profissional':
+          planType = 'profissional';
+          break;
+      }
+
+      await updateCredits(planType);
 
       toast({
         title: "Pagamento processado!",
-        description: "Sua assinatura foi ativada com sucesso.",
+        description: `Plano ${selectedPlan} ativado com sucesso.`,
       });
 
-      // Redirect to appropriate dashboard
-      const response = await fetch('/api/check-user-role', {
-        headers: { 'Authorization': `Bearer ${user?.id}` }
-      }).catch(() => null);
-
-      if (response?.ok) {
-        const { isFounder } = await response.json();
-        navigate(isFounder ? '/founder/dashboard' : '/app/dashboard');
-      } else {
-        navigate('/app/dashboard');
-      }
+      navigate('/app/dashboard');
     } catch (error) {
       console.error('Error processing payment:', error);
       toast({
@@ -151,32 +171,23 @@ export const Checkout = () => {
     }
   };
 
-  const formatPrice = (value: string) => {
-    if (billing === 'trial' || value === '0') {
-      return 'Grátis por 30 dias';
-    }
-    const numericValue = value.replace(/\D/g, '');
-    return billing === 'yearly' ? 
-      `R$ ${numericValue} (${Math.round(parseInt(numericValue) / 12)} por mês)` :
-      `R$ ${numericValue} por mês`;
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth={false} />
 
       <div className="container py-12">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold">Finalizar Contratação</h1>
+            <h1 className="text-3xl font-bold">Escolha Seu Plano</h1>
             <p className="text-muted-foreground">
-              Complete seus dados para ativar o plano {plan}
+              Selecione o plano ideal para sua empresa
             </p>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-3">
-            {/* Opção de Teste Grátis */}
-            <div className="lg:col-span-2">
+          <div className="grid gap-8 lg:grid-cols-4">
+            {/* Seleção de Planos */}
+            <div className="lg:col-span-3">
+              {/* Opção de Teste Grátis */}
               <Card className="mb-6 border-green-200 bg-green-50">
                 <CardHeader>
                   <CardTitle className="flex items-center text-green-800">
@@ -217,6 +228,89 @@ export const Checkout = () => {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Seleção de Tipo de Cobrança */}
+              <div className="flex items-center justify-center mb-6">
+                <div className="bg-muted p-1 rounded-lg flex items-center">
+                  <Button
+                    variant={selectedBilling === 'monthly' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSelectedBilling('monthly')}
+                  >
+                    Mensal
+                  </Button>
+                  <Button
+                    variant={selectedBilling === 'yearly' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSelectedBilling('yearly')}
+                    className="relative"
+                  >
+                    Anual
+                    <Badge variant="secondary" className="absolute -top-2 -right-2 px-1 py-0 text-[10px]">
+                      -17%
+                    </Badge>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Planos */}
+              <div className="grid gap-6 md:grid-cols-3 mb-8">
+                {plans.map((planOption, index) => (
+                  <Card 
+                    key={index} 
+                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                      selectedPlan === planOption.name 
+                        ? 'border-primary shadow-lg ring-2 ring-primary/20' 
+                        : planOption.popular 
+                        ? 'border-orange-200' 
+                        : ''
+                    }`}
+                    onClick={() => setSelectedPlan(planOption.name)}
+                  >
+                    {planOption.popular && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                        <Star className="mr-1 h-3 w-3 inline" />
+                        Mais Popular
+                      </div>
+                    )}
+                    
+                    <CardHeader className="text-center pb-2">
+                      <CardTitle className="text-xl">{planOption.name}</CardTitle>
+                      <CardDescription>{planOption.description}</CardDescription>
+                    </CardHeader>
+                    
+                    <CardContent className="text-center">
+                      <div className="mb-6">
+                        <div className="text-3xl font-bold text-primary mb-2">
+                          {selectedBilling === 'monthly' ? planOption.monthlyPrice : planOption.yearlyPrice}
+                          <span className="text-base text-muted-foreground font-normal">
+                            /{selectedBilling === 'monthly' ? 'mês' : 'ano'}
+                          </span>
+                        </div>
+                        {selectedBilling === 'yearly' && (
+                          <div className="text-sm text-green-600">
+                            Economize 2 meses!
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2 mb-6">
+                        {planOption.features.slice(0, 4).map((feature, featureIndex) => (
+                          <div key={featureIndex} className="flex items-center text-left text-sm">
+                            <Check className="h-4 w-4 text-primary mr-2 flex-shrink-0" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                        {planOption.features.length > 4 && (
+                          <div className="text-sm text-muted-foreground">
+                            +{planOption.features.length - 4} funcionalidades
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
 
               {/* Formulário de Pagamento */}
@@ -327,7 +421,7 @@ export const Checkout = () => {
                       size="lg"
                       disabled={isProcessing}
                     >
-                      {isProcessing ? 'Processando...' : `Contratar ${plan}`}
+                      {isProcessing ? 'Processando...' : `Contratar Plano ${selectedPlan}`}
                     </Button>
 
                     <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
@@ -341,24 +435,24 @@ export const Checkout = () => {
 
             {/* Resumo do Pedido */}
             <div>
-              <Card>
+              <Card className="sticky top-8">
                 <CardHeader>
                   <CardTitle>Resumo do Pedido</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span>Plano {plan}</span>
+                    <span>Plano {selectedPlan}</span>
                     <Badge variant="secondary">
-                      {billing === 'yearly' ? 'Anual' : 'Mensal'}
+                      {selectedBilling === 'yearly' ? 'Anual' : 'Mensal'}
                     </Badge>
                   </div>
 
                   <div className="flex justify-between items-center text-lg font-semibold">
                     <span>Total</span>
-                    <span>{formatPrice(price)}</span>
+                    <span>{getCurrentPrice()}</span>
                   </div>
 
-                  {billing === 'yearly' && (
+                  {selectedBilling === 'yearly' && (
                     <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
                       🎉 Você está economizando 2 meses com o plano anual!
                     </div>
@@ -378,6 +472,20 @@ export const Checkout = () => {
                     <div className="flex items-center space-x-2">
                       <Shield className="h-4 w-4 text-green-600" />
                       <span>Suporte técnico incluído</span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Funcionalidades Incluídas:</h4>
+                    <div className="space-y-1 text-sm">
+                      {getCurrentPlan().features.map((feature, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <Check className="h-3 w-3 text-green-600" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
