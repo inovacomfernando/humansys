@@ -14,43 +14,7 @@ export const PreviewProtection: React.FC<{ children: React.ReactNode }> = ({ chi
                      window.location.hostname.includes('.repl.co');
 
     if (isPreview) {
-      // Marca d'água removida - usando apenas banner superior
-
-      // Bloquear recursos específicos do preview
-      const blockPreviewFeatures = () => {
-        // Desabilitar drag and drop
-        document.addEventListener('dragstart', (e) => {
-          e.preventDefault();
-          return false;
-        });
-
-        // Bloquear seleção mais agressiva
-        document.addEventListener('selectstart', (e) => {
-          e.preventDefault();
-          return false;
-        });
-
-        // Interceptar tentativas de abertura de nova janela
-        const originalOpen = window.open;
-        window.open = function(...args) {
-          console.log('%c⚠️ Tentativa de abertura de nova janela bloqueada no preview', 'color: orange; font-weight: bold;');
-          return null;
-        };
-
-        // Bloquear downloads no preview
-        document.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement;
-          if (target.tagName === 'A' && target.getAttribute('download')) {
-            e.preventDefault();
-            console.log('%c⚠️ Download bloqueado no modo preview', 'color: orange; font-weight: bold;');
-            return false;
-          }
-        });
-      };
-
-      blockPreviewFeatures();
-
-      // Banner de preview
+      // Banner de preview apenas
       const previewBanner = document.createElement('div');
       previewBanner.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; height: 30px;
