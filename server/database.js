@@ -15,6 +15,12 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`📡 ${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
+
 // Criar diretório data se não existir
 import fs from 'fs';
 const dataDir = path.join(__dirname, '../data');
@@ -213,4 +219,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Database server running on port ${PORT}`);
   console.log(`📁 Database file: ${path.join(dataDir, 'app.db')}`);
   console.log(`🌐 Server accessible at: http://0.0.0.0:${PORT}`);
+  console.log(`🔗 API Health check: http://0.0.0.0:${PORT}/api/health`);
 });
