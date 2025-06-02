@@ -526,11 +526,11 @@ export const Landing = () => {
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 group-hover:bg-purple-200 transition-colors">
                   <Brain className="h-8 w-8 text-purple-600" />
                 </div>
-                <CardTitle className="text-xl">IA Preditiva</CardTitle>
+                <CardTitle className="text-xl">Brainsys IAO V.1</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4">
-                  Previsões inteligentes de churn, crescimento e otimizações automáticas
+                  Orquestrador de Inteligência Organizacional com precisão de 94.7%
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -542,7 +542,11 @@ export const Landing = () => {
                     <Brain className="h-4 w-4 text-purple-600" />
                   </div>
                   <div className="flex justify-between">
-                    <span>Smart Recommendations</span>
+                    <span>ML Analytics</span>
+                    <Brain className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Insights Automáticos</span>
                     <Brain className="h-4 w-4 text-purple-600" />
                   </div>
                 </div>
@@ -592,10 +596,98 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* IA Features Showcase */}
+      <section className="py-20 px-4 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-purple-100 text-purple-700 hover:bg-purple-200">
+              Inteligência Artificial Avançada
+            </Badge>
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Tecnologia de IA Revolucionária
+            </h2>
+            <p className="text-xl text-purple-100 max-w-3xl mx-auto">
+              Conheça nossos módulos de IA que transformam completamente a gestão de RH
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            {/* Brainsys IAO V.1 */}
+            <Card className="relative overflow-hidden bg-gradient-to-br from-purple-900/90 to-blue-900/90 border-purple-500/20 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10"></div>
+              <CardContent className="relative p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Brain className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Brainsys IAO V.1</h3>
+                    <p className="text-purple-200">Orquestrador de Inteligência Organizacional</p>
+                  </div>
+                </div>
+                <div className="space-y-4 text-purple-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>Análises preditivas em tempo real</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                    <span>Machine Learning para otimização</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                    <span>Insights automatizados avançados</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span>94.7% de precisão preditiva</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* IA Assistant */}
+            <Card className="relative overflow-hidden bg-gradient-to-br from-green-900/90 to-emerald-900/90 border-green-500/20 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10"></div>
+              <CardContent className="relative p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Zap className="h-8 w-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">IA Assistant</h3>
+                    <p className="text-green-200">Assistente Inteligente 24/7</p>
+                  </div>
+                </div>
+                <div className="space-y-4 text-green-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span>Suporte instantâneo e inteligente</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span>Respostas contextualmente relevantes</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+                    <span>Integração com todos os módulos</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-lime-400 rounded-full animate-pulse"></div>
+                    <span>Aprendizado contínuo e personalizado</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-12 md:py-20">
         <div className="container">
-          <div className="mx-auto max-w-2xl text-center mb-16">
+          <div className="mx-auto max```text
+-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold md:text-4xl">
               Funcionalidades Completas
             </h2>
@@ -1250,7 +1342,7 @@ export const Landing = () => {
                 Teste Grátis por 30 Dias
               </Button>
               <Button 
-                size="lg" 
+size="lg" 
                 variant="outline"
                 className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary"
                 onClick={() => debouncedNavigate('/plans')}
