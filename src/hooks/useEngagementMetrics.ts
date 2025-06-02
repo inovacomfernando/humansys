@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCollaborators } from '@/hooks/useCollaborators';
 
@@ -21,7 +21,7 @@ interface DepartmentScore {
 export const useEngagementMetrics = () => {
   const { user } = useAuth();
   const { collaborators } = useCollaborators();
-  const [isCalculated, setIsCalculated] = useState(false);
+  const calculatedRef = useRef<string | null>(null);
   
   const metrics = useMemo<EngagementMetrics>(() => ({
     overallScore: 84,
@@ -46,7 +46,14 @@ export const useEngagementMetrics = () => {
   }, []);
 
   const calculateEngagementMetrics = useCallback(() => {
-    if (!collaborators.length || !user?.id || isCalculated) return;
+    const currentUserKey = `${user?.id}_${collaborators.length}`;
+    
+    // Se já calculou para este usuário e quantidade de colaboradores, não recalcular
+    if (calculatedRef.current === currentUserKey) {
+      return;
+    }
+
+    if (!collaborators.length || !user?.id) return;
 
     // Agrupar colaboradores por departamento
     const deptGroups = collaborators.reduce((acc, collab) => {
@@ -97,20 +104,31 @@ export const useEngagementMetrics = () => {
       });
     }
     setTrends(trendData);
-    setIsCalculated(true);
-  }, [collaborators, user?.id, userSeed, seededRandom, isCalculated]);
+    
+    // Marcar como calculado para esta combinação
+    calculatedRef.current = currentUserKey;
+  }, [collaborators, user?.id, userSeed, seededRandom]);
 
   useEffect(() => {
-    if (user?.id && collaborators.length > 0 && !isCalculated) {
-      calculateEngagementMetrics();
+    const currentUserKey = `${user?.id}_${collaborators.length}`;
+    
+    if (user?.id && collaborators.length > 0 && calculatedRef.current !== currentUserKey) {
+      // Usar setTimeout para evitar cálculos síncronos que podem causar loops
+      const timeoutId = setTimeout(() => {
+        calculateEngagementMetrics();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [user?.id, collaborators.length, calculateEngagementMetrics, isCalculated]);
+  }, [user?.id, collaborators.length, calculateEngagementMetrics]);
 
-  // Reset quando o usuário muda
+  // Limpar cache quando o usuário muda completamente
   useEffect(() => {
-    setIsCalculated(false);
-    setDepartmentScores([]);
-    setTrends([]);
+    if (user?.id && calculatedRef.current && !calculatedRef.current.startsWith(user.id)) {
+      calculatedRef.current = null;
+      setDepartmentScores([]);
+      setTrends([]);
+    }
   }, [user?.id]);
 
   return {
