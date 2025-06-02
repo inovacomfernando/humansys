@@ -14,7 +14,7 @@ export const PreviewProtection: React.FC<{ children: React.ReactNode }> = ({ chi
                      window.location.hostname.includes('.repl.co');
 
     if (isPreview) {
-      // Banner de preview apenas
+      // Apenas banner superior - sem marca d'água
       const previewBanner = document.createElement('div');
       previewBanner.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; height: 30px;
