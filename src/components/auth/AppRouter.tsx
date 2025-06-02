@@ -11,7 +11,7 @@ const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ def
 const Profile = React.lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
 const SecurityManagement = React.lazy(() => import('@/pages/SecurityManagement').then(module => ({ default: module.SecurityManagement })));
 
-// Import regular components
+// Import BrainsysIAO component
 import { BrainsysIAO } from '@/pages/BrainsysIAO';
 import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
 import { OptimizedRecruitment } from '@/pages/OptimizedRecruitment';
