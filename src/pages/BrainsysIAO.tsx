@@ -403,3 +403,5 @@ export const BrainsysIAO = () => {
     </DashboardLayout>
   );
 };
+
+export default BrainsysIAO;

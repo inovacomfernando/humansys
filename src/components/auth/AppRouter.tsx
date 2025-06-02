@@ -11,8 +11,8 @@ const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ def
 const Profile = React.lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
 const SecurityManagement = React.lazy(() => import('@/pages/SecurityManagement').then(module => ({ default: module.SecurityManagement })));
 
-// Import BrainsysIAO component
-import { BrainsysIAO } from '@/pages/BrainsysIAO';
+// Lazy load BrainsysIAO component
+const BrainsysIAO = React.lazy(() => import('@/pages/BrainsysIAO').then(module => ({ default: module.BrainsysIAO })));
 import { OptimizedCollaborators } from '@/pages/OptimizedCollaborators';
 import { OptimizedRecruitment } from '@/pages/OptimizedRecruitment';
 import Index from '@/pages/Index';
@@ -92,6 +92,7 @@ export const AppRouter = () => {
 
         {/* Rotas de compatibilidade (redirecionam para /app/[page]) */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/brainsys-iao" element={<ProtectedRoute><BrainsysIAO /></ProtectedRoute>} />
         <Route path="/founder-dashboard" element={<ProtectedRoute requiredRole="founder"><FounderDashboard /></ProtectedRoute>} />
         <Route path="/collaborators" element={<ProtectedRoute><OptimizedCollaborators /></ProtectedRoute>} />
         <Route path="/recruitment" element={<ProtectedRoute><OptimizedRecruitment /></ProtectedRoute>} />
