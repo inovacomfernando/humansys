@@ -21,6 +21,7 @@ import { Help } from '@/pages/Help';
 import { Careers } from '@/pages/Careers';
 import { Blog } from '@/pages/Blog';
 import NotFound from '@/pages/NotFound';
+import { SecurityProvider } from '@/components/security/SecurityProvider';
 
 import './App.css';
 
@@ -40,32 +41,34 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <Router>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/plans" element={<Plans />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/changelog" element={<PublicChangelog />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/documentation" element={<Documentation />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/blog" element={<Blog />} />
+            <SecurityProvider>
+              <Router>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/plans" element={<Plans />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/changelog" element={<PublicChangelog />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/documentation" element={<Documentation />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/help" element={<Help />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/blog" element={<Blog />} />
 
-                {/* Protected app routes */}
-                <Route path="/app/*" element={<AppRouter />} />
-                <Route path="/founder/*" element={<AppRouter />} />
+                  {/* Protected app routes */}
+                  <Route path="/app/*" element={<AppRouter />} />
+                  <Route path="/founder/*" element={<AppRouter />} />
 
-                {/* 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </Router>
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <Toaster />
+              </Router>
+            </SecurityProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

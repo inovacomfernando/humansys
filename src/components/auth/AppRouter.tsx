@@ -34,6 +34,7 @@ import { Contact } from '@/pages/Contact';
 import { Help } from '@/pages/Help';
 import NotFound from '@/pages/NotFound';
 import { Disc } from '@/pages/Disc';
+const SecurityManagement = React.lazy(() => import('@/pages/SecurityManagement').then(module => ({ default: module.SecurityManagement })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -212,6 +213,15 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute>
               <Documentation />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="/app/security" 
+          element={
+            <ProtectedRoute requiredRole="founder">
+              <SecurityManagement />
             </ProtectedRoute>
           } 
         />
