@@ -29,6 +29,7 @@ import {
   Crown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { IAAssistantDialog } from '@/components/dashboard/IAAssistantDialog';
 
 export const Dashboard = () => {
   const { data, isLoading, loadingStage } = useOptimizedDashboardData();
@@ -56,6 +57,17 @@ export const Dashboard = () => {
     };
 
     checkFounderRole();
+
+    // Listen for IA Assistant open event from Sidebar
+    const handleOpenIAAssistant = () => {
+      setIsIAAssistantOpen(true);
+    };
+
+    window.addEventListener('openIAAssistant', handleOpenIAAssistant);
+
+    return () => {
+      window.removeEventListener('openIAAssistant', handleOpenIAAssistant);
+    };
   }, [user?.id]);
 
   return (
@@ -364,11 +376,10 @@ export const Dashboard = () => {
         </div>
 
         {/* IA Assistant Dialog */}
-        {/* Assuming IAAssistantDialog is a component you have */}
-        {/* <IAAssistantDialog 
+        <IAAssistantDialog 
           open={isIAAssistantOpen} 
           onOpenChange={setIsIAAssistantOpen} 
-        /> */}
+        />
       </div>
     </DashboardLayout>
   );

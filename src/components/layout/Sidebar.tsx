@@ -70,6 +70,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Handle IA Assistant opening
+  const handleOpenIAAssistant = () => {
+    // Dispatch event to open IA Assistant
+    window.dispatchEvent(new CustomEvent('openIAAssistant'));
+  };
+
   // Check founder role
   useEffect(() => {
     const checkFounderRole = async () => {
@@ -339,10 +345,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         <div className="p-3 border-t border-green-200 dark:border-green-700 bg-gradient-to-r from-green-50 to-emerald-100 dark:from-green-800 dark:to-emerald-700">
           <div 
             className="flex items-center gap-3 p-3 bg-white dark:bg-green-800 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
-            onClick={() => {
-              // Função para abrir o IA Assistant será implementada via props ou context
-              window.dispatchEvent(new CustomEvent('openIAAssistant'));
-            }}
+            onClick={handleOpenIAAssistant}
           >
             <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
               <Bot className="h-4 w-4 text-white" />
