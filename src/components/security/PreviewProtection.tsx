@@ -14,7 +14,11 @@ export const PreviewProtection: React.FC<{ children: React.ReactNode }> = ({ chi
                      window.location.hostname.includes('.repl.co');
 
     if (isPreview) {
-      // Apenas banner superior - sem marca d'água
+      // Remover qualquer marca d'água existente primeiro
+      const existingWatermarks = document.querySelectorAll('[data-watermark]');
+      existingWatermarks.forEach(el => el.remove());
+
+      // Apenas banner superior - SEM MARCA D'ÁGUA
       const previewBanner = document.createElement('div');
       previewBanner.style.cssText = `
         position: fixed; top: 0; left: 0; right: 0; height: 30px;
@@ -24,13 +28,22 @@ export const PreviewProtection: React.FC<{ children: React.ReactNode }> = ({ chi
         box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       `;
       previewBanner.innerHTML = '🔒 MODO PREVIEW - Sistema Protegido - Funcionalidades Limitadas';
+      previewBanner.setAttribute('data-preview-banner', 'true');
       document.body.appendChild(previewBanner);
 
-      // Ajustar padding do body para compensar o banner
+      // Ajustar padding do body para compensar apenas o banner
       document.body.style.paddingTop = '30px';
 
+      // Logs de identificação apenas
       console.log('%c🔒 PROTEÇÃO DE PREVIEW ATIVADA', 'color: orange; font-size: 18px; font-weight: bold;');
       console.log('%cRecursos limitados para proteção do sistema', 'color: orange; font-size: 14px;');
+
+      // Cleanup function para remover banner ao desmontar
+      return () => {
+        const banner = document.querySelector('[data-preview-banner]');
+        if (banner) banner.remove();
+        document.body.style.paddingTop = '';
+      };
     }
   }, [user?.email]);
 

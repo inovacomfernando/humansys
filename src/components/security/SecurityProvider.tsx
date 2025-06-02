@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useSecurityProtection } from '@/hooks/useSecurityProtection';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,12 +66,12 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
           const isReplitDev = window.location.hostname.includes('replit') || 
                              window.location.hostname.includes('repl.co') ||
                              window.location.hostname.includes('replit.dev');
-          
+
           const isLegitimateFrame = isReplitDev || 
                                    document.referrer.includes('replit') ||
                                    document.referrer.includes('repl.co') ||
                                    document.referrer.includes('replit.dev');
-          
+
           // Se não for um frame legítimo do Replit, apenas registrar (não bloquear)
           if (!isLegitimateFrame) {
             await logSecurityEvent({
@@ -110,7 +109,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
 
   const blockAccess = async (reason: string) => {
     setIsSecure(false);
-    
+
     await logSecurityEvent({
       type: 'suspicious_activity',
       user_agent: navigator.userAgent,
