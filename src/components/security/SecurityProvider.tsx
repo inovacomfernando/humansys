@@ -65,13 +65,15 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
         // Verificar se está rodando em iframe (possível embedding malicioso)
         if (window.top !== window.self) {
           const isReplitDev = window.location.hostname.includes('replit') || 
-                             window.location.hostname.includes('repl.co');
+                             window.location.hostname.includes('repl.co') ||
+                             window.location.hostname.includes('replit.dev');
           
           const isLegitimateFrame = isReplitDev || 
                                    document.referrer.includes('replit') ||
-                                   document.referrer.includes('repl.co');
+                                   document.referrer.includes('repl.co') ||
+                                   document.referrer.includes('replit.dev');
           
-          // Se não for um frame legítimo do Replit, bloquear
+          // Se não for um frame legítimo do Replit, apenas registrar (não bloquear)
           if (!isLegitimateFrame) {
             await logSecurityEvent({
               type: 'suspicious_activity',
@@ -80,14 +82,16 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
               details: { 
                 reason: 'iframe_detected', 
                 hostname: window.location.hostname,
-                referrer: document.referrer 
+                referrer: document.referrer,
+                blocked: false
               }
             });
-            setIsSecure(false);
+            // Não bloquear mais automaticamente no preview
+            console.warn('⚠️ Sistema rodando em iframe não reconhecido - Monitorando...');
           } else {
-            // Mesmo sendo legítimo, ativar proteções de preview
+            // Frame legítimo do Replit
             console.log('%c🔒 PREVIEW PROTEGIDO', 'color: orange; font-size: 16px; font-weight: bold;');
-            console.log('%cSistema rodando em preview com proteções ativas', 'color: orange; font-size: 12px;');
+            console.log('%cSistema rodando em preview com proteções de monitoramento', 'color: orange; font-size: 12px;');
           }
         }
 
