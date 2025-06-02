@@ -5,6 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { DynamicBadge } from '@/components/landing/DynamicBadge';
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
   Users,
   UserPlus,
   MessageSquare,
@@ -299,6 +306,165 @@ export const Landing = () => {
               >
                 <TrendingUp className="mr-2 h-5 w-5" />
                 Ver Novidades
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Screenshots Carousel Section */}
+      <section className="py-12 md:py-20 bg-gradient-to-r from-slate-50 to-gray-50">
+        <div className="container">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <div className="flex justify-center mb-4">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-blue-300">
+                <Smartphone className="mr-1 h-3 w-3 inline" />
+                Interface Moderna
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold md:text-4xl">
+              Visual Moderno e Intuitivo
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Conheça nossa interface elegante e funcional que facilita a gestão de RH
+            </p>
+          </div>
+
+          <div className="max-w-6xl mx-auto">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                <CarouselItem className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white">
+                    <div className="aspect-video bg-gradient-to-br from-blue-500 to-indigo-600 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute inset-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Users className="h-12 w-12 mx-auto mb-2 opacity-80" />
+                          <h3 className="font-semibold text-lg">Dashboard Principal</h3>
+                          <p className="text-sm opacity-90">Visão geral completa</p>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">Dashboard Executivo</h3>
+                      <p className="text-sm text-muted-foreground">Central de controle com métricas em tempo real e insights de IA</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white">
+                    <div className="aspect-video bg-gradient-to-br from-green-500 to-emerald-600 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute inset-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <UserPlus className="h-12 w-12 mx-auto mb-2 opacity-80" />
+                          <h3 className="font-semibold text-lg">Gestão de Pessoas</h3>
+                          <p className="text-sm opacity-90">Controle total</p>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">Gestão de Colaboradores</h3>
+                      <p className="text-sm text-muted-foreground">Interface moderna para gerenciar toda sua equipe com facilidade</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white">
+                    <div className="aspect-video bg-gradient-to-br from-purple-500 to-pink-600 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute inset-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Trophy className="h-12 w-12 mx-auto mb-2 opacity-80" />
+                          <h3 className="font-semibold text-lg">Gamificação</h3>
+                          <p className="text-sm opacity-90">Engajamento total</p>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">Sistema de Badges</h3>
+                      <p className="text-sm text-muted-foreground">Gamificação completa com conquistas e ranking para motivar sua equipe</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white">
+                    <div className="aspect-video bg-gradient-to-br from-orange-500 to-red-600 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute inset-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Brain className="h-12 w-12 mx-auto mb-2 opacity-80" />
+                          <h3 className="font-semibold text-lg">IA Analytics</h3>
+                          <p className="text-sm opacity-90">Insights inteligentes</p>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">Analytics com IA</h3>
+                      <p className="text-sm text-muted-foreground">Análises preditivas e insights automáticos para decisões estratégicas</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white">
+                    <div className="aspect-video bg-gradient-to-br from-teal-500 to-cyan-600 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute inset-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Video className="h-12 w-12 mx-auto mb-2 opacity-80" />
+                          <h3 className="font-semibold text-lg">Treinamentos</h3>
+                          <p className="text-sm opacity-90">Plataforma completa</p>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">Portal de Treinamentos</h3>
+                      <p className="text-sm text-muted-foreground">Plataforma de cursos com certificação automática e player integrado</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+
+                <CarouselItem className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                  <Card className="relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border-0 bg-white">
+                    <div className="aspect-video bg-gradient-to-br from-indigo-500 to-blue-600 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-black/20"></div>
+                      <div className="absolute inset-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <Target className="h-12 w-12 mx-auto mb-2 opacity-80" />
+                          <h3 className="font-semibold text-lg">Metas & PDI</h3>
+                          <p className="text-sm opacity-90">Desenvolvimento contínuo</p>
+                        </div>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">Gestão de Metas</h3>
+                      <p className="text-sm text-muted-foreground">Plano de desenvolvimento individual com acompanhamento em tempo real</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
+            </Carousel>
+
+            <div className="text-center mt-12">
+              <Button 
+                size="lg" 
+                className="text-lg px-8 py-6"
+                onClick={() => debouncedNavigate('/app/dashboard')}
+              >
+                <Smartphone className="mr-2 h-5 w-5" />
+                Explorar Interface
               </Button>
             </div>
           </div>
