@@ -1,99 +1,137 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { dbClient } from '@/lib/replit-db';
 
 interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
+  created_at?: string;
+}
+
+interface AuthState {
+  user: User | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
 }
 
 export const usePostgreSQLAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isLoading: true,
+    isAuthenticated: false
+  });
 
-  useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('auth_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('auth_user');
+  // Verificar se há usuário logado no localStorage
+  const checkAuthState = useCallback(async () => {
+    try {
+      const savedUser = localStorage.getItem('postgres_user');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        setAuthState({
+          user,
+          isLoading: false,
+          isAuthenticated: true
+        });
+      } else {
+        setAuthState({
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        });
       }
+    } catch (error) {
+      console.error('Erro ao verificar estado de autenticação:', error);
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false
+      });
     }
   }, []);
 
-  const signIn = async (email: string, password: string): Promise<boolean> => {
+  // Login
+  const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      setError(null);
+      console.log('Tentando fazer login:', { email });
       
-      // Check database server health first
-      const healthCheck = await dbClient.healthCheck();
-      if (!healthCheck.success) {
-        setError('Servidor de banco não está acessível');
-        return false;
-      }
-
-      const result = await dbClient.login(email, password);
-
-      if (result.success && result.data?.user) {
-        const userData = result.data.user;
-        setUser(userData);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-        return true;
+      const response = await dbClient.login(email, password);
+      
+      if (response.success && response.data?.user) {
+        const user = response.data.user;
+        localStorage.setItem('postgres_user', JSON.stringify(user));
+        
+        setAuthState({
+          user,
+          isLoading: false,
+          isAuthenticated: true
+        });
+        
+        return { user, error: null };
       } else {
-        setError(result.error || 'Credenciais inválidas');
-        return false;
+        return { user: null, error: new Error(response.error || 'Credenciais inválidas') };
       }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      setError('Erro de conexão com o banco');
-      return false;
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Erro no login:', error);
+      return { user: null, error };
     }
   };
 
-  const signUp = async (email: string, password: string, name: string): Promise<boolean> => {
+  // Cadastro
+  const signUp = async (email: string, password: string, name: string) => {
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const result = await dbClient.createUser(email, name, password);
-
-      if (result.success && result.data?.user) {
-        const userData = result.data.user;
-        setUser(userData);
-        localStorage.setItem('auth_user', JSON.stringify(userData));
-        return true;
+      console.log('Iniciando criação de usuário:', { email, name });
+      
+      // Simular hash de senha (em produção usar bcrypt)
+      const password_hash = btoa(password); // Base64 básico para teste
+      
+      const response = await dbClient.createUser(email, name, password_hash);
+      
+      if (response.success && response.data?.user) {
+        const user = response.data.user;
+        localStorage.setItem('postgres_user', JSON.stringify(user));
+        
+        setAuthState({
+          user,
+          isLoading: false,
+          isAuthenticated: true
+        });
+        
+        return { user, error: null };
       } else {
-        setError(result.error || 'Erro ao criar usuário');
-        return false;
+        return { user: null, error: new Error(response.error || 'Erro ao criar usuário') };
       }
-    } catch (error) {
-      console.error('Sign up error:', error);
-      setError('Erro de conexão com o banco');
-      return false;
-    } finally {
-      setIsLoading(false);
+    } catch (error: any) {
+      console.error('Erro no cadastro:', error);
+      return { user: null, error };
     }
   };
 
-  const signOut = async (): Promise<void> => {
-    setUser(null);
-    localStorage.removeItem('auth_user');
+  // Logout
+  const signOut = async () => {
+    try {
+      localStorage.removeItem('postgres_user');
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false
+      });
+      return { error: null };
+    } catch (error: any) {
+      return { error };
+    }
   };
+
+  // Verificar estado na inicialização
+  useEffect(() => {
+    checkAuthState();
+  }, [checkAuthState]);
 
   return {
-    user,
-    isLoading,
-    error,
+    ...authState,
     signIn,
     signUp,
     signOut,
+    refreshAuth: checkAuthState
   };
 };
