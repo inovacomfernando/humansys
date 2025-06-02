@@ -14,30 +14,7 @@ export const PreviewProtection: React.FC<{ children: React.ReactNode }> = ({ chi
                      window.location.hostname.includes('.repl.co');
 
     if (isPreview) {
-      // Adicionar watermark específico do preview
-      const previewWatermark = document.createElement('div');
-      previewWatermark.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        pointer-events: none; z-index: 999997; opacity: 0.15;
-        background: repeating-linear-gradient(
-          45deg,
-          transparent,
-          transparent 80px,
-          rgba(255, 165, 0, 0.1) 80px,
-          rgba(255, 165, 0, 0.1) 100px
-        );
-      `;
-      
-      const previewText = document.createElement('div');
-      previewText.style.cssText = `
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);
-        font-size: 36px; color: rgba(255, 165, 0, 0.2); font-weight: bold;
-        white-space: nowrap; user-select: none; pointer-events: none;
-      `;
-      previewText.textContent = `PREVIEW MODE - ${user?.email || 'Demo'} - ${new Date().toLocaleDateString()}`;
-      
-      previewWatermark.appendChild(previewText);
-      document.body.appendChild(previewWatermark);
+      // Marca d'água removida - usando apenas banner superior
 
       // Bloquear recursos específicos do preview
       const blockPreviewFeatures = () => {
