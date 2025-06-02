@@ -52,7 +52,8 @@ export const Checkout = () => {
         'Onboarding estruturado',
         'Gamificação básica',
         'Suporte por email'
-      ]
+      ],
+      popular: false
     },
     {
       name: 'Em Crescimento',
@@ -83,7 +84,8 @@ export const Checkout = () => {
         'Integração com sistemas externos',
         'Consultoria especializada',
         'Suporte 24/7'
-      ]
+      ],
+      popular: false
     }
   ];
 
@@ -230,6 +232,65 @@ export const Checkout = () => {
                 </div>
               </div>
 
+              {/* Sistema de Créditos */}
+              <Card className="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                <CardHeader className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Badge className="bg-green-500 text-white px-3 py-1 text-sm">
+                      Sistema de Créditos
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-xl">Gestão Inteligente de Créditos</CardTitle>
+                  <CardDescription className="text-base">
+                    Sistema transparente e flexível para controlar o cadastro de colaboradores
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-6 md:grid-cols-3">
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Users className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <h4 className="font-semibold mb-2">1 Crédito = 1 Colaborador</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Sistema simples: cada colaborador cadastrado consome 1 crédito
+                      </p>
+                      <div className="mt-2 text-sm font-medium">
+                        Cadastro completo: <span className="text-green-600">1 crédito</span>
+                      </div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Shield className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Planos Flexíveis</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Escolha o plano ideal para o tamanho da sua empresa
+                      </p>
+                      <div className="mt-2">
+                        <div className="text-xs text-muted-foreground">Inicial: <span className="text-green-600 font-medium">10 créditos</span></div>
+                        <div className="text-xs text-muted-foreground">Crescimento: <span className="text-green-600 font-medium">50 créditos</span></div>
+                        <div className="text-xs text-muted-foreground">Profissional: <span className="text-green-600 font-medium">Ilimitados</span></div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <BarChart3 className="h-6 w-6 text-green-600" />
+                      </div>
+                      <h4 className="font-semibold mb-2">Controle Total</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Acompanhe o uso de créditos em tempo real no dashboard
+                      </p>
+                      <div className="mt-2 text-sm font-medium text-green-600">
+                        ✓ Histórico completo
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Seleção de Tipo de Cobrança */}
               <div className="flex items-center justify-center mb-6">
                 <div className="bg-muted p-1 rounded-lg flex items-center">
@@ -259,7 +320,7 @@ export const Checkout = () => {
                 {plans.map((planOption, index) => (
                   <Card 
                     key={index} 
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                    className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
                       selectedPlan === planOption.name 
                         ? 'border-primary shadow-lg ring-2 ring-primary/20' 
                         : planOption.popular 
@@ -269,7 +330,7 @@ export const Checkout = () => {
                     onClick={() => setSelectedPlan(planOption.name)}
                   >
                     {planOption.popular && (
-                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-1 rounded-full text-sm font-medium z-10">
                         <Star className="mr-1 h-3 w-3 inline" />
                         Mais Popular
                       </div>
