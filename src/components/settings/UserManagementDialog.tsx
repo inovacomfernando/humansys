@@ -380,24 +380,36 @@ export const UserManagementDialog = () => {
 
     setIsLoading(true);
     try {
-      // Criar usuário diretamente na tabela de colaboradores (simulação)
-      const newUserId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      // Verificar se o usuário já existe
+      const { data: existingUser } = await supabase
+        .from('collaborators')
+        .select('email')
+        .eq('email', newUser.email)
+        .single();
+
+      if (existingUser) {
+        throw new Error('Este email já está cadastrado no sistema');
+      }
+
+      // Gerar um ID temporário para o usuário
+      const newUserId = crypto.randomUUID();
 
       // Inserir na tabela de colaboradores
       const { error: collaboratorError } = await supabase
         .from('collaborators')
         .insert({
-          user_id: user.id,
+          user_id: newUserId,
           name: newUser.name,
           email: newUser.email,
-          role: 'Usuário',
-          department: 'Geral',
-          status: 'active',
-          join_date: new Date().toISOString().split('T')[0]
+          status: 'pending',
+          password_hash: btoa(newUser.password), // Apenas para desenvolvimento
+          created_by: user.id,
+          invited_at: new Date().toISOString()
         });
 
       if (collaboratorError) {
         console.error('Collaborator insert error:', collaboratorError);
+        throw new Error('Erro ao inserir colaborador na base de dados');
       }
 
       // Tentar inserir na tabela de organização (se existir)

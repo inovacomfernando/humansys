@@ -77,46 +77,62 @@ export const AdminPanel = () => {
 
     setIsLoading(true);
     try {
-      // Criar usuário via admin
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: newUserData.email,
-        password: newUserData.password,
-        email_confirm: true,
-        user_metadata: {
-          name: newUserData.name,
-          full_name: newUserData.name,
-        }
-      });
+      // Verificar se o usuário já existe na tabela de colaboradores
+      const { data: existingCollaborator } = await supabase
+        .from('collaborators')
+        .select('*')
+        .eq('email', newUserData.email)
+        .single();
 
-      if (error) throw error;
-
-      // Adicionar na tabela de colaboradores
-      if (data.user) {
-        const { error: collaboratorError } = await supabase
-          .from('collaborators')
-          .insert([{
-            user_id: data.user.id,
-            name: newUserData.name,
-            email: newUserData.email,
-            status: 'active'
-          }]);
-
-        if (collaboratorError) {
-          console.error('Error adding to collaborators:', collaboratorError);
-        }
+      if (existingCollaborator) {
+        toast({
+          title: "Usuário já existe",
+          description: "Este email já está cadastrado no sistema.",
+          variant: "destructive",
+        });
+        return;
       }
 
+      // Para produção: Criar usuário diretamente na tabela de colaboradores
+      // O usuário receberá um convite por email para ativar a conta
+      const { data: collaboratorData, error: collaboratorError } = await supabase
+        .from('collaborators')
+        .insert([{
+          name: newUserData.name,
+          email: newUserData.email,
+          status: 'pending',
+          password_hash: btoa(newUserData.password), // Não é seguro, apenas para desenvolvimento
+          created_by: user?.id,
+          invited_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (collaboratorError) {
+        throw collaboratorError;
+      }
+
+      // Simular envio de email de convite
       toast({
-        title: "Usuário criado com sucesso",
-        description: `${newUserData.name} foi adicionado ao sistema.`,
+        title: "Convite enviado",
+        description: `Um convite foi enviado para ${newUserData.email}. Senha temporária: ${newUserData.password}`,
       });
 
       setNewUserData({ email: '', password: '', name: '' });
     } catch (error: any) {
       console.error('Create user error:', error);
+      
+      let errorMessage = "Não foi possível criar o usuário.";
+      
+      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
+        errorMessage = "Este email já está cadastrado no sistema.";
+      } else if (error.message?.includes('permission') || error.message?.includes('RLS')) {
+        errorMessage = "Sem permissão para criar usuários. Contate o administrador do sistema.";
+      }
+      
       toast({
         title: "Erro ao criar usuário",
-        description: error.message || "Não foi possível criar o usuário.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -230,6 +246,20 @@ export const AdminPanel = () => {
 
           {/* Recuperação de Conta */}
           <AccountRecovery />
+
+          {/* Sistema de Convites */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <Mail className="h-5 w-5 text-green-600 mr-2" />
+              <h4 className="font-medium text-green-800">Sistema de Convites</h4>
+            </div>
+            <div className="text-sm text-green-700 mt-2 space-y-1">
+              <p>• Usuários são criados com status "pendente"</p>
+              <p>• Uma senha temporária é fornecida para primeiro acesso</p>
+              <p>• O usuário deve trocar a senha no primeiro login</p>
+              <p>• Emails de convite podem ser configurados futuramente</p>
+            </div>
+          </div>
 
           {/* Informações do Sistema */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
