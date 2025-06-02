@@ -37,13 +37,16 @@ import {
   Crown,
   DollarSign,
   TrendingDown,
-  CreditCard
+  CreditCard,
+  Building
 } from 'lucide-react';
 import { useDebounceNavigation } from '@/hooks/useDebounceNavigation';
 import { FeatureCard } from '@/components/landing/FeatureCard';
+import { useNavigate } from 'react-router-dom';
 
 export const Landing = () => {
   const { debouncedNavigate } = useDebounceNavigation();
+  const navigate = useNavigate();
 
   const features = [
     {
@@ -166,56 +169,57 @@ export const Landing = () => {
   const plans = [
     {
       name: 'Inicial',
-      description: 'Perfeito para empresas iniciantes',
+      description: 'Perfeito para startups e pequenas empresas',
       monthlyPrice: 'R$ 127',
-      yearlyPrice: 'R$ 1270',
-      popular: false,
+      yearlyPrice: 'R$ 1.270',
       features: [
-        'Até 15 colaboradores',
-        'Onboarding estruturado',
-        'Gestão de documentos',
-        'Gamificação básica',
-        'Análise DISC básica',
-        'Suporte por email',
-        'Relatórios essenciais'
-      ]
+        'Gestão de 15 Colaboradores',
+        'Dashboard Principal',
+        'Módulo de Treinamentos',
+        'Reuniões 1:1 Básicas',
+        'Metas & PDI Simples',
+        'Feedback Estruturado',
+        'Onboarding Básico',
+        'Suporte por Email'
+      ],
+      popular: false
     },
     {
       name: 'Em Crescimento',
-      description: 'Ideal para empresas em expansão',
+      description: 'Para empresas em expansão',
       monthlyPrice: 'R$ 247',
-      yearlyPrice: 'R$ 2470',
-      popular: true,
+      yearlyPrice: 'R$ 2.470',
       features: [
-        'Até 75 colaboradores',
-        'Onboarding completo com gamificação',
-        'Sistema de feedback 360°',
-        'Treinamentos e certificados',
-        'Pesquisas de clima organizacional',
-        'Analytics com IA preditiva',
-        'Análise DISC completa',
-        'Suporte prioritário',
-        'Integração com sistemas externos'
-      ]
+        'Gestão de 75 Colaboradores',
+        'Análise DISC com IA',
+        'Analytics Avançados',
+        'Pesquisas de Engajamento',
+        'Certificados Personalizados',
+        'Gamificação Completa',
+        'Recrutamento Inteligente',
+        'Documentos Avançados',
+        'Suporte Prioritário'
+      ],
+      popular: true
     },
     {
       name: 'Profissional',
-      description: 'Para empresas estabelecidas',
+      description: 'Para grandes organizações',
       monthlyPrice: 'R$ 497',
-      yearlyPrice: 'R$ 4970',
-      popular: false,
+      yearlyPrice: 'R$ 4.970',
       features: [
-        'Colaboradores ilimitados',
-        'Todas as funcionalidades premium',
-        'IA avançada para predição de turnover',
-        'Gamificação completa com leaderboards',
-        'Relatórios executivos automatizados',
-        'API personalizada e webhooks',
-        'Suporte 24/7 com CSM dedicado',
-        'White label completo',
-        'Consultoria estratégica mensal',
-        'Implementação assistida'
-      ]
+        'Gestão de 500 Colaboradores',
+        'Founder Dashboard Premium',
+        'IA Preditiva Avançada',
+        'Brainsys IAO V.1 Completo',
+        'Security Management',
+        'API Personalizada',
+        'Integrações Ilimitadas',
+        'White Label Disponível',
+        'Suporte 24/7 Dedicado',
+        'Consultor Especializado'
+      ],
+      popular: false
     }
   ];
 
@@ -686,8 +690,7 @@ export const Landing = () => {
       {/* Features Section */}
       <section className="py-12 md:py-20">
         <div className="container">
-          <div className="mx-auto max```text
--w-2xl text-center mb-16">
+          <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-3xl font-bold md:text-4xl">
               Funcionalidades Completas
             </h2>
@@ -804,6 +807,53 @@ export const Landing = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* Enterprise */}
+          <div className="mt-16">
+            <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 max-w-2xl mx-auto">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center">
+                  <Building className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="text-3xl font-bold mb-2">Enterprise</h3>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Soluções customizadas para grandes corporações
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-purple-600 mr-2" />
+                    Colaboradores Ilimitados
+                  </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-purple-600 mr-2" />
+                    Customização Completa
+                  </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-purple-600 mr-2" />
+                    Deployment On-Premise
+                  </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-purple-600 mr-2" />
+                    SLA Garantido
+                  </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-purple-600 mr-2" />
+                    Treinamento da Equipe
+                  </div>
+                  <div className="flex items-center">
+                    <Check className="h-4 w-4 text-purple-600 mr-2" />
+                    Suporte Técnico Dedicado
+                  </div>
+                </div>
+
+                <Button size="lg" variant="outline" onClick={() => navigate('/contact')}>
+                  <Building className="h-4 w-4 mr-2" />
+                  Fale Conosco
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

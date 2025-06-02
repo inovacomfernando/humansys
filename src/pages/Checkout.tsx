@@ -42,48 +42,55 @@ export const Checkout = () => {
   const plans = [
     {
       name: 'Inicial',
-      description: 'Perfeito para empresas pequenas',
-      monthlyPrice: 'R$ 79',
-      yearlyPrice: 'R$ 790',
+      description: 'Perfeito para startups e pequenas empresas',
+      monthlyPrice: 'R$ 127',
+      yearlyPrice: 'R$ 1.270',
       features: [
-        'Até 10 colaboradores',
-        'Dashboard básico',
-        'Análise DISC básica',
-        'Onboarding estruturado',
-        'Gamificação básica',
-        'Suporte por email'
+        'Gestão de 15 Colaboradores',
+        'Dashboard Principal',
+        'Módulo de Treinamentos',
+        'Reuniões 1:1 Básicas',
+        'Metas & PDI Simples',
+        'Feedback Estruturado',
+        'Onboarding Básico',
+        'Suporte por Email'
       ],
       popular: false
     },
     {
       name: 'Em Crescimento',
       description: 'Para empresas em expansão',
-      monthlyPrice: 'R$ 149',
-      yearlyPrice: 'R$ 1490',
+      monthlyPrice: 'R$ 247',
+      yearlyPrice: 'R$ 2.470',
       features: [
-        'Até 50 colaboradores',
-        'Analytics avançada com IA',
-        'Gamificação completa',
-        'Reuniões 1:1 automatizadas',
-        'Feedback 360°',
-        'Relatórios personalizados',
-        'Suporte prioritário'
+        'Gestão de 75 Colaboradores',
+        'Análise DISC com IA',
+        'Analytics Avançados',
+        'Pesquisas de Engajamento',
+        'Certificados Personalizados',
+        'Gamificação Completa',
+        'Recrutamento Inteligente',
+        'Documentos Avançados',
+        'Suporte Prioritário'
       ],
       popular: true
     },
     {
       name: 'Profissional',
       description: 'Para grandes organizações',
-      monthlyPrice: 'R$ 299',
-      yearlyPrice: 'R$ 2990',
+      monthlyPrice: 'R$ 497',
+      yearlyPrice: 'R$ 4.970',
       features: [
-        'Colaboradores ilimitados',
-        'IA para triagem e análises preditivas',
-        'API completa',
-        'PWA para acesso mobile',
-        'Integração com sistemas externos',
-        'Consultoria especializada',
-        'Suporte 24/7'
+        'Gestão de 500 Colaboradores',
+        'Founder Dashboard Premium',
+        'IA Preditiva Avançada',
+        'Brainsys IAO V.1 Completo',
+        'Security Management',
+        'API Personalizada',
+        'Integrações Ilimitadas',
+        'White Label Disponível',
+        'Suporte 24/7 Dedicado',
+        'Consultor Especializado'
       ],
       popular: false
     }
@@ -269,9 +276,9 @@ export const Checkout = () => {
                         Escolha o plano ideal para o tamanho da sua empresa
                       </p>
                       <div className="mt-2">
-                        <div className="text-xs text-muted-foreground">Inicial: <span className="text-green-600 font-medium">10 créditos</span></div>
-                        <div className="text-xs text-muted-foreground">Crescimento: <span className="text-green-600 font-medium">50 créditos</span></div>
-                        <div className="text-xs text-muted-foreground">Profissional: <span className="text-green-600 font-medium">Ilimitados</span></div>
+                        <div className="text-xs text-muted-foreground">Inicial: <span className="text-green-600 font-medium">15 créditos</span></div>
+                        <div className="text-xs text-muted-foreground">Crescimento: <span className="text-green-600 font-medium">75 créditos</span></div>
+                        <div className="text-xs text-muted-foreground">Profissional: <span className="text-green-600 font-medium">500 créditos</span></div>
                       </div>
                     </div>
                     
