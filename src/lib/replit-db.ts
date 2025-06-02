@@ -1,5 +1,5 @@
 // Cliente para comunicação com o servidor de banco local
-const API_BASE_URL = 'http://0.0.0.0:3001/api';
+const API_BASE_URL = 'http://localhost:3001/api';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -13,14 +13,20 @@ class LocalDatabaseClient {
       const url = `${API_BASE_URL}${endpoint}`;
       console.log('📡 Fazendo requisição:', { url, method: options.method || 'GET' });
       
+      // Timeout para requisições
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+      
       const response = await fetch(url, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,
         },
+        signal: controller.signal,
         ...options,
       });
 
+      clearTimeout(timeoutId);
       console.log('📥 Resposta recebida:', { status: response.status, ok: response.ok });
 
       const data = await response.json();
@@ -33,7 +39,16 @@ class LocalDatabaseClient {
       return { success: true, data };
     } catch (error) {
       console.error('❌ Erro na requisição de banco:', error);
-      return { success: false, error: 'Erro de conexão. Verifique se o servidor está rodando.' };
+      
+      if (error.name === 'AbortError') {
+        return { success: false, error: 'Timeout na requisição. Servidor pode estar sobrecarregado.' };
+      }
+      
+      if (error.message?.includes('Failed to fetch')) {
+        return { success: false, error: 'Erro de rede. Verifique se o servidor de banco está rodando na porta 3001.' };
+      }
+      
+      return { success: false, error: `Erro de conexão: ${error.message}` };
     }
   }
 
