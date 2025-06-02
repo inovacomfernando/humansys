@@ -40,7 +40,7 @@ args = "node server/database.js"
 [[workflows.workflow]]
 name = "Test Database Connection"
 author = 43334172
-mode = "sequential"
+mode = "parallel"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
