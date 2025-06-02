@@ -1,18 +1,17 @@
-
 import pkg from 'pg';
 const { Pool } = pkg;
 
-// Configuração do banco PostgreSQL local
-const DATABASE_CONFIG = {
-  host: '127.0.0.1',
-  port: 5432,
-  database: 'humansys_db',
-  user: 'replit',
-  password: 'humansys123'
-};
-
-// Pool de conexões para melhor performance
-const pool = new Pool(DATABASE_CONFIG);
+// Configuração do pool de conexões PostgreSQL
+const pool = new Pool({
+  user: process.env.PGUSER || 'replit',
+  host: process.env.PGHOST || 'localhost',
+  database: process.env.PGDATABASE || 'humansys_db',
+  password: process.env.PGPASSWORD || 'humansys123',
+  port: parseInt(process.env.PGPORT || '5432'),
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
 
 // Interface compatível com Supabase para facilitar migração
 class PostgreSQLClient {
@@ -31,7 +30,7 @@ class PostgreSQLClient {
       },
       error: null
     }),
-    
+
     getSession: async () => ({
       data: { 
         session: { 
@@ -48,32 +47,32 @@ class PostgreSQLClient {
       try {
         const { name, email, password } = credentials;
         const client = await this.pool.connect();
-        
+
         try {
           // Verificar se usuário já existe
           const existingUser = await client.query('SELECT id FROM auth_users WHERE email = $1', [email]);
-          
+
           if (existingUser.rows.length > 0) {
             return { 
               data: null, 
               error: { message: 'Usuário já existe' } 
             };
           }
-          
+
           // Criar novo usuário
           const result = await client.query(
             'INSERT INTO auth_users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
             [email, password] // Em produção, hash a senha
           );
-          
+
           const user = result.rows[0];
-          
+
           // Criar créditos iniciais
           await client.query(
             'INSERT INTO user_credits (user_id) VALUES ($1)',
             [user.id]
           );
-          
+
           return { 
             data: { user }, 
             error: null 
@@ -94,20 +93,20 @@ class PostgreSQLClient {
       try {
         const { email, password } = credentials;
         const client = await this.pool.connect();
-        
+
         try {
           const result = await client.query(
             'SELECT id, email FROM auth_users WHERE email = $1 AND password_hash = $2',
             [email, password] // Em produção, verificar hash
           );
-          
+
           if (result.rows.length === 0) {
             return { 
               data: null, 
               error: { message: 'Credenciais inválidas' } 
             };
           }
-          
+
           const user = result.rows[0];
           return { 
             data: { user }, 
@@ -182,9 +181,9 @@ class QueryBuilder {
       const columns = Object.keys(data);
       const values = Object.values(data);
       const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
-      
+
       const sql = `INSERT INTO ${this.table} (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`;
-      
+
       const client = await this.pool.connect();
       try {
         const result = await client.query(sql, values);
@@ -203,16 +202,16 @@ class QueryBuilder {
       const columns = Object.keys(data);
       const values = Object.values(data);
       const setClause = columns.map((col, i) => `${col} = $${i + 1}`).join(', ');
-      
+
       let sql = `UPDATE ${this.table} SET ${setClause}`;
-      
+
       if (this.query.where.length > 0) {
         sql += ` WHERE ${this.query.where.join(' AND ')}`;
         values.push(...this.values);
       }
-      
+
       sql += ' RETURNING *';
-      
+
       const client = await this.pool.connect();
       try {
         const result = await client.query(sql, values);
@@ -229,11 +228,11 @@ class QueryBuilder {
   async delete() {
     try {
       let sql = `DELETE FROM ${this.table}`;
-      
+
       if (this.query.where.length > 0) {
         sql += ` WHERE ${this.query.where.join(' AND ')}`;
       }
-      
+
       const client = await this.pool.connect();
       try {
         const result = await client.query(sql, this.values);
@@ -250,21 +249,21 @@ class QueryBuilder {
   async execute() {
     try {
       let sql = `SELECT ${this.query.select} FROM ${this.table}`;
-      
+
       if (this.query.where.length > 0) {
         sql += ` WHERE ${this.query.where.join(' AND ')}`;
       }
-      
+
       if (this.query.order.length > 0) {
         sql += ` ORDER BY ${this.query.order.join(', ')}`;
       }
-      
+
       if (this.query.limit) {
         sql += ` LIMIT ${this.query.limit}`;
       }
 
       console.log('Executing SQL:', sql, this.values);
-      
+
       const client = await this.pool.connect();
       try {
         const result = await client.query(sql, this.values);
