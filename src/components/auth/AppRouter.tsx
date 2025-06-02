@@ -237,6 +237,16 @@ export const AppRouter = () => {
           } 
         />
         
+        {/* Rota específica para BrainsysIAO */}
+        <Route 
+          path="/app/brainsys-iao" 
+          element={
+            <ProtectedRoute>
+              <BrainsysIAO />
+            </ProtectedRoute>
+          } 
+        />
+
         {/* Rotas Protegidas do App */}
         <Route path="/app/*" element={<ProtectedRoute><Routes>
           <Route index element={<Dashboard />} />
@@ -255,12 +265,9 @@ export const AppRouter = () => {
           <Route path="meetings" element={<Meetings />} />
           <Route path="documents" element={<Documents />} />
           <Route path="certificates" element={<Certificates />} />
-          {/* <Route path="modern-certificates" element={<ModernCertificates />} /> */}
           <Route path="surveys" element={<ModernSurveys />} />
-          {/* <Route path="modern-surveys" element={<ModernSurveys />} /> */}
           <Route path="profile" element={<Profile />} />
           <Route path="security-management" element={<SecurityManagement />} />
-          <Route path="brainsys-iao" element={<BrainsysIAO />} />
         </Routes></ProtectedRoute>} />
 
         {/* Rotas Públicas Institucionais */}
