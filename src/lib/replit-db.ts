@@ -1,7 +1,7 @@
 // Cliente para comunicação com o servidor de banco local
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-production-url.com' 
-  : `http://${window.location.hostname}:3001`;
+  : `http://0.0.0.0:3001`;
 
 interface ApiResponse<T> {
   success: boolean;
