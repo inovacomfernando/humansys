@@ -1,247 +1,194 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  CheckCircle, 
-  Circle, 
-  Clock, 
-  PlayCircle, 
-  Star,
-  FileText,
-  Users,
-  Briefcase,
-  Play,
-  Edit,
-  Video,
-  Trophy,
-  Zap,
-  Target
-} from 'lucide-react';
+import { CheckCircle, Clock, User, FileText, Briefcase, Users, Play, Edit2 } from 'lucide-react';
 import { OnboardingStep } from '@/hooks/useOnboarding';
-import { cn } from '@/lib/utils';
 
 interface OnboardingStepsProps {
   steps: OnboardingStep[];
-  onStepToggle: (stepId: string, completed: boolean) => void;
-  onStepEdit?: (step: OnboardingStep) => void;
-  progressPercentage: number;
-  isLoading?: boolean;
+  onToggleStep: (stepId: string, currentCompleted: boolean) => void;
+  onEditStep: (step: OnboardingStep) => void;
 }
 
-export const OnboardingSteps: React.FC<OnboardingStepsProps> = ({
-  steps,
-  onStepToggle,
-  onStepEdit,
-  progressPercentage,
-  isLoading = false
-}) => {
-  const getStepIcon = (index: number, completed: boolean) => {
-    const icons = [FileText, Play, Users, Briefcase, Video, Trophy];
-    const IconComponent = icons[index % icons.length];
-
-    if (completed) {
-      return <CheckCircle className="h-5 w-5 text-green-600" />;
+export const OnboardingSteps = ({ steps, onToggleStep, onEditStep }: OnboardingStepsProps) => {
+  const getStepIcon = (type: string) => {
+    switch (type) {
+      case 'document': return FileText;
+      case 'training': return Play;
+      case 'meeting': return Users;
+      case 'task': return Briefcase;
+      default: return FileText;
     }
-
-    return <IconComponent className="h-5 w-5 text-muted-foreground" />;
   };
 
-  const getStepStatus = (step: OnboardingStep, index: number) => {
-    if (step.completed) return 'completed';
-    if (index === 0 || steps[index - 1]?.completed) return 'available';
-    return 'locked';
+  const getStepTypeLabel = (type: string) => {
+    switch (type) {
+      case 'document': return 'Documento';
+      case 'training': return 'Treinamento';
+      case 'meeting': return 'Reunião';
+      case 'task': return 'Tarefa';
+      default: return type;
+    }
   };
 
-  const getStepPoints = (index: number, completed: boolean) => {
-    const basePoints = (index + 1) * 10;
-    return completed ? basePoints : 0;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-500';
+      case 'in-progress': return 'bg-blue-500';
+      case 'pending': return 'bg-gray-500';
+      default: return 'bg-gray-500';
+    }
   };
 
-  const getCompletionAnimation = (completed: boolean) => {
-    return completed ? 'animate-[scale-in_0.3s_ease-out]' : '';
-  };
-
-  if (isLoading) {
+  if (!steps || steps.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-medium mb-2">Nenhuma etapa encontrada</h3>
+        <p className="text-muted-foreground">As etapas do onboarding aparecerão aqui</p>
+      </div>
     );
   }
 
-  return (
-    <Card className="relative overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Target className="h-5 w-5 text-blue-600" />
-            <span>Etapas do Onboarding</span>
-          </div>
-          <Badge variant="secondary" className="flex items-center space-x-1 bg-white/80">
-            <Star className="h-3 w-3" />
-            <span>{progressPercentage}% Concluído</span>
-          </Badge>
-        </CardTitle>
-        <div className="space-y-2">
-          <Progress value={progressPercentage} className="h-3" />
-          <p className="text-sm text-muted-foreground">
-            {steps.filter(s => s.completed).length} de {steps.length} etapas concluídas
-          </p>
-        </div>
-      </CardHeader>
+  const completedSteps = steps.filter(step => step.completed || step.status === 'completed').length;
+  const progressPercentage = Math.round((completedSteps / steps.length) * 100);
 
-      <CardContent className="space-y-4 p-6">
+  return (
+    <div className="space-y-6">
+      {/* Progress Overview */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg border">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-medium">Progresso do Onboarding</h3>
+            <p className="text-sm text-muted-foreground">
+              {completedSteps} de {steps.length} etapas concluídas
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-primary">{progressPercentage}%</div>
+            <div className="text-sm text-muted-foreground">Completo</div>
+          </div>
+        </div>
+        <Progress value={progressPercentage} className="h-3" />
+      </div>
+
+      {/* Steps List */}
+      <div className="space-y-4">
         {steps.map((step, index) => {
-          const status = getStepStatus(step, index);
-          const points = getStepPoints(index, step.completed);
+          const Icon = getStepIcon(step.type);
+          const isCompleted = step.completed || step.status === 'completed';
 
           return (
-            <div
+            <div 
               key={step.id}
-              className={cn(
-                "group relative flex items-center space-x-4 p-4 rounded-xl border transition-all duration-300 hover:shadow-md",
-                step.completed && "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm",
-                status === 'available' && !step.completed && "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-300",
-                status === 'locked' && "bg-gray-50 border-gray-200 opacity-60",
-                getCompletionAnimation(step.completed)
-              )}
+              className={`relative flex items-start space-x-4 p-4 rounded-lg border transition-all duration-200 ${
+                isCompleted 
+                  ? 'bg-green-50 border-green-200' 
+                  : step.status === 'in-progress'
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'bg-gray-50 border-gray-200'
+              }`}
             >
-              {/* Progress Indicator */}
-              <div className="relative">
-                <div className={cn(
-                  "flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-300",
-                  step.completed && "bg-green-500 text-white scale-110",
-                  status === 'available' && !step.completed && "bg-blue-500 text-white",
-                  status === 'locked' && "bg-gray-300 text-gray-600"
-                )}>
-                  {step.completed ? (
-                    <CheckCircle className="h-6 w-6" />
+              {/* Step Number & Icon */}
+              <div className="flex-shrink-0">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                  isCompleted 
+                    ? 'bg-green-500 text-white' 
+                    : step.status === 'in-progress'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {isCompleted ? (
+                    <CheckCircle className="h-5 w-5" />
                   ) : (
-                    <span>{index + 1}</span>
+                    <span className="text-sm font-medium">{index + 1}</span>
                   )}
                 </div>
-
-                {/* Gamification Effect */}
-                {step.completed && (
-                  <div className="absolute -top-1 -right-1">
-                    <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
-                      <Star className="h-2 w-2 text-yellow-800" />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Step Icon */}
-              <div className="flex-shrink-0">
-                {getStepIcon(index, step.completed)}
               </div>
 
               {/* Step Content */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className={cn(
-                      "font-medium transition-colors",
-                      step.completed && "text-green-700",
-                      status === 'available' && !step.completed && "text-blue-700",
-                      status === 'locked' && "text-gray-500"
-                    )}>
-                      {step.title}
-                    </h4>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="font-medium text-gray-900">{step.title}</h4>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {step.description}
+                    </p>
 
-                    <div className="flex items-center space-x-3 mt-2">
-                      {/* Status Badge */}
-                      {step.completed && (
-                        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-                          <Trophy className="h-3 w-3 mr-1" />
-                          +{points} pontos
-                        </Badge>
+                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-xs">
+                        {getStepTypeLabel(step.type)}
+                      </Badge>
+
+                      {step.due_date && (
+                        <span className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3" />
+                          <span>Prazo: {new Date(step.due_date).toLocaleDateString('pt-BR')}</span>
+                        </span>
                       )}
 
-                      {status === 'available' && !step.completed && (
-                        <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
-                          <Zap className="h-3 w-3 mr-1" />
-                          {points} pontos disponíveis
-                        </Badge>
-                      )}
-
-                      {status === 'locked' && (
-                        <Badge variant="outline" className="text-gray-500 border-gray-200">
-                          <Clock className="h-3 w-3 mr-1" />
-                          Bloqueado
-                        </Badge>
+                      {step.completed_at && (
+                        <span className="flex items-center space-x-1 text-green-600">
+                          <CheckCircle className="h-3 w-3" />
+                          <span>Concluído em {new Date(step.completed_at).toLocaleDateString('pt-BR')}</span>
+                        </span>
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-2">
-                {/* Edit Button */}
-                {onStepEdit && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => onStepEdit(step)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                )}
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEditStep(step)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
 
-                {/* Action Button */}
-                {status === 'available' && (
-                  <Button
-                    size="sm"
-                    variant={step.completed ? "outline" : "default"}
-                    onClick={() => onStepToggle(step.id, step.completed)}
-                    className={cn(
-                      "transition-all duration-300",
-                      step.completed && "hover:bg-red-50 hover:border-red-200 hover:text-red-600",
-                      !step.completed && "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
-                    )}
-                  >
-                    {step.completed ? (
-                      <>
-                        <Circle className="h-4 w-4 mr-1" />
-                        Desfazer
-                      </>
-                    ) : (
-                      <>
-                        <PlayCircle className="h-4 w-4 mr-1" />
-                        Iniciar
-                      </>
-                    )}
-                  </Button>
-                )}
-
-                {status === 'locked' && (
-                  <Button size="sm" variant="ghost" disabled>
-                    <Clock className="h-4 w-4 mr-1" />
-                    Aguardando
-                  </Button>
-                )}
-              </div>
-
-              {/* Completion Effect */}
-              {step.completed && (
-                <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <Button
+                      variant={isCompleted ? "outline" : "default"}
+                      size="sm"
+                      onClick={() => onToggleStep(step.id, isCompleted)}
+                      className="text-xs"
+                    >
+                      {isCompleted ? 'Reabrir' : 'Concluir'}
+                    </Button>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Summary */}
+      <div className="bg-muted/50 p-4 rounded-lg">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div className="text-lg font-semibold text-green-600">{completedSteps}</div>
+            <div className="text-xs text-muted-foreground">Concluídas</div>
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-blue-600">
+              {steps.filter(s => s.status === 'in-progress').length}
+            </div>
+            <div className="text-xs text-muted-foreground">Em Andamento</div>
+          </div>
+          <div>
+            <div className="text-lg font-semibold text-gray-600">
+              {steps.filter(s => s.status === 'pending').length}
+            </div>
+            <div className="text-xs text-muted-foreground">Pendentes</div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
