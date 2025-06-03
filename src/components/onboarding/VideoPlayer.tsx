@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,13 +29,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         : url.split('v=')[1]?.split('&')[0];
       return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
     }
-    
+
     // Vimeo
     if (url.includes('vimeo.com')) {
       const videoId = url.split('/').pop();
       return `https://player.vimeo.com/video/${videoId}`;
     }
-    
+
     // Direct video URL
     return url;
   };
@@ -116,14 +115,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     >
                       {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                     </Button>
-                    
+
                     <div className="flex-1 bg-white/20 rounded-full h-1">
                       <div 
                         className="bg-white h-full rounded-full transition-all duration-300"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
-                    
+
                     <Button
                       size="sm"
                       variant="ghost"
@@ -132,7 +131,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     >
                       {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                     </Button>
-                    
+
                     <Button
                       size="sm"
                       variant="ghost"
@@ -162,114 +161,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <span>Assista ao vídeo para continuar o onboarding</span>
             )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Play, Pause, CheckCircle } from 'lucide-react';
-
-interface VideoPlayerProps {
-  url: string;
-  title: string;
-  onComplete: () => void;
-}
-
-export const VideoPlayer = ({ url, title, onComplete }: VideoPlayerProps) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  const handlePlay = () => {
-    setIsPlaying(true);
-    // Simular progresso do vídeo
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsCompleted(true);
-          setIsPlaying(false);
-          onComplete();
-          return 100;
-        }
-        return prev + 10;
-      });
-    }, 1000);
-  };
-
-  const handlePause = () => {
-    setIsPlaying(false);
-  };
-
-  return (
-    <Card className={`transition-all ${isCompleted ? 'bg-green-50 border-green-200' : ''}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center space-x-2">
-            {isCompleted && <CheckCircle className="h-5 w-5 text-green-500" />}
-            <span>{title}</span>
-          </span>
-          {isCompleted && (
-            <span className="text-sm text-green-600 font-medium">Concluído</span>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Vídeo de treinamento - {isCompleted ? 'Assistido' : 'Pendente'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Simulação de player de vídeo */}
-        <div className="bg-gray-900 rounded-lg aspect-video flex items-center justify-center">
-          <div className="text-center text-white">
-            <div className="text-6xl mb-4">🎬</div>
-            <p className="text-lg font-medium">{title}</p>
-            <p className="text-sm opacity-75">Vídeo de demonstração</p>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        {progress > 0 && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progresso</span>
-              <span>{progress}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="flex justify-center space-x-2">
-          {!isCompleted && (
-            <>
-              {!isPlaying ? (
-                <Button onClick={handlePlay} disabled={progress >= 100}>
-                  <Play className="h-4 w-4 mr-2" />
-                  {progress > 0 ? 'Continuar' : 'Assistir'}
-                </Button>
-              ) : (
-                <Button onClick={handlePause} variant="outline">
-                  <Pause className="h-4 w-4 mr-2" />
-                  Pausar
-                </Button>
-              )}
-            </>
-          )}
-          
-          {isCompleted && (
-            <Button onClick={() => setProgress(0)} variant="outline">
-              <Play className="h-4 w-4 mr-2" />
-              Assistir Novamente
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>
