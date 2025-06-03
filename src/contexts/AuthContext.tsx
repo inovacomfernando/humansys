@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -23,52 +24,76 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
-  // Inicializar autenticação
+  // Inicializar autenticação uma única vez
   useEffect(() => {
-    let mounted = true;
+    if (initialized) return;
 
+    let mounted = true;
+    
     const initAuth = async () => {
       try {
-        console.log('🔐 Inicializando autenticação local...');
-
-        const { data: { session } } = await supabase.auth.getSession();
-
+        console.log('🔐 Inicializando sistema de autenticação...');
+        
+        // Verificar se há sessão ativa
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
         if (mounted) {
+          if (sessionError) {
+            console.warn('⚠️ Erro ao obter sessão:', sessionError.message);
+            setError(null); // Não considerar como erro crítico
+          }
+          
           if (session?.user) {
             setUser(session.user);
-            console.log('✅ Usuário autenticado:', session.user.email);
+            console.log('✅ Usuário autenticado recuperado:', session.user.email);
           } else {
-            console.log('👤 Nenhum usuário autenticado');
+            console.log('👤 Nenhuma sessão ativa encontrada');
           }
+          
           setIsLoading(false);
+          setInitialized(true);
         }
       } catch (err: any) {
-        console.error('❌ Erro na inicialização:', err);
+        console.error('❌ Erro crítico na inicialização:', err);
         if (mounted) {
-          setError(err.message);
+          setError('Erro na inicialização do sistema');
           setIsLoading(false);
+          setInitialized(true);
         }
       }
     };
 
     initAuth();
 
-    // Listener para mudanças de autenticação
+    // Listener para mudanças de estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
-
-        console.log('🔄 Estado de autenticação mudou:', event);
-
-        if (session?.user) {
-          setUser(session.user);
-        } else {
-          setUser(null);
+        
+        console.log('🔄 Mudança no estado de auth:', event);
+        
+        try {
+          if (event === 'SIGNED_IN' && session?.user) {
+            console.log('✅ Login realizado:', session.user.email);
+            setUser(session.user);
+            setError(null);
+          } else if (event === 'SIGNED_OUT') {
+            console.log('🚪 Logout realizado');
+            setUser(null);
+            setError(null);
+          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+            console.log('🔄 Token renovado');
+            setUser(session.user);
+          }
+          
+          setIsLoading(false);
+        } catch (err: any) {
+          console.error('❌ Erro no listener de auth:', err);
+          setError('Erro no sistema de autenticação');
+          setIsLoading(false);
         }
-
-        setIsLoading(false);
-        setError(null);
       }
     );
 
@@ -76,37 +101,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialized]);
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log('🔑 Tentando fazer login para:', email);
+      console.log('🔑 Tentativa de login para:', email);
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password
       });
 
       if (signInError) {
-        console.error('❌ Erro no login:', signInError);
-        setError(signInError.message);
-        return { success: false, error: signInError.message };
+        console.error('❌ Erro no login:', signInError.message);
+        const errorMsg = signInError.message === 'Invalid login credentials' 
+          ? 'Email ou senha incorretos' 
+          : signInError.message;
+        setError(errorMsg);
+        return { success: false, error: errorMsg };
       }
 
       if (data.user) {
-        console.log('✅ Login realizado com sucesso');
-        setUser(data.user);
+        console.log('✅ Login bem-sucedido');
+        // O listener já vai atualizar o estado
         return { success: true };
       }
 
       return { success: false, error: 'Falha na autenticação' };
+      
     } catch (err: any) {
       console.error('❌ Erro inesperado no login:', err);
-      setError(err.message);
-      return { success: false, error: err.message };
+      const errorMsg = 'Erro inesperado no login';
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     } finally {
       setIsLoading(false);
     }
@@ -115,16 +145,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      console.log('🚪 Fazendo logout...');
+      console.log('🚪 Realizando logout...');
 
-      await supabase.auth.signOut();
-      setUser(null);
-      setError(null);
-
-      console.log('✅ Logout realizado com sucesso');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('❌ Erro no logout:', error);
+        setError('Erro ao fazer logout');
+      } else {
+        console.log('✅ Logout realizado com sucesso');
+        // Limpar dados locais
+        setUser(null);
+        setError(null);
+      }
     } catch (err: any) {
-      console.error('❌ Erro no logout:', err);
-      setError(err.message);
+      console.error('❌ Erro inesperado no logout:', err);
+      setError('Erro inesperado no logout');
     } finally {
       setIsLoading(false);
     }
@@ -133,10 +169,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshSession = async () => {
     try {
       console.log('🔄 Renovando sessão...');
-      await supabase.auth.refreshSession();
+      const { error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error('❌ Erro ao renovar sessão:', error);
+        setError('Erro ao renovar sessão');
+      }
     } catch (err: any) {
-      console.error('❌ Erro ao renovar sessão:', err);
-      setError(err.message);
+      console.error('❌ Erro inesperado ao renovar sessão:', err);
+      setError('Erro inesperado ao renovar sessão');
     }
   };
 

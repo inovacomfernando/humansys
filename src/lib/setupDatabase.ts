@@ -1,30 +1,77 @@
-// Setup local simplificado
-export const setupLocalDatabase = () => {
-  console.log('🗄️ Inicializando banco de dados local...');
 
-  // Verificar localStorage
+import { supabase } from '@/integrations/supabase/client';
+
+interface DatabaseStatus {
+  isConnected: boolean;
+  tablesExist: boolean;
+  error?: string;
+}
+
+export const checkDatabaseConnection = async (): Promise<DatabaseStatus> => {
   try {
-    localStorage.setItem('db_test', 'ok');
-    localStorage.removeItem('db_test');
-    console.log('✅ LocalStorage disponível');
+    console.log('🔍 Verificando conexão com banco...');
+    
+    // Verificar conexão básica
+    const { data, error } = await supabase
+      .from('collaborators')
+      .select('count')
+      .limit(0);
 
-    // Inicializar estruturas básicas se não existirem
-    const tables = ['collaborators', 'trainings', 'user_credits', 'goals', 'feedback'];
+    if (error) {
+      console.error('❌ Erro na conexão:', error);
+      return {
+        isConnected: false,
+        tablesExist: false,
+        error: error.message
+      };
+    }
 
-    tables.forEach(table => {
-      const key = `local_db_${table}`;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, JSON.stringify([]));
-      }
-    });
+    console.log('✅ Conexão com banco estabelecida');
+    return {
+      isConnected: true,
+      tablesExist: true
+    };
 
-    console.log('✅ Banco de dados local configurado');
+  } catch (error: any) {
+    console.error('❌ Erro crítico na verificação:', error);
+    return {
+      isConnected: false,
+      tablesExist: false,
+      error: error.message
+    };
+  }
+};
+
+export const setupDatabase = async (): Promise<boolean> => {
+  try {
+    console.log('🛠️ Configurando banco de dados...');
+    
+    const status = await checkDatabaseConnection();
+    
+    if (!status.isConnected) {
+      console.error('❌ Não foi possível conectar ao banco');
+      return false;
+    }
+
+    console.log('✅ Banco de dados configurado e pronto');
     return true;
-  } catch (error) {
-    console.error('❌ Erro ao configurar banco local:', error);
+
+  } catch (error: any) {
+    console.error('❌ Erro na configuração do banco:', error);
     return false;
   }
 };
 
-// Executar setup
-setupLocalDatabase();
+// Verificar saúde do banco periodicamente
+export const healthCheck = async (): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('collaborators')
+      .select('count')
+      .limit(0);
+
+    return !error;
+  } catch {
+    return false;
+  }
+};
