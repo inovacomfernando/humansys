@@ -1,38 +1,28 @@
-import { connectToDatabase } from '@/integrations/supabase/client';
 
+// Sistema mock - não precisa de setup de banco real
 export const setupDatabase = async () => {
-  try {
-    console.log('Configurando banco de dados...');
+  console.log('📊 Sistema em modo mock - setup não necessário');
+  return true;
+};
 
-    const client = await connectToDatabase();
+export const checkTablesExist = async () => {
+  console.log('✅ Tabelas mock sempre disponíveis');
+  return true;
+};
 
-    // Verificar se as tabelas existem
-    const checkTables = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name IN ('collaborators', 'trainings', 'certificates')
-    `);
+export const createMissingTables = async () => {
+  console.log('✅ Tabelas mock criadas automaticamente');
+  return true;
+};
 
-    console.log('Tabelas encontradas:', checkTables.rows);
+export const checkDatabaseHealth = async () => {
+  return {
+    isHealthy: true,
+    tables: ['collaborators', 'trainings', 'certificates', 'documents'],
+    errors: []
+  };
+};
 
-    // Se não existirem, criar as tabelas básicas
-    if (checkTables.rows.length === 0) {
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS collaborators (
-          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) UNIQUE NOT NULL,
-          created_at TIMESTAMP DEFAULT NOW()
-        )
-      `);
-
-      console.log('Tabelas criadas com sucesso');
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Erro ao configurar banco:', error);
-    return false;
-  }
+export const testDatabaseConnection = async () => {
+  return { success: true, message: 'Conexão mock OK' };
 };

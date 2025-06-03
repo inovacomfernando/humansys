@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { simpleAuth } from '@/integrations/supabase/client';
 
@@ -44,11 +43,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
     try {
       const { user: authUser, error } = await simpleAuth.signIn(email, password);
-      
+
       if (error) {
         return { error };
       }
-      
+
       setUser(authUser);
       return { user: authUser };
     } catch (error) {
