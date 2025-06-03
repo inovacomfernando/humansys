@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSupabaseQuery } from './supabase';
+import { useSupabaseQuery } from './useSupabaseQuery';
 import { useToast } from './use-toast';
 
 export interface OnboardingProcess {
