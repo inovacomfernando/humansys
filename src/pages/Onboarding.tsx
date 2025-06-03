@@ -11,9 +11,12 @@ import { OnboardingDetails } from '@/components/onboarding/OnboardingDetails';
 import { useOnboarding } from '@/hooks/useOnboarding';
 
 export const Onboarding = () => {
-  const { processes, isLoading } = useOnboarding();
+  const { processes, isLoading, error } = useOnboarding();
   const [selectedProcess, setSelectedProcess] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+
+  // Garantir que processes seja sempre um array
+  const safeProcesses = Array.isArray(processes) ? processes : [];
 
   // Mock data para o modelo de onboarding
   const defaultSteps = [
@@ -108,6 +111,22 @@ export const Onboarding = () => {
     );
   }
 
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h3 className="text-lg font-medium text-red-600 mb-2">Erro ao carregar dados</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Tentar Novamente
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -131,7 +150,7 @@ export const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {processes.filter((p) => p.status === 'in-progress').length}
+                {safeProcesses.filter((p) => p.status === 'in-progress').length}
               </div>
             </CardContent>
           </Card>
@@ -143,7 +162,7 @@ export const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {processes.filter((p) => p.status === 'completed').length}
+                {safeProcesses.filter((p) => p.status === 'completed').length}
               </div>
             </CardContent>
           </Card>
@@ -154,7 +173,7 @@ export const Onboarding = () => {
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{processes.length}</div>
+              <div className="text-2xl font-bold">{safeProcesses.length}</div>
             </CardContent>
           </Card>
           
@@ -165,8 +184,8 @@ export const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {processes.length > 0 
-                  ? Math.round((processes.filter((p) => p.status === 'completed').length / processes.length) * 100)
+                {safeProcesses.length > 0 
+                  ? Math.round((safeProcesses.filter((p) => p.status === 'completed').length / safeProcesses.length) * 100)
                   : 0}%
               </div>
             </CardContent>
@@ -182,7 +201,7 @@ export const Onboarding = () => {
 
           <TabsContent value="active">
             <div className="space-y-4">
-              {processes.filter((p) => p.status !== 'completed').map((process) => (
+              {safeProcesses.filter((p) => p && p.status !== 'completed').map((process) => (
                 <Card key={process.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -228,7 +247,7 @@ export const Onboarding = () => {
                 </Card>
               ))}
               
-              {processes.filter((p) => p.status !== 'completed').length === 0 && (
+              {safeProcesses.filter((p) => p && p.status !== 'completed').length === 0 && (
                 <Card>
                   <CardContent className="py-8">
                     <div className="text-center">
@@ -296,7 +315,7 @@ export const Onboarding = () => {
 
           <TabsContent value="completed">
             <div className="space-y-4">
-              {processes.filter((p) => p.status === 'completed').map((process) => (
+              {safeProcesses.filter((p) => p && p.status === 'completed').map((process) => (
                 <Card key={process.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -326,7 +345,7 @@ export const Onboarding = () => {
                 </Card>
               ))}
               
-              {processes.filter((p) => p.status === 'completed').length === 0 && (
+              {safeProcesses.filter((p) => p && p.status === 'completed').length === 0 && (
                 <Card>
                   <CardContent className="py-8">
                     <div className="text-center">

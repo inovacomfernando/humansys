@@ -1,5 +1,6 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSupabaseQuery } from './supabase';
+import { useToast } from './use-toast';
 
 export interface OnboardingProcess {
   id: string;
@@ -166,218 +167,184 @@ const mockSteps: Record<string, OnboardingStep[]> = {
 };
 
 export const useOnboarding = () => {
-  const [processes, setProcesses] = useState<OnboardingProcess[]>([]);
+  const [processes, setProcesses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { executeQuery } = useSupabaseQuery();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    loadProcesses();
-  }, []);
+  // Mock data para desenvolvimento
+  const mockProcesses2 = [
+    {
+      id: '1',
+      collaborator_id: '1',
+      collaborator: {
+        id: '1',
+        name: 'Ana Silva',
+        email: 'ana.silva@empresa.com',
+        position: 'Desenvolvedora Frontend',
+        department: 'Tecnologia',
+        hire_date: '2024-01-15',
+        status: 'active'
+      },
+      position: 'Desenvolvedora Frontend',
+      department: 'Tecnologia',
+      start_date: '2024-01-15',
+      status: 'in-progress',
+      progress: 75,
+      current_step: 'Treinamento de Segurança',
+    },
+    {
+      id: '2',
+      collaborator_id: '2',
+      collaborator: {
+        id: '2',
+        name: 'Carlos Oliveira',
+        email: 'carlos.oliveira@empresa.com',
+        position: 'Analista de Marketing',
+        department: 'Marketing',
+        hire_date: '2024-01-10',
+        status: 'active'
+      },
+      position: 'Analista de Marketing',
+      department: 'Marketing',
+      start_date: '2024-01-10',
+      status: 'completed',
+      progress: 100,
+      current_step: 'Concluído',
+    }
+  ];
 
-  const loadProcesses = async () => {
+  const fetchProcesses = useCallback(async () => {
+    console.log('useOnboarding: Iniciando busca de processos');
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setIsLoading(true);
-      console.log('Carregando processos de onboarding...');
-      
-      // Simular delay de carregamento
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Garantir que sempre retornamos dados válidos
-      const validProcesses = mockProcesses.filter(process => 
-        process && 
-        typeof process === 'object' && 
-        process.id && 
-        process.collaborator_id
+      const result = await executeQuery(
+        () => {
+          console.log('useOnboarding: Executando query mock para processos');
+          // Simular delay de rede
+          return new Promise<any[]>((resolve) => {
+            setTimeout(() => {
+              console.log('useOnboarding: Retornando dados mock');
+              resolve(mockProcesses2);
+            }, 500);
+          });
+        },
+        { 
+          maxRetries: 2, 
+          retryDelay: 1000,
+          useCache: true 
+        }
       );
-      
-      setProcesses(validProcesses);
-      console.log('Processos carregados:', validProcesses.length);
-      
-    } catch (error) {
-      console.error('Erro ao carregar processos:', error);
+
+      if (result && Array.isArray(result)) {
+        console.log('useOnboarding: Dados carregados com sucesso:', result);
+        setProcesses(result);
+        setError(null);
+      } else {
+        console.warn('useOnboarding: Resultado não é um array, usando array vazio');
+        setProcesses([]);
+        setError('Dados inválidos recebidos');
+      }
+    } catch (err) {
+      console.error('useOnboarding: Erro ao carregar dados:', err);
       setProcesses([]);
+      setError('Erro ao carregar processos de onboarding');
+
+      toast({
+        title: "Erro ao carregar dados",
+        description: "Não foi possível carregar os processos de onboarding",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [executeQuery, toast]);
 
-  const getProcessSteps = async (processId: string): Promise<OnboardingStep[]> => {
+  useEffect(() => {
+    fetchProcesses();
+  }, [fetchProcesses]);
+
+  const updateProcessProgress = useCallback(async (processId: string, progress: number) => {
+    console.log(`useOnboarding: Atualizando progresso do processo ${processId} para ${progress}%`);
+
     try {
-      if (!processId || typeof processId !== 'string') {
-        console.warn('ProcessId inválido:', processId);
-        return [];
-      }
-
-      console.log('Carregando etapas do processo:', processId);
-
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      const steps = mockSteps[processId];
-      const validSteps = Array.isArray(steps) 
-        ? steps.filter(step => 
-            step && 
-            typeof step === 'object' && 
-            step.id && 
-            step.title
-          )
-        : [];
-        
-      return validSteps;
-    } catch (error) {
-      console.error('Erro ao buscar etapas:', error);
-      return [];
-    }
-  };
-
-  const updateStepStatus = async (stepId: string, completed: boolean, processId: string): Promise<void> => {
-    try {
-      console.log('Atualizando status da etapa:', { stepId, completed, processId });
-
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Atualizar o status no mock local
-      if (mockSteps[processId]) {
-        const stepIndex = mockSteps[processId].findIndex(step => step.id === stepId);
-        if (stepIndex !== -1) {
-          mockSteps[processId][stepIndex] = {
-            ...mockSteps[processId][stepIndex],
-            completed,
-            status: completed ? 'completed' : 'pending',
-            completed_at: completed ? new Date().toISOString() : undefined
-          };
-
-          // Atualizar o progresso do processo
-          const completedSteps = mockSteps[processId].filter(step => step.completed).length;
-          const totalSteps = mockSteps[processId].length;
-          const newProgress = Math.round((completedSteps / totalSteps) * 100);
-
-          // Atualizar processo no array de processos
-          setProcesses(prev => prev.map(process => 
-            process.id === processId 
-              ? { ...process, progress: newProgress }
-              : process
-          ));
+      setProcesses(current => {
+        if (!Array.isArray(current)) {
+          console.error('useOnboarding: processes não é um array ao atualizar progresso');
+          return [];
         }
-      }
 
-      console.log('Status da etapa atualizado com sucesso');
-    } catch (error) {
-      console.error('Erro ao atualizar status da etapa:', error);
-      throw error;
+        return current.map(process => 
+          process.id === processId 
+            ? { ...process, progress }
+            : process
+        );
+      });
+
+      toast({
+        title: "Progresso atualizado",
+        description: `Progresso atualizado para ${progress}%`,
+      });
+    } catch (err) {
+      console.error('useOnboarding: Erro ao atualizar progresso:', err);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o progresso",
+        variant: "destructive"
+      });
     }
-  };
+  }, [toast]);
 
-  const createProcess = async (processData: Partial<OnboardingProcess>): Promise<OnboardingProcess | null> => {
+  const createProcess = useCallback(async (processData: any) => {
+    console.log('useOnboarding: Criando novo processo', processData);
+
     try {
-      console.log('Criando novo processo:', processData);
-
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      const newProcess: OnboardingProcess = {
+      const newProcess = {
         id: Date.now().toString(),
-        collaborator_id: processData.collaborator_id || '',
-        collaborator: processData.collaborator,
-        status: 'not-started',
+        ...processData,
+        start_date: new Date().toISOString(),
+        status: 'in-progress',
         progress: 0,
-        current_step: 'Aguardando início',
-        start_date: new Date().toISOString().split('T')[0],
-        position: processData.position || '',
-        department: processData.department || ''
+        current_step: 'Documentação Pessoal',
       };
 
-      // Adicionar aos processos locais
-      setProcesses(prev => [...prev, newProcess]);
-      
-      console.log('Processo criado com sucesso:', newProcess);
+      setProcesses(current => {
+        if (!Array.isArray(current)) {
+          console.error('useOnboarding: processes não é um array ao criar processo');
+          return [newProcess];
+        }
+        return [...current, newProcess];
+      });
+
+      toast({
+        title: "Processo criado",
+        description: `Onboarding iniciado para ${processData.collaborator?.name}`,
+      });
+
       return newProcess;
-    } catch (error) {
-      console.error('Erro ao criar processo:', error);
+    } catch (err) {
+      console.error('useOnboarding: Erro ao criar processo:', err);
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar o processo de onboarding",
+        variant: "destructive"
+      });
       return null;
     }
-  };
+  }, [toast]);
 
-  const updateProcess = async (processId: string, updateData: Partial<OnboardingProcess>): Promise<void> => {
-    try {
-      console.log('Atualizando processo:', { processId, updateData });
-
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      setProcesses(prev => prev.map(process => 
-        process.id === processId 
-          ? { ...process, ...updateData }
-          : process
-      ));
-
-      console.log('Processo atualizado com sucesso');
-    } catch (error) {
-      console.error('Erro ao atualizar processo:', error);
-      throw error;
-    }
-  };
-
-  const deleteProcess = async (processId: string): Promise<void> => {
-    try {
-      console.log('Deletando processo:', processId);
-
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      setProcesses(prev => prev.filter(process => process.id !== processId));
-      
-      // Limpar etapas do processo
-      delete mockSteps[processId];
-
-      console.log('Processo deletado com sucesso');
-    } catch (error) {
-      console.error('Erro ao deletar processo:', error);
-      throw error;
-    }
-  };
-
-  const createStep = async (stepData: Partial<OnboardingStep>): Promise<OnboardingStep | null> => {
-    try {
-      console.log('Criando nova etapa:', stepData);
-
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      const newStep: OnboardingStep = {
-        id: `step-${Date.now()}`,
-        process_id: stepData.process_id || '',
-        title: stepData.title || '',
-        description: stepData.description || '',
-        type: stepData.type || 'task',
-        status: 'pending',
-        order: stepData.order || 1,
-        completed: false
-      };
-
-      // Adicionar ao mock
-      if (!mockSteps[newStep.process_id]) {
-        mockSteps[newStep.process_id] = [];
-      }
-      mockSteps[newStep.process_id].push(newStep);
-
-      console.log('Etapa criada com sucesso:', newStep);
-      return newStep;
-    } catch (error) {
-      console.error('Erro ao criar etapa:', error);
-      return null;
-    }
-  };
+  // Garantir que processes sempre seja um array
+  const safeProcesses = Array.isArray(processes) ? processes : [];
 
   return {
-    processes,
+    processes: safeProcesses,
     isLoading,
-    loadProcesses,
-    getProcessSteps,
-    updateStepStatus,
+    error,
+    updateProcessProgress,
     createProcess,
-    updateProcess,
-    deleteProcess,
-    createStep
+    refetch: fetchProcesses
   };
 };
