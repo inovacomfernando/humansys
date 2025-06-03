@@ -209,7 +209,7 @@ export const Dashboard = () => {
           <StatsCard
             title="Processos Ativos"
             value={data.stats.activeProcesses}
-            icon={Target}
+            icon={Users}
             trend={8}
           />
           <StatsCard
