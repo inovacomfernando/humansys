@@ -1,4 +1,41 @@
 
+import { useState, useEffect } from 'react';
+import { OnboardingStep } from './useOnboarding';
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+  criteria: {
+    type: string;
+    value: number;
+  };
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+export interface Achievement {
+  id: string;
+  badge_id: string;
+  earned_at: string;
+  points_awarded: number;
+}
+
+export interface OnboardingProgress {
+  progress_percentage: number;
+  completed_steps: number;
+  total_steps: number;
+  badges_earned: Badge[];
+  gamification_score: number;
+  current_streak: number;
+  estimated_completion: string;
+  next_milestone?: Badge;
+  performance_rating: 'excellent' | 'good' | 'average' | 'needs_improvement';
+  time_spent_minutes: number;
+}
+
 const onboardingBadges: Badge[] = [
   {
     id: 'first-step',
@@ -52,225 +89,161 @@ const onboardingBadges: Badge[] = [
   }
 ];
 
-import { cacheTTLs } from '@/cacheConfig';
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { OnboardingProgress, Badge, Achievement } from '@/types/gamification';
-import { OnboardingStep } from '@/hooks/useOnboarding';
-import { supabase } from '@/integrations/supabase/client';
-
 export const useOnboardingGamification = (processId: string, steps: OnboardingStep[]) => {
-  const { user } = useAuth();
   const [progress, setProgress] = useState<OnboardingProgress | null>(null);
-  const [availableBadges, setAvailableBadges] = useState<Badge[]>(onboardingBadges);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [availableBadges, setAvailableBadges] = useState<Badge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carrega achievements do Supabase primeiro, depois calcula progresso
   useEffect(() => {
-    if (user && processId && steps.length > 0) {
-      (async () => {
-        setIsLoading(true);
-        await loadExistingAchievements();
-        await calculateProgress();
-        setIsLoading(false);
-      })();
+    if (processId && steps.length > 0) {
+      calculateProgress();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, processId, steps.length]);
+  }, [processId, steps]);
 
-  // Busca conquistas do Supabase
-  const loadExistingAchievements = async () => {
-    if (!user?.id || !processId) return;
-    const { data, error } = await supabase
-      .from('achievements')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('process_id', processId);
-
-    if (error) {
-      console.error('Erro ao buscar conquistas:', error);
-      setAchievements([]);
-      return;
-    }
-    setAchievements((data || []) as Achievement[]);
-  };
-
-  // Salva apenas novas conquistas no Supabase
-  const saveAchievements = async (newAchievements: Achievement[]) => {
-    if (!user?.id || !processId || newAchievements.length === 0) return;
-    const { error } = await supabase
-      .from('achievements')
-      .upsert(newAchievements.map(a => ({
-        ...a,
-        user_id: user.id,
-        process_id: processId,
-      })));
-    if (error) {
-      console.error('Erro ao salvar conquistas:', error);
-    }
-  };
-
-  // Calcula progresso e badges
   const calculateProgress = async () => {
-    const completedSteps = steps.filter(s => s.completed).length;
-    const progressPercentage = Math.round((completedSteps / steps.length) * 100);
+    try {
+      setIsLoading(true);
 
-    let baseScore = completedSteps * 50;
-    const timeBonus = progressPercentage > 50 ? 100 : 0;
-    const perfectionBonus = progressPercentage === 100 ? 200 : 0;
-    const totalScore = baseScore + timeBonus + perfectionBonus;
+      const completedSteps = steps.filter(step => step.completed).length;
+      const totalSteps = steps.length;
+      const progressPercentage = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
 
-    let performanceRating: 'excellent' | 'good' | 'average' | 'needs_improvement';
-    if (progressPercentage >= 90) performanceRating = 'excellent';
-    else if (progressPercentage >= 70) performanceRating = 'good';
-    else if (progressPercentage >= 50) performanceRating = 'average';
-    else performanceRating = 'needs_improvement';
+      // Calcular pontuação de gamificação
+      const basePoints = completedSteps * 100;
+      const bonusPoints = progressPercentage >= 100 ? 500 : 0;
+      const totalScore = basePoints + bonusPoints;
 
-    const earnedBadges = onboardingBadges.filter(badge => {
-      switch (badge.criteria.type) {
-        case 'steps_completed':
-          return completedSteps >= badge.criteria.value;
-        case 'progress_percentage':
-          return progressPercentage >= badge.criteria.value;
-        case 'speed_completion':
-          return completedSteps >= badge.criteria.value && progressPercentage > 75;
-        case 'perfect_completion':
-          return progressPercentage === 100 && completedSteps === steps.length;
-        default:
-          return false;
-      }
-    });
+      // Determinar rating de performance
+      let performanceRating: 'excellent' | 'good' | 'average' | 'needs_improvement';
+      if (progressPercentage >= 90) performanceRating = 'excellent';
+      else if (progressPercentage >= 70) performanceRating = 'good';
+      else if (progressPercentage >= 50) performanceRating = 'average';
+      else performanceRating = 'needs_improvement';
 
-    const nextBadge = onboardingBadges.find(badge =>
-      !earnedBadges.some(earned => earned.id === badge.id)
-    );
+      // Calcular streak atual
+      const calculateStreak = () => {
+        let streak = 0;
+        for (let i = steps.length - 1; i >= 0; i--) {
+          if (steps[i].completed) {
+            streak++;
+          } else {
+            break;
+          }
+        }
+        return streak;
+      };
 
-    const progressData: OnboardingProgress = {
-      progress_percentage: progressPercentage,
-      completed_steps: completedSteps,
-      total_steps: steps.length,
-      badges_earned: earnedBadges,
-      gamification_score: totalScore,
-      current_streak: calculateStreak(),
-      estimated_completion: calculateEstimatedCompletion(progressPercentage),
-      next_milestone: nextBadge,
-      performance_rating: performanceRating,
-      time_spent_minutes: Math.round(completedSteps * 15)
-    };
+      // Estimar data de conclusão
+      const calculateEstimatedCompletion = (progress: number) => {
+        if (progress >= 100) return new Date().toISOString();
+        const remainingSteps = totalSteps - completedSteps;
+        const daysToComplete = remainingSteps * 2; // 2 dias por etapa estimado
+        return new Date(Date.now() + daysToComplete * 24 * 60 * 60 * 1000).toISOString();
+      };
 
-    setProgress(progressData);
-    setAvailableBadges(onboardingBadges);
+      // Verificar badges conquistados
+      const earnedBadges = onboardingBadges.filter(badge => {
+        switch (badge.criteria.type) {
+          case 'steps_completed':
+            return completedSteps >= badge.criteria.value;
+          case 'progress_percentage':
+            return progressPercentage >= badge.criteria.value;
+          case 'speed_completion':
+            return completedSteps >= badge.criteria.value && progressPercentage > 75;
+          case 'perfect_completion':
+            return progressPercentage === 100 && completedSteps === totalSteps;
+          default:
+            return false;
+        }
+      });
 
-    // Verifica novas conquistas
-    await checkForNewAchievements(earnedBadges);
-  };
+      const nextBadge = onboardingBadges.find(badge =>
+        !earnedBadges.some(earned => earned.id === badge.id)
+      );
 
-  const calculateStreak = (): number => {
-    let streak = 0;
-    for (const step of steps) {
-      if (step.completed) {
-        streak++;
-      } else {
-        break;
-      }
+      const progressData: OnboardingProgress = {
+        progress_percentage: progressPercentage,
+        completed_steps: completedSteps,
+        total_steps: totalSteps,
+        badges_earned: earnedBadges,
+        gamification_score: totalScore,
+        current_streak: calculateStreak(),
+        estimated_completion: calculateEstimatedCompletion(progressPercentage),
+        next_milestone: nextBadge,
+        performance_rating: performanceRating,
+        time_spent_minutes: Math.round(completedSteps * 15)
+      };
+
+      setProgress(progressData);
+      setAvailableBadges(onboardingBadges);
+
+      // Verificar novas conquistas
+      await checkForNewAchievements(earnedBadges);
+
+    } catch (error) {
+      console.error('Erro ao calcular progresso de gamificação:', error);
+    } finally {
+      setIsLoading(false);
     }
-    return streak;
   };
 
-  const calculateEstimatedCompletion = (currentProgress: number): string => {
-    const remainingProgress = 100 - currentProgress;
-    const estimatedDays = Math.ceil(remainingProgress / 20);
-    const completionDate = new Date();
-    completionDate.setDate(completionDate.getDate() + estimatedDays);
-    return completionDate.toISOString();
-  };
-
-  // Checa e salva apenas novas conquistas
   const checkForNewAchievements = async (earnedBadges: Badge[]) => {
-    const existingAchievementIds = achievements.map(a => a.badge_id);
-    const newBadges = earnedBadges.filter(badge =>
-      !existingAchievementIds.includes(badge.id)
-    );
-    if (newBadges.length > 0) {
-      const newAchievements: Achievement[] = newBadges.map(badge => ({
-        id: `${processId}-${badge.id}-${Date.now()}`,
-        badge_id: badge.id,
-        user_id: user?.id || '',
-        process_id: processId,
-        earned_at: new Date().toISOString(),
-        badge
-      }));
-      setAchievements(prev => [...prev, ...newAchievements]);
-      await saveAchievements(newAchievements);
-      await updateGlobalGamificationScore(newAchievements);
-    }
-  };
+    try {
+      const currentAchievementIds = achievements.map(a => a.badge_id);
+      const newBadges = earnedBadges.filter(badge => !currentAchievementIds.includes(badge.id));
 
-  // Atualiza score global no Supabase
-  const updateGlobalGamificationScore = async (newAchievements: Achievement[]) => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('gamification')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-    let currentData = data || {
-      user_id: user.id,
-      totalPoints: 100,
-      totalBadges: 0
-    };
-    const bonusPoints = newAchievements.reduce((total, achievement) => {
-      switch (achievement.badge.rarity) {
-        case 'common': return total + 50;
-        case 'rare': return total + 100;
-        case 'epic': return total + 200;
-        case 'legendary': return total + 500;
-        default: return total;
+      if (newBadges.length > 0) {
+        const newAchievements = newBadges.map(badge => ({
+          id: `achievement-${Date.now()}-${badge.id}`,
+          badge_id: badge.id,
+          earned_at: new Date().toISOString(),
+          points_awarded: getPointsForBadge(badge.rarity)
+        }));
+
+        setAchievements(prev => [...prev, ...newAchievements]);
+        console.log('Novas conquistas desbloqueadas:', newAchievements);
       }
-    }, 0);
-
-    const updatedData = {
-      ...currentData,
-      totalPoints: currentData.totalPoints + bonusPoints,
-      totalBadges: currentData.totalBadges + newAchievements.length,
-    };
-    const { error: upsertError } = await supabase
-      .from('gamification')
-      .upsert([updatedData]);
-    if (upsertError) {
-      console.error('Erro ao atualizar gamification:', upsertError);
+    } catch (error) {
+      console.error('Erro ao verificar novas conquistas:', error);
     }
   };
 
-  // Bonus manual
-  const awardBonusPoints = async (points: number, reason: string) => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('gamification')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-    let currentData = data || { user_id: user.id, totalPoints: 100 };
-    const updatedData = { ...currentData, totalPoints: currentData.totalPoints + points };
-    const { error } = await supabase.from('gamification').upsert([updatedData]);
-    if (error) {
-      console.error('Erro ao dar pontos bônus:', error);
+  const getPointsForBadge = (rarity: Badge['rarity']): number => {
+    switch (rarity) {
+      case 'common': return 50;
+      case 'rare': return 100;
+      case 'epic': return 250;
+      case 'legendary': return 500;
+      default: return 50;
     }
-    setProgress(prev => prev ? { ...prev, gamification_score: prev.gamification_score + points } : null);
+  };
+
+  const awardBonusPoints = async (points: number, reason: string) => {
+    try {
+      console.log(`Bonus points awarded: ${points} - ${reason}`);
+      
+      if (progress) {
+        setProgress(prev => prev ? {
+          ...prev,
+          gamification_score: prev.gamification_score + points
+        } : prev);
+      }
+    } catch (error) {
+      console.error('Erro ao conceder pontos bônus:', error);
+    }
+  };
+
+  const refetch = async () => {
+    await calculateProgress();
   };
 
   return {
     progress,
-    availableBadges,
     achievements,
+    availableBadges,
     isLoading,
     awardBonusPoints,
-    refetch: async () => {
-      setIsLoading(true);
-      await loadExistingAchievements();
-      await calculateProgress();
-      setIsLoading(false);
-    }
+    refetch
   };
 };

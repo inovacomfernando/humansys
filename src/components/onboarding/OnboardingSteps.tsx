@@ -246,3 +246,169 @@ export const OnboardingSteps: React.FC<OnboardingStepsProps> = ({
     </Card>
   );
 };
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { CheckCircle, Clock, FileText, Play, Users, Briefcase, Edit } from 'lucide-react';
+import { OnboardingStep } from '@/hooks/useOnboarding';
+
+interface OnboardingStepsProps {
+  steps: OnboardingStep[];
+  onStepToggle: (stepId: string, currentCompleted: boolean) => void;
+  onStepEdit: (step: OnboardingStep) => void;
+  progressPercentage: number;
+  isLoading: boolean;
+}
+
+export const OnboardingSteps = ({ 
+  steps, 
+  onStepToggle, 
+  onStepEdit, 
+  progressPercentage, 
+  isLoading 
+}: OnboardingStepsProps) => {
+  const getStepIcon = (type: string) => {
+    switch (type) {
+      case 'document': return FileText;
+      case 'training': return Play;
+      case 'meeting': return Users;
+      case 'task': return Briefcase;
+      default: return FileText;
+    }
+  };
+
+  const getStepStatusBadge = (step: OnboardingStep) => {
+    if (step.completed) {
+      return <Badge className="bg-green-500">Concluído</Badge>;
+    }
+    if (step.status === 'in-progress') {
+      return <Badge className="bg-blue-500">Em Andamento</Badge>;
+    }
+    return <Badge variant="outline">Pendente</Badge>;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-muted rounded w-1/2"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!steps || steps.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center">
+            <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Nenhuma etapa encontrada</h3>
+            <p className="text-muted-foreground">Este processo ainda não possui etapas configuradas</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Progress Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Progresso Geral</span>
+            <span className="text-2xl font-bold">{progressPercentage}%</span>
+          </CardTitle>
+          <CardDescription>
+            {steps.filter(s => s.completed).length} de {steps.length} etapas concluídas
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Progress value={progressPercentage} className="h-3" />
+        </CardContent>
+      </Card>
+
+      {/* Steps List */}
+      <div className="space-y-4">
+        {steps
+          .sort((a, b) => a.order - b.order)
+          .map((step) => {
+            const Icon = getStepIcon(step.type);
+            
+            return (
+              <Card key={step.id} className={`transition-all ${step.completed ? 'bg-green-50 border-green-200' : ''}`}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3">
+                      <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                        step.completed ? 'bg-green-500 text-white' : 'bg-muted'
+                      }`}>
+                        {step.completed ? (
+                          <CheckCircle className="h-5 w-5" />
+                        ) : (
+                          <Icon className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{step.title}</CardTitle>
+                        <CardDescription className="mt-1">
+                          {step.description}
+                        </CardDescription>
+                        {step.due_date && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Prazo: {new Date(step.due_date).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                        {step.completed_at && (
+                          <p className="text-xs text-green-600 mt-2">
+                            Concluído em: {new Date(step.completed_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {getStepStatusBadge(step)}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onStepEdit(step)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <Badge variant="outline">
+                        {step.type === 'document' && 'Documento'}
+                        {step.type === 'training' && 'Treinamento'}
+                        {step.type === 'meeting' && 'Reunião'}
+                        {step.type === 'task' && 'Tarefa'}
+                      </Badge>
+                    </div>
+                    <Button
+                      variant={step.completed ? "outline" : "default"}
+                      size="sm"
+                      onClick={() => onStepToggle(step.id, step.completed || false)}
+                    >
+                      {step.completed ? 'Marcar como Pendente' : 'Marcar como Concluído'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+      </div>
+    </div>
+  );
+};

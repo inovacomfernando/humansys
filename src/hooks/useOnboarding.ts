@@ -27,6 +27,7 @@ export interface OnboardingStep {
   due_date?: string;
   completed_at?: string;
   order: number;
+  completed?: boolean;
 }
 
 // Dados mock para desenvolvimento
@@ -88,7 +89,8 @@ const mockSteps: Record<string, OnboardingStep[]> = {
       type: 'document',
       status: 'completed',
       order: 1,
-      completed_at: '2024-01-21'
+      completed_at: '2024-01-21',
+      completed: true
     },
     {
       id: 'step1-2',
@@ -98,7 +100,8 @@ const mockSteps: Record<string, OnboardingStep[]> = {
       type: 'training',
       status: 'completed',
       order: 2,
-      completed_at: '2024-01-22'
+      completed_at: '2024-01-22',
+      completed: true
     },
     {
       id: 'step1-3',
@@ -108,7 +111,8 @@ const mockSteps: Record<string, OnboardingStep[]> = {
       type: 'training',
       status: 'in-progress',
       order: 3,
-      due_date: '2024-01-25'
+      due_date: '2024-01-25',
+      completed: false
     },
     {
       id: 'step1-4',
@@ -118,7 +122,8 @@ const mockSteps: Record<string, OnboardingStep[]> = {
       type: 'task',
       status: 'pending',
       order: 4,
-      due_date: '2024-01-26'
+      due_date: '2024-01-26',
+      completed: false
     }
   ],
   '2': [
@@ -130,7 +135,8 @@ const mockSteps: Record<string, OnboardingStep[]> = {
       type: 'document',
       status: 'completed',
       order: 1,
-      completed_at: '2024-01-23'
+      completed_at: '2024-01-23',
+      completed: true
     },
     {
       id: 'step2-2',
@@ -140,7 +146,8 @@ const mockSteps: Record<string, OnboardingStep[]> = {
       type: 'meeting',
       status: 'in-progress',
       order: 2,
-      due_date: '2024-01-24'
+      due_date: '2024-01-24',
+      completed: false
     }
   ],
   '3': [
@@ -152,7 +159,8 @@ const mockSteps: Record<string, OnboardingStep[]> = {
       type: 'task',
       status: 'completed',
       order: 1,
-      completed_at: '2024-01-18'
+      completed_at: '2024-01-18',
+      completed: true
     }
   ]
 };
@@ -221,6 +229,45 @@ export const useOnboarding = () => {
     }
   };
 
+  const updateStepStatus = async (stepId: string, completed: boolean, processId: string): Promise<void> => {
+    try {
+      console.log('Atualizando status da etapa:', { stepId, completed, processId });
+
+      // Simular delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Atualizar o status no mock local
+      if (mockSteps[processId]) {
+        const stepIndex = mockSteps[processId].findIndex(step => step.id === stepId);
+        if (stepIndex !== -1) {
+          mockSteps[processId][stepIndex] = {
+            ...mockSteps[processId][stepIndex],
+            completed,
+            status: completed ? 'completed' : 'pending',
+            completed_at: completed ? new Date().toISOString() : undefined
+          };
+
+          // Atualizar o progresso do processo
+          const completedSteps = mockSteps[processId].filter(step => step.completed).length;
+          const totalSteps = mockSteps[processId].length;
+          const newProgress = Math.round((completedSteps / totalSteps) * 100);
+
+          // Atualizar processo no array de processos
+          setProcesses(prev => prev.map(process => 
+            process.id === processId 
+              ? { ...process, progress: newProgress }
+              : process
+          ));
+        }
+      }
+
+      console.log('Status da etapa atualizado com sucesso');
+    } catch (error) {
+      console.error('Erro ao atualizar status da etapa:', error);
+      throw error;
+    }
+  };
+
   const createProcess = async (processData: Partial<OnboardingProcess>): Promise<OnboardingProcess | null> => {
     try {
       console.log('Criando novo processo:', processData);
@@ -251,11 +298,86 @@ export const useOnboarding = () => {
     }
   };
 
+  const updateProcess = async (processId: string, updateData: Partial<OnboardingProcess>): Promise<void> => {
+    try {
+      console.log('Atualizando processo:', { processId, updateData });
+
+      // Simular delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      setProcesses(prev => prev.map(process => 
+        process.id === processId 
+          ? { ...process, ...updateData }
+          : process
+      ));
+
+      console.log('Processo atualizado com sucesso');
+    } catch (error) {
+      console.error('Erro ao atualizar processo:', error);
+      throw error;
+    }
+  };
+
+  const deleteProcess = async (processId: string): Promise<void> => {
+    try {
+      console.log('Deletando processo:', processId);
+
+      // Simular delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      setProcesses(prev => prev.filter(process => process.id !== processId));
+      
+      // Limpar etapas do processo
+      delete mockSteps[processId];
+
+      console.log('Processo deletado com sucesso');
+    } catch (error) {
+      console.error('Erro ao deletar processo:', error);
+      throw error;
+    }
+  };
+
+  const createStep = async (stepData: Partial<OnboardingStep>): Promise<OnboardingStep | null> => {
+    try {
+      console.log('Criando nova etapa:', stepData);
+
+      // Simular delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const newStep: OnboardingStep = {
+        id: `step-${Date.now()}`,
+        process_id: stepData.process_id || '',
+        title: stepData.title || '',
+        description: stepData.description || '',
+        type: stepData.type || 'task',
+        status: 'pending',
+        order: stepData.order || 1,
+        completed: false
+      };
+
+      // Adicionar ao mock
+      if (!mockSteps[newStep.process_id]) {
+        mockSteps[newStep.process_id] = [];
+      }
+      mockSteps[newStep.process_id].push(newStep);
+
+      console.log('Etapa criada com sucesso:', newStep);
+      return newStep;
+    } catch (error) {
+      console.error('Erro ao criar etapa:', error);
+      return null;
+    }
+  };
+
   return {
     processes,
     isLoading,
     loadProcesses,
     getProcessSteps,
-    createProcess
+    updateStepStatus,
+    createProcess,
+    updateProcess,
+    deleteProcess,
+    createStep
   };
 };
