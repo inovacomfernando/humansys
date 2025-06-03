@@ -3,35 +3,25 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Use environment variables for PostgreSQL connection
-const SUPABASE_URL = process.env.DATABASE_URL || "postgresql://localhost:5432/postgres";
-const SUPABASE_PUBLISHABLE_KEY = process.env.DATABASE_ANON_KEY || "your-anon-key";
+const SUPABASE_URL = import.meta.env.VITE_DATABASE_URL || "postgresql://localhost:5432/postgres";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_DATABASE_ANON_KEY || "your-anon-key";
 
 // Create singleton instance to avoid multiple connections
 let supabaseInstance: any = null;
 
 export const supabase = supabaseInstance || (supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage,
-    storageKey: 'replit.auth.token',
-    flowType: 'pkce'
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false
   },
   global: {
     headers: {
-      'X-Client-Info': 'replit-hr-dashboard',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      'X-Client-Info': 'replit-hr-dashboard'
     }
   },
   db: {
     schema: 'public'
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 2
-    }
   }
 }));
 
