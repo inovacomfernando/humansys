@@ -1,90 +1,137 @@
 
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { Client } from 'pg';
 
-// Use environment variables for PostgreSQL connection
-const SUPABASE_URL = import.meta.env.VITE_DATABASE_URL || "postgresql://localhost:5432/postgres";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_DATABASE_ANON_KEY || "your-anon-key";
+// Configuração do PostgreSQL
+const DATABASE_URL = import.meta.env.VITE_DATABASE_URL || "postgresql://localhost:5432/postgres";
 
-// Create singleton instance to avoid multiple connections
-let supabaseInstance: any = null;
+let pgClient: Client | null = null;
 
-export const supabase = supabaseInstance || (supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-    detectSessionInUrl: false
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'replit-hr-dashboard'
-    }
-  },
-  db: {
-    schema: 'public'
+// Função para criar conexão com PostgreSQL
+export const createPgClient = () => {
+  if (!pgClient) {
+    pgClient = new Client({
+      connectionString: DATABASE_URL,
+      ssl: DATABASE_URL.includes('neon.tech') ? { rejectUnauthorized: false } : false
+    });
   }
-}));
+  return pgClient;
+};
 
-// Função auxiliar para verificar conectividade com PostgreSQL
-export const checkSupabaseConnection = async (): Promise<boolean> => {
+// Função para conectar
+export const connectToDatabase = async () => {
   try {
-    // Usar uma consulta mais simples e robusta
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.warn('Database session check failed:', sessionError.message);
-      return false;
-    }
+    const client = createPgClient();
+    await client.connect();
+    console.log('Conectado ao PostgreSQL');
+    return client;
+  } catch (error) {
+    console.error('Erro ao conectar ao PostgreSQL:', error);
+    throw error;
+  }
+};
 
-    // Se há sessão, fazer uma query básica para testar a conectividade
-    if (session) {
-      const { error } = await supabase
-        .from('collaborators')
-        .select('count')
-        .limit(0);
-
-      if (error) {
-        console.warn('Database table access test failed:', error.message);
-        // Erros de RLS/permissão ainda indicam conectividade
-        if (error.message.includes('JWT') || 
-            error.message.includes('auth') || 
-            error.message.includes('RLS') ||
-            error.message.includes('permission') ||
-            error.code === 'PGRST301') {
-          return true;
-        }
-        return false;
-      }
-    }
-
+// Função para verificar conectividade
+export const checkDatabaseConnection = async (): Promise<boolean> => {
+  try {
+    const client = createPgClient();
+    await client.query('SELECT 1');
     return true;
   } catch (error) {
-    console.error('Connection check failed:', error);
+    console.error('Erro de conectividade:', error);
     return false;
   }
 };
 
-// Cache para melhorar performance
+// Auth simples sem Supabase
+export const simpleAuth = {
+  async signIn(email: string, password: string) {
+    // Implementação simples de autenticação
+    try {
+      const client = createPgClient();
+      const result = await client.query(
+        'SELECT * FROM collaborators WHERE email = $1 LIMIT 1',
+        [email]
+      );
+      
+      if (result.rows.length > 0) {
+        // Salvar no localStorage para simular sessão
+        const user = result.rows[0];
+        localStorage.setItem('user', JSON.stringify(user));
+        return { user, error: null };
+      }
+      
+      return { user: null, error: { message: 'Usuário não encontrado' } };
+    } catch (error) {
+      return { user: null, error };
+    }
+  },
+
+  async signOut() {
+    localStorage.removeItem('user');
+    return { error: null };
+  },
+
+  async getSession() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return { data: { session: { user } }, error: null };
+    }
+    return { data: { session: null }, error: null };
+  }
+};
+
+// Exportar auth para compatibilidade
+export const supabase = {
+  auth: simpleAuth,
+  from: (table: string) => ({
+    select: (columns: string) => ({
+      eq: (column: string, value: any) => ({
+        limit: (limit: number) => ({
+          order: (column: string, options: any) => 
+            mockQuery(table, columns, { [column]: value }, limit)
+        })
+      })
+    })
+  })
+};
+
+// Função mock para queries
+const mockQuery = async (table: string, columns: string, filters: any, limit?: number) => {
+  try {
+    const client = createPgClient();
+    let query = `SELECT ${columns === '*' ? '*' : columns} FROM ${table}`;
+    const values: any[] = [];
+    
+    if (filters && Object.keys(filters).length > 0) {
+      const conditions = Object.keys(filters).map((key, index) => {
+        values.push(filters[key]);
+        return `${key} = $${index + 1}`;
+      });
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+    
+    if (limit) {
+      query += ` LIMIT ${limit}`;
+    }
+    
+    const result = await client.query(query, values);
+    return { data: result.rows, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+};
+
+// Cache simples
 export const queryCache = new Map();
 
-// Função para limpar cache
 export const clearQueryCache = () => {
   queryCache.clear();
-  console.log('Query cache cleared');
 };
 
-// Função para refresh completo do sistema
 export const refreshSystemData = async () => {
-  try {
-    clearQueryCache();
-    localStorage.removeItem('replit.auth.token');
-
-    // Recarregar a página para garantir estado limpo
-    window.location.reload();
-
-    return true;
-  } catch (error) {
-    console.error('System refresh failed:', error);
-    return false;
-  }
+  clearQueryCache();
+  localStorage.removeItem('user');
+  window.location.reload();
+  return true;
 };
