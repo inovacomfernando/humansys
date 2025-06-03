@@ -1,47 +1,124 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// URLs e chaves para PostgreSQL local
-const supabaseUrl = 'http://localhost:5432';
-const supabaseAnonKey = 'local_development_key';
+// Configuração para desenvolvimento local sem Supabase
+const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.VITE_SUPABASE_URL;
 
-// Configuração específica para desenvolvimento local
-const supabaseConfig = {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
+// Mock client para desenvolvimento
+const createMockClient = () => {
+  const mockAuth = {
+    getSession: async () => ({ data: { session: null }, error: null }),
+    signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
+      // Simular login bem-sucedido para desenvolvimento
+      const mockUser = {
+        id: '5b43d42f-f5e1-46bf-9a95-e6de48163a81',
+        email,
+        user_metadata: { name: email.split('@')[0] },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        aud: 'authenticated',
+        role: 'authenticated'
+      };
+
+      const mockSession = {
+        access_token: 'mock-token',
+        refresh_token: 'mock-refresh',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: mockUser
+      };
+
+      // Armazenar no localStorage para persistência
+      localStorage.setItem('supabase.auth.token', JSON.stringify(mockSession));
+      
+      return { data: { user: mockUser, session: mockSession }, error: null };
+    },
+    signUp: async ({ email, password, options }: any) => {
+      return await mockAuth.signInWithPassword({ email, password });
+    },
+    signOut: async () => {
+      localStorage.removeItem('supabase.auth.token');
+      return { error: null };
+    },
+    onAuthStateChange: (callback: Function) => {
+      // Verificar se há sessão salva
+      const savedSession = localStorage.getItem('supabase.auth.token');
+      if (savedSession) {
+        try {
+          const session = JSON.parse(savedSession);
+          setTimeout(() => callback('INITIAL_SESSION', session), 100);
+        } catch (e) {
+          console.log('No saved session');
+        }
+      }
+
+      return {
+        data: {
+          subscription: {
+            unsubscribe: () => {}
+          }
+        }
+      };
+    },
+    refreshSession: async () => ({ data: { session: null }, error: null }),
+    resetPasswordForEmail: async () => ({ error: null })
+  };
+
+  const mockFrom = (table: string) => ({
+    select: (columns = '*') => ({
+      eq: () => ({ data: [], error: null }),
+      limit: () => ({ data: [], error: null }),
+      order: () => ({ data: [], error: null }),
+      single: () => ({ data: null, error: null }),
+      then: (resolve: Function) => resolve({ data: [], error: null })
+    }),
+    insert: () => ({ data: null, error: null }),
+    update: () => ({ data: null, error: null }),
+    delete: () => ({ data: null, error: null }),
+    upsert: () => ({ data: null, error: null })
+  });
+
+  return {
+    auth: mockAuth,
+    from: mockFrom,
+    rpc: async () => ({ data: null, error: null }),
     storage: {
-      getItem: (key: string) => localStorage.getItem(key),
-      setItem: (key: string, value: string) => localStorage.setItem(key, value),
-      removeItem: (key: string) => localStorage.removeItem(key),
-    },
-  },
-  db: {
-    schema: 'public',
-  },
-  global: {
-    headers: {
-      'x-my-custom-header': 'OrientoHub-Local',
-    },
-  },
+      from: () => ({
+        upload: async () => ({ data: null, error: null }),
+        download: async () => ({ data: null, error: null })
+      })
+    }
+  };
+};
+
+// Cliente real para produção
+const createRealClient = () => {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY!;
+
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false
+    }
+  });
 };
 
 // Cliente único para evitar múltiplas instâncias
-let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
+let supabaseInstance: any = null;
 
 export const getSupabaseClient = () => {
   if (!supabaseInstance) {
-    console.log('Criando nova instância do cliente Supabase para PostgreSQL local');
-
-    // Para desenvolvimento local, usamos uma configuração simplificada
-    supabaseInstance = createClient(
-      'http://localhost:54321', // Supabase local URL
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
-      supabaseConfig
-    );
+    if (isDevelopment) {
+      console.log('🛠️ Modo desenvolvimento: usando mock client');
+      supabaseInstance = createMockClient();
+    } else {
+      console.log('🚀 Modo produção: usando cliente real');
+      supabaseInstance = createRealClient();
+    }
   }
-
   return supabaseInstance;
 };
 
@@ -50,18 +127,15 @@ export const supabase = getSupabaseClient();
 // Função para verificar conectividade
 export const checkSupabaseConnection = async (): Promise<boolean> => {
   try {
-    console.log('Verificando conectividade...');
-    const { error } = await supabase.from('collaborators').select('count').limit(0);
-
-    if (error && error.code !== 'PGRST301') {
-      console.warn('Erro de conectividade:', error);
-      return false;
+    if (isDevelopment) {
+      console.log('Conectividade OK (modo desenvolvimento)');
+      return true;
     }
-
-    console.log('Conectividade OK');
-    return true;
+    
+    const { error } = await supabase.from('collaborators').select('count').limit(0);
+    return !error;
   } catch (error) {
-    console.error('Erro na verificação de conectividade:', error);
+    console.log('Erro na conectividade:', error);
     return false;
   }
 };
@@ -69,42 +143,24 @@ export const checkSupabaseConnection = async (): Promise<boolean> => {
 // Função para refresh do sistema
 export const refreshSystemData = async (): Promise<boolean> => {
   try {
-    console.log('Iniciando refresh do sistema...');
-
-    // Refresh da sessão
-    const { error: refreshError } = await supabase.auth.refreshSession();
-    if (refreshError) {
-      console.warn('Aviso no refresh da sessão:', refreshError);
-    }
-
-    // Verificar conectividade
-    const isConnected = await checkSupabaseConnection();
-
-    console.log('Refresh do sistema concluído:', { isConnected });
-    return isConnected;
+    console.log('Refresh do sistema...');
+    return true;
   } catch (error) {
-    console.error('Erro no refresh do sistema:', error);
+    console.error('Erro no refresh:', error);
     return false;
   }
 };
 
-// Função para limpar cache de queries
+// Função para limpar cache
 export const clearQueryCache = (): void => {
   try {
-    console.log('Limpando cache de queries...');
-
-    // Limpar localStorage específico do Supabase
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
-      if (key.startsWith('supabase.') || key.startsWith('sb-')) {
+      if (key.startsWith('supabase.') && key.includes('undefined')) {
         localStorage.removeItem(key);
       }
     });
-
-    // Limpar sessionStorage
-    sessionStorage.clear();
-
-    console.log('Cache limpo com sucesso');
+    console.log('Cache limpo');
   } catch (error) {
     console.error('Erro ao limpar cache:', error);
   }

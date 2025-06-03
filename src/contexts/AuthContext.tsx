@@ -1,8 +1,6 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { initializeDatabase } from '@/lib/setupDatabase';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -36,30 +34,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
+    console.log('%c🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
     console.log('%cSistema em modo de desenvolvimento', 'color: blue; font-size: 12px;');
 
     // Verificar sessão inicial
     const getInitialSession = async () => {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Erro ao obter sessão inicial:', error);
-        } else if (initialSession) {
-          console.log('Auth state changed:', 'INITIAL_SESSION', initialSession.user.id);
+
+        if (!error && initialSession) {
+          console.log('Sessão inicial encontrada:', initialSession.user.id);
           setSession(initialSession);
           setUser(initialSession.user);
-          
-          // Inicializar banco após login
-          try {
-            await initializeDatabase();
-          } catch (dbError) {
-            console.warn('Aviso na inicialização do banco:', dbError);
-          }
         }
       } catch (error) {
-        console.error('Erro na verificação de sessão inicial:', error);
+        console.log('Nenhuma sessão inicial encontrada');
       } finally {
         setLoading(false);
       }
@@ -71,24 +60,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log('Auth state changed:', event, currentSession?.user?.id);
-        
+
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && currentSession) {
-          try {
-            await initializeDatabase();
-          } catch (dbError) {
-            console.warn('Aviso na inicialização do banco após login:', dbError);
-          }
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          // Limpar dados locais
-          localStorage.clear();
-          sessionStorage.clear();
-        }
-        
         setLoading(false);
       }
     );
@@ -101,47 +75,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      
-      // Para desenvolvimento local, criar usuário fictício se necessário
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        // Se for erro de usuário não encontrado, tentar criar
-        if (error.message.includes('Invalid login credentials')) {
-          console.log('Usuário não encontrado, criando conta...');
-          
-          const { error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                name: email.split('@')[0],
-              }
-            }
-          });
-
-          if (signUpError) {
-            throw signUpError;
-          }
-
-          // Tentar login novamente
-          const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (retryError) {
-            throw retryError;
-          }
-
-          return { data: retryData };
-        }
-        
         throw error;
       }
+
+      toast({
+        title: "Login realizado!",
+        description: "Bem-vindo de volta!",
+      });
 
       return { data };
     } catch (error: any) {
@@ -160,14 +107,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password: string, name: string) => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            name,
-          }
+          data: { name }
         }
       });
 
@@ -195,13 +140,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       setLoading(true);
-      
-      // Limpar dados locais primeiro
+
+      // Limpar dados locais
       localStorage.clear();
       sessionStorage.clear();
-      
+
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
         console.warn('Aviso no logout:', error);
       }
@@ -209,7 +154,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Forçar limpeza do estado
       setUser(null);
       setSession(null);
-      
+
+      toast({
+        title: "Logout realizado",
+        description: "Até logo!",
+      });
+
     } catch (error) {
       console.error('Erro no logout:', error);
     } finally {
@@ -219,9 +169,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
 
       if (error) throw error;
 

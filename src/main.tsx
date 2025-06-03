@@ -7,7 +7,6 @@ import './index.css';
 // Limpar cache corrompido na inicialização
 const clearCorruptedCache = () => {
   try {
-    // Remover tokens corrompidos
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
       if (key.includes('supabase.auth') && key.includes('undefined')) {
@@ -31,8 +30,8 @@ const clearCorruptedCache = () => {
 // Executar limpeza
 clearCorruptedCache();
 
-console.log('🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
-console.log('Sistema em modo de desenvolvimento', 'color: blue; font-size: 12px;');
+console.log('%c🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
+console.log('%cSistema iniciado em modo de desenvolvimento', 'color: blue; font-size: 12px;');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
