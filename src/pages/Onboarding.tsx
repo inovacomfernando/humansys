@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, Clock, User, FileText, Briefcase, Users, Play, Eye, MoreHorizontal } from 'lucide-react';
 import { NewOnboardingDialog } from '@/components/onboarding/NewOnboardingDialog';
 import { OnboardingDetails } from '@/components/onboarding/OnboardingDetails';
-import { useOnboarding } from '@/hooks/useOnboarding';
+import { useOnboarding, OnboardingProcess } from '@/hooks/useOnboarding';
 import {
   Table,
   TableBody,
@@ -27,13 +27,16 @@ import {
 
 export const Onboarding = () => {
   const { processes, isLoading } = useOnboarding();
-  const [selectedProcess, setSelectedProcess] = useState<any>(null);
+  const [selectedProcess, setSelectedProcess] = useState<OnboardingProcess | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Garantir que processes seja sempre um array válido
   const processData = useMemo(() => {
-    if (!Array.isArray(processes)) return [];
-    return processes;
+    if (!processes || !Array.isArray(processes)) {
+      console.warn('Processes não é um array válido:', processes);
+      return [];
+    }
+    return processes.filter(process => process && typeof process === 'object');
   }, [processes]);
 
   const getStatusColor = (status: string) => {
@@ -120,13 +123,13 @@ export const Onboarding = () => {
     }
   };
 
-  const openDetails = (process: any) => {
+  const openDetails = (process: OnboardingProcess) => {
     setSelectedProcess(process);
     setDetailsOpen(true);
   };
 
   // Filtros seguros para evitar erros
-  const safeProcesses = processData;
+  const safeProcesses = processData || [];
   const inProgressProcesses = safeProcesses.filter((p) => p?.status !== 'completed');
   const completedProcesses = safeProcesses.filter((p) => p?.status === 'completed');
   const completedCount = completedProcesses.length;
@@ -222,7 +225,7 @@ export const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {processData.length > 0 ? (
+                {processData && processData.length > 0 ? (
                   <div className="space-y-4">
                     <Table>
                       <TableHeader>
@@ -237,63 +240,70 @@ export const Onboarding = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {processData.map((process) => (
-                          <TableRow key={process?.id || Math.random()}>
-                            <TableCell>
-                              <div className="font-medium">
-                                {process?.collaborator?.name || 'Nome não disponível'}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm text-muted-foreground">
-                                {process?.position || 'Posição não definida'}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {process?.department || 'Departamento não definido'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(process?.status || 'not-started')}>
-                                {getStatusText(process?.status || 'not-started')}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Progress value={process?.progress || 0} className="h-2 w-20" />
-                                <span className="text-sm font-medium">{process?.progress || 0}%</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                {process?.start_date 
-                                  ? new Date(process.start_date).toLocaleDateString('pt-BR')
-                                  : 'Data não disponível'
-                                }
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => openDetails(process)}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Ver Detalhes
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openDetails(process)}>
-                                    <Play className="mr-2 h-4 w-4" />
-                                    Acompanhar
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {processData.map((process) => {
+                          // Verificação adicional de segurança
+                          if (!process || typeof process !== 'object') {
+                            return null;
+                          }
+                          
+                          return (
+                            <TableRow key={process.id || Math.random()}>
+                              <TableCell>
+                                <div className="font-medium">
+                                  {process.collaborator?.name || 'Nome não disponível'}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm text-muted-foreground">
+                                  {process.position || 'Posição não definida'}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {process.department || 'Departamento não definido'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={getStatusColor(process.status || 'not-started')}>
+                                  {getStatusText(process.status || 'not-started')}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <Progress value={process.progress || 0} className="h-2 w-20" />
+                                  <span className="text-sm font-medium">{process.progress || 0}%</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  {process.start_date 
+                                    ? new Date(process.start_date).toLocaleDateString('pt-BR')
+                                    : 'Data não disponível'
+                                  }
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openDetails(process)}>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      Ver Detalhes
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => openDetails(process)}>
+                                      <Play className="mr-2 h-4 w-4" />
+                                      Acompanhar
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -369,29 +379,35 @@ export const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {completedProcesses.length > 0 ? (
+                {completedProcesses && completedProcesses.length > 0 ? (
                   <div className="space-y-4">
-                    {completedProcesses.map((process) => (
-                      <div key={process?.id || Math.random()} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">
-                            {process?.collaborator?.name || 'Nome não disponível'}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {process?.position || 'Posição não definida'} • {process?.department || 'Departamento não definido'}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Concluído • Iniciado em {process?.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'Data não disponível'}
-                          </p>
+                    {completedProcesses.map((process) => {
+                      if (!process || typeof process !== 'object') {
+                        return null;
+                      }
+                      
+                      return (
+                        <div key={process.id || Math.random()} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <h4 className="font-medium">
+                              {process.collaborator?.name || 'Nome não disponível'}
+                            </h4>
+                            <p className="text-sm text-muted-foreground">
+                              {process.position || 'Posição não definida'} • {process.department || 'Departamento não definido'}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Concluído • Iniciado em {process.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <Badge className="bg-green-500">Concluído</Badge>
+                            <Button variant="outline" size="sm" onClick={() => openDetails(process)}>
+                              Ver Relatório
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-4">
-                          <Badge className="bg-green-500">Concluído</Badge>
-                          <Button variant="outline" size="sm" onClick={() => openDetails(process)}>
-                            Ver Relatório
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="text-center py-8">

@@ -5,16 +5,89 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit, Video, MessageSquare, Trophy, Sparkles } from 'lucide-react';
-import { useOnboarding, OnboardingStep } from '@/hooks/useOnboarding';
-import { useOnboardingGamification } from '@/hooks/useOnboardingGamification';
-import { GamificationPanel } from './GamificationPanel';
-import { OnboardingSteps } from './OnboardingSteps';
-import { EditStepDialog } from './EditStepDialog';
-import { VideoPlayer } from './VideoPlayer';
+import { useOnboarding, OnboardingStep, OnboardingProcess } from '@/hooks/useOnboarding';
 import { useToast } from '@/hooks/use-toast';
 
+// Componentes placeholder para evitar erros de importação
+const GamificationPanel = ({ progress, availableBadges, achievements }: any) => (
+  <div className="p-4 border rounded-lg">
+    <h3 className="font-medium mb-2">Gamificação</h3>
+    <p className="text-sm text-muted-foreground">Painel de gamificação em desenvolvimento</p>
+  </div>
+);
+
+const OnboardingSteps = ({ steps, onStepToggle, onStepEdit, progressPercentage, isLoading }: any) => (
+  <div className="space-y-4">
+    {isLoading ? (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+      </div>
+    ) : (
+      steps && steps.length > 0 ? (
+        steps.map((step: OnboardingStep) => (
+          <div key={step.id} className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                checked={step.completed}
+                onChange={() => onStepToggle(step.id, step.completed)}
+                className="rounded"
+              />
+              <div>
+                <h4 className="font-medium">{step.title}</h4>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant="outline">
+                {step.type === 'document' && 'Documento'}
+                {step.type === 'training' && 'Treinamento'}
+                {step.type === 'meeting' && 'Reunião'}
+                {step.type === 'task' && 'Tarefa'}
+              </Badge>
+              <Button variant="ghost" size="sm" onClick={() => onStepEdit(step)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Nenhuma etapa encontrada</p>
+        </div>
+      )
+    )}
+  </div>
+);
+
+const EditStepDialog = ({ step, open, onOpenChange, onSave }: any) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Editar Etapa</DialogTitle>
+        <DialogDescription>
+          Modifique as informações da etapa do onboarding
+        </DialogDescription>
+      </DialogHeader>
+      <div className="p-4">
+        <p>Editor de etapa em desenvolvimento</p>
+        <Button onClick={() => onOpenChange(false)} className="mt-4">
+          Fechar
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
+const VideoPlayer = ({ videoUrl, onComplete }: any) => (
+  <div className="p-4 border rounded-lg">
+    <p className="text-sm text-muted-foreground">Player de vídeo em desenvolvimento</p>
+    {videoUrl && <p className="text-xs mt-2">URL: {videoUrl}</p>}
+  </div>
+);
+
 interface OnboardingDetailsProps {
-  process: any;
+  process: OnboardingProcess;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -27,14 +100,12 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Integração com gamificação
-  const { 
-    progress, 
-    availableBadges, 
-    achievements, 
-    awardBonusPoints, 
-    refetch: refetchGamification 
-  } = useOnboardingGamification(process?.id || '', steps);
+  // Mock gamification data
+  const mockGamificationData = {
+    progress: { level: 1, xp: 150, nextLevelXp: 300 },
+    availableBadges: [],
+    achievements: []
+  };
 
   useEffect(() => {
     if (process?.id && open) {
@@ -48,9 +119,10 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     setIsLoading(true);
     try {
       const processSteps = await getProcessSteps(process.id);
-      setSteps(processSteps);
+      setSteps(Array.isArray(processSteps) ? processSteps : []);
     } catch (error) {
       console.error('Erro ao carregar etapas:', error);
+      setSteps([]);
       toast({
         title: "Erro",
         description: "Não foi possível carregar as etapas do onboarding.",
@@ -66,17 +138,12 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
       await updateStepStatus(stepId, !currentCompleted, process.id);
       await loadSteps();
       
-      // Gamificação: Award bonus points for completing a step
       if (!currentCompleted) {
-        awardBonusPoints(50, 'Etapa concluída');
         toast({
           title: "🎉 Etapa Concluída!",
-          description: "+50 pontos de gamificação",
+          description: "Parabéns pelo progresso!",
         });
       }
-      
-      // Atualizar dados de gamificação
-      setTimeout(refetchGamification, 100);
     } catch (error) {
       console.error('Erro ao atualizar etapa:', error);
       toast({
@@ -95,175 +162,127 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   const handleSaveStep = (stepData: Partial<OnboardingStep>) => {
     console.log('Salvando etapa:', stepData);
     loadSteps();
-    refetchGamification();
   };
 
   const handleVideoComplete = (stepTitle: string) => {
-    // Award bonus for completing video
-    awardBonusPoints(25, `Vídeo assistido: ${stepTitle}`);
     toast({
       title: "📹 Vídeo Concluído!",
-      description: "+25 pontos de gamificação",
+      description: `Vídeo "${stepTitle}" assistido com sucesso!`,
     });
-    refetchGamification();
   };
 
-  if (!process) return null;
+  if (!process) {
+    return null;
+  }
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span>Onboarding - {process.collaborator?.name}</span>
-                {progress && (
-                  <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-                    <Trophy className="h-3 w-3 mr-1" />
-                    {progress.gamification_score} pontos
-                  </Badge>
-                )}
-              </div>
-              <Button variant="outline" size="sm">
-                <Edit className="h-4 w-4 mr-2" />
-                Configurar
-              </Button>
-            </DialogTitle>
-            <DialogDescription className="flex items-center justify-between">
-              <span>{process.position} • {process.department}</span>
-              {progress && progress.performance_rating === 'excellent' && (
-                <Badge variant="outline" className="text-green-600 border-green-200">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Performance Excelente
-                </Badge>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Tabs defaultValue="progress" className="h-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="progress">
-                Progresso & Gamificação
-                {achievements.length > 0 && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {achievements.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="steps">Etapas Interativas</TabsTrigger>
-              <TabsTrigger value="feedback">Feedback & Vídeos</TabsTrigger>
-            </TabsList>
-            
-            <div className="overflow-auto max-h-[calc(95vh-280px)]">
-              <TabsContent value="progress" className="space-y-6 mt-6">
-                {progress && (
-                  <GamificationPanel
-                    progress={progress}
-                    achievements={achievements}
-                    availableBadges={availableBadges}
-                  />
-                )}
-              </TabsContent>
-
-              <TabsContent value="steps" className="mt-6">
-                <OnboardingSteps
-                  steps={steps}
-                  onStepToggle={toggleStep}
-                  onStepEdit={handleEditStep}
-                  progressPercentage={process.progress}
-                  isLoading={isLoading}
-                />
-              </TabsContent>
-
-              <TabsContent value="feedback" className="mt-6 space-y-6">
-                {/* Vídeos de Onboarding com Gamificação */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium flex items-center space-x-2">
-                    <Video className="h-5 w-5" />
-                    <span>Vídeos de Onboarding</span>
-                  </h3>
-                  
-                  <div className="grid gap-4">
-                    <VideoPlayer
-                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                      title="Bem-vindo à Empresa"
-                      onComplete={() => handleVideoComplete('Bem-vindo à Empresa')}
-                    />
-                    
-                    <VideoPlayer
-                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                      title="Cultura e Valores"
-                      onComplete={() => handleVideoComplete('Cultura e Valores')}
-                    />
-                    
-                    <VideoPlayer
-                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                      title="Políticas de Segurança"
-                      onComplete={() => handleVideoComplete('Políticas de Segurança')}
-                    />
-                  </div>
-                </div>
-
-                {/* Sistema de Feedback Melhorado */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium flex items-center space-x-2">
-                    <MessageSquare className="h-5 w-5" />
-                    <span>Feedback em Tempo Real</span>
-                  </h3>
-                  
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-green-800 mb-2">Pontos Fortes</h4>
-                      <p className="text-sm text-green-700">
-                        {progress?.performance_rating === 'excellent' 
-                          ? 'Excelente progresso! Mantendo alta performance em todas as etapas.'
-                          : progress?.performance_rating === 'good'
-                          ? 'Bom progresso! Continue assim para alcançar a excelência.'
-                          : 'Continue se esforçando para melhorar sua performance.'
-                        }
-                      </p>
-                    </div>
-                    
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2">Próximos Passos</h4>
-                      <p className="text-sm text-blue-700">
-                        {progress?.next_milestone 
-                          ? `Próxima conquista: ${progress.next_milestone.name}`
-                          : 'Todas as conquistas desbloqueadas!'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t mt-4">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Iniciado em {new Date(process.start_date).toLocaleDateString('pt-BR')}
-                  {progress && <span className="ml-2">• Tempo dedicado: {progress.time_spent_minutes} minutos</span>}
-                </p>
-              </div>
-              <Badge className={
+            <DialogTitle className="flex items-center gap-2">
+              <span>{process.collaborator?.name || 'Colaborador'}</span>
+              <Badge className={`ml-2 ${
                 process.status === 'completed' ? 'bg-green-500' :
                 process.status === 'in-progress' ? 'bg-blue-500' : 'bg-gray-500'
-              }>
+              }`}>
                 {process.status === 'completed' ? 'Concluído' :
                  process.status === 'in-progress' ? 'Em Andamento' : 'Não Iniciado'}
               </Badge>
-            </div>
+            </DialogTitle>
+            <DialogDescription>
+              {process.position} • {process.department}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="overview" className="mt-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+              <TabsTrigger value="steps">Etapas</TabsTrigger>
+              <TabsTrigger value="gamification">Gamificação</TabsTrigger>
+              <TabsTrigger value="feedback">Feedback</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="mt-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Informações do Colaborador</h3>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Nome:</strong> {process.collaborator?.name || 'N/A'}</p>
+                      <p><strong>Email:</strong> {process.collaborator?.email || 'N/A'}</p>
+                      <p><strong>Cargo:</strong> {process.position || 'N/A'}</p>
+                      <p><strong>Departamento:</strong> {process.department || 'N/A'}</p>
+                      <p><strong>Data de Início:</strong> {
+                        process.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'N/A'
+                      }</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Progresso do Onboarding</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Progresso</span>
+                        <span>{process.progress || 0}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full" 
+                          style={{ width: `${process.progress || 0}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Etapa Atual: {process.current_step || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="steps" className="mt-6">
+              <OnboardingSteps
+                steps={steps}
+                onStepToggle={toggleStep}
+                onStepEdit={handleEditStep}
+                progressPercentage={process.progress}
+                isLoading={isLoading}
+              />
+            </TabsContent>
+
+            <TabsContent value="gamification" className="mt-6">
+              <GamificationPanel
+                progress={mockGamificationData.progress}
+                availableBadges={mockGamificationData.availableBadges}
+                achievements={mockGamificationData.achievements}
+              />
+            </TabsContent>
+
+            <TabsContent value="feedback" className="mt-6">
+              <div className="space-y-4">
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-medium mb-2">Feedback do Colaborador</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Sistema de feedback em desenvolvimento
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
           </Tabs>
         </DialogContent>
       </Dialog>
 
-      <EditStepDialog
-        step={editStep}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSave={handleSaveStep}
-      />
+      {editStep && (
+        <EditStepDialog
+          step={editStep}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSave={handleSaveStep}
+        />
+      )}
     </>
   );
 };

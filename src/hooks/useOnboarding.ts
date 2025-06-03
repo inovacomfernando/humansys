@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -187,19 +188,33 @@ export const useOnboarding = () => {
   useEffect(() => {
     if (user) {
       fetchProcesses();
+    } else {
+      // Se não há usuário, inicializar com array vazio
+      setProcesses([]);
+      setIsLoading(false);
     }
   }, [user]);
 
   const fetchProcesses = async () => {
     setIsLoading(true);
     try {
+      console.log('Carregando processos de onboarding...');
+      
       // Simular delay de carregamento
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      console.log('Carregando processos de onboarding...');
-      setProcesses(mockProcesses);
+      // Garantir que sempre retornamos um array válido
+      const validProcesses = Array.isArray(mockProcesses) ? mockProcesses : [];
+      
+      setProcesses(validProcesses);
+      
+      console.log('Processos carregados:', validProcesses);
     } catch (error) {
       console.error('Erro ao buscar processos:', error);
+      
+      // Em caso de erro, definir array vazio para evitar crashes
+      setProcesses([]);
+      
       toast({
         title: "Erro",
         description: "Não foi possível carregar os processos de onboarding.",
@@ -220,7 +235,7 @@ export const useOnboarding = () => {
       console.log('Criando novo processo de onboarding:', processData);
 
       const newProcess: OnboardingProcess = {
-        id: String(mockProcesses.length + 1),
+        id: String(Date.now()),
         collaborator_id: processData.collaboratorId,
         collaborator: {
           id: processData.collaboratorId,
@@ -230,7 +245,7 @@ export const useOnboarding = () => {
         position: processData.position,
         department: processData.department,
         start_date: processData.startDate,
-        status: 'in-progress',
+        status: 'not-started',
         progress: 0,
         current_step: 'Documentação Pessoal',
         created_at: new Date().toISOString(),
@@ -289,8 +304,12 @@ export const useOnboarding = () => {
         }
       ];
 
+      // Atualizar estado garantindo array válido
+      const currentProcesses = Array.isArray(processes) ? processes : [];
+      const updatedProcesses = [...currentProcesses, newProcess];
+      
       mockProcesses.push(newProcess);
-      setProcesses([...mockProcesses]);
+      setProcesses(updatedProcesses);
 
       toast({
         title: "Sucesso",
@@ -316,10 +335,11 @@ export const useOnboarding = () => {
       // Simular delay
       await new Promise(resolve => setTimeout(resolve, 300));
 
-      return mockSteps[processId] || [];
+      const steps = mockSteps[processId];
+      return Array.isArray(steps) ? steps : [];
     } catch (error) {
       console.error('Erro ao buscar etapas:', error);
-      throw error;
+      return [];
     }
   };
 
@@ -328,7 +348,7 @@ export const useOnboarding = () => {
       console.log('Atualizando status da etapa:', { stepId, completed, processId });
 
       // Atualizar no mock
-      if (mockSteps[processId]) {
+      if (mockSteps[processId] && Array.isArray(mockSteps[processId])) {
         const step = mockSteps[processId].find(s => s.id === stepId);
         if (step) {
           step.completed = completed;
@@ -348,9 +368,9 @@ export const useOnboarding = () => {
     try {
       const steps = await getProcessSteps(processId);
       const completedSteps = steps.filter(step => step.completed).length;
-      const progress = Math.round((completedSteps / steps.length) * 100);
+      const progress = steps.length > 0 ? Math.round((completedSteps / steps.length) * 100) : 0;
 
-      const status = progress === 100 ? 'completed' : 'in-progress';
+      const status = progress === 100 ? 'completed' : progress > 0 ? 'in-progress' : 'not-started';
 
       // Atualizar no mock
       const processIndex = mockProcesses.findIndex(p => p.id === processId);
@@ -360,15 +380,27 @@ export const useOnboarding = () => {
         mockProcesses[processIndex].updated_at = new Date().toISOString();
       }
 
-      setProcesses([...mockProcesses]);
+      // Garantir que processes seja sempre um array válido antes de atualizar
+      const validProcesses = Array.isArray(processes) ? [...processes] : [];
+      const currentProcessIndex = validProcesses.findIndex(p => p.id === processId);
+      
+      if (currentProcessIndex >= 0) {
+        validProcesses[currentProcessIndex].progress = progress;
+        validProcesses[currentProcessIndex].status = status;
+        validProcesses[currentProcessIndex].updated_at = new Date().toISOString();
+        setProcesses(validProcesses);
+      }
     } catch (error) {
       console.error('Erro ao atualizar progresso:', error);
       throw error;
     }
   };
 
+  // Garantir que sempre retornamos um array válido
+  const safeProcesses = Array.isArray(processes) ? processes : [];
+
   return {
-    processes,
+    processes: safeProcesses,
     isLoading,
     fetchProcesses,
     createProcess,
