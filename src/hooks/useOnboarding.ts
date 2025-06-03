@@ -201,10 +201,17 @@ export const useOnboarding = () => {
       console.log('Carregando processos de onboarding...');
       
       // Simular delay de carregamento
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Garantir que sempre retornamos um array válido
-      const validProcesses = Array.isArray(mockProcesses) ? mockProcesses : [];
+      // Garantir que sempre retornamos um array válido com dados válidos
+      const validProcesses = Array.isArray(mockProcesses) 
+        ? mockProcesses.filter(process => 
+            process && 
+            typeof process === 'object' && 
+            process.id && 
+            process.collaborator_id
+          )
+        : [];
       
       setProcesses(validProcesses);
       
@@ -330,13 +337,27 @@ export const useOnboarding = () => {
 
   const getProcessSteps = async (processId: string): Promise<OnboardingStep[]> => {
     try {
+      if (!processId || typeof processId !== 'string') {
+        console.warn('ProcessId inválido:', processId);
+        return [];
+      }
+
       console.log('Carregando etapas do processo:', processId);
 
       // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       const steps = mockSteps[processId];
-      return Array.isArray(steps) ? steps : [];
+      const validSteps = Array.isArray(steps) 
+        ? steps.filter(step => 
+            step && 
+            typeof step === 'object' && 
+            step.id && 
+            step.title
+          )
+        : [];
+        
+      return validSteps;
     } catch (error) {
       console.error('Erro ao buscar etapas:', error);
       return [];

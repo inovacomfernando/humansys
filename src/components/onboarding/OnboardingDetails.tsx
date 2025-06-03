@@ -87,7 +87,7 @@ const VideoPlayer = ({ videoUrl, onComplete }: any) => (
 );
 
 interface OnboardingDetailsProps {
-  process: OnboardingProcess;
+  process: OnboardingProcess | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -99,6 +99,11 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   const [editStep, setEditStep] = useState<OnboardingStep | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // Validação de segurança no início
+  if (!process || typeof process !== 'object') {
+    return null;
+  }
 
   // Mock gamification data
   const mockGamificationData = {
@@ -114,12 +119,19 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   }, [process?.id, open]);
 
   const loadSteps = async () => {
-    if (!process?.id) return;
+    if (!process?.id || typeof process.id !== 'string') {
+      setSteps([]);
+      setIsLoading(false);
+      return;
+    }
     
     setIsLoading(true);
     try {
       const processSteps = await getProcessSteps(process.id);
-      setSteps(Array.isArray(processSteps) ? processSteps : []);
+      const validSteps = Array.isArray(processSteps) ? processSteps.filter(step => 
+        step && typeof step === 'object' && step.id
+      ) : [];
+      setSteps(validSteps);
     } catch (error) {
       console.error('Erro ao carregar etapas:', error);
       setSteps([]);
@@ -171,7 +183,8 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     });
   };
 
-  if (!process) {
+  // Validação final antes da renderização
+  if (!process || !process.id) {
     return null;
   }
 
