@@ -57,7 +57,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { OnboardingProgress, Badge, Achievement } from '@/types/gamification';
 import { OnboardingStep } from '@/hooks/useOnboarding';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useOnboardingGamification = (processId: string, steps: OnboardingStep[]) => {
   const { user } = useAuth();
