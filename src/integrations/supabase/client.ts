@@ -2,18 +2,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Use environment variables for PostgreSQL connection
-const SUPABASE_URL = import.meta.env.VITE_DATABASE_URL || "postgresql://localhost:5432/postgres";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_DATABASE_ANON_KEY || "your-anon-key";
+// For local development, use the existing Neon database
+const SUPABASE_URL = "https://ep-holy-fire-a6jhjo8y.us-west-2.aws.neon.tech";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwLWhvbHktZmlyZS1hNmpqamhvOHkiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNjg3NDM5MSwiZXhwIjoyMDUyNDUwMzkxfQ.ZjY2ZjZjNjZkNmQ2ZDZkNmQ2ZDZkNmQ2ZDZkNmQ2ZA";
 
 // Create singleton instance to avoid multiple connections
 let supabaseInstance: any = null;
 
 export const supabase = supabaseInstance || (supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-    detectSessionInUrl: false
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
   },
   global: {
     headers: {
