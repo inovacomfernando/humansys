@@ -1,23 +1,202 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, Clock, User, FileText, Briefcase, Users, Play } from 'lucide-react';
+import { CheckCircle, Clock, User, FileText, Briefcase, Users, Play, Eye, MoreHorizontal } from 'lucide-react';
 import { NewOnboardingDialog } from '@/components/onboarding/NewOnboardingDialog';
 import { OnboardingDetails } from '@/components/onboarding/OnboardingDetails';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  createColumnHelper,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+  type ColumnFiltersState,
+} from '@tanstack/react-table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+interface OnboardingTableData {
+  id: string;
+  collaboratorName: string;
+  position: string;
+  department: string;
+  status: string;
+  progress: number;
+  startDate: string;
+  currentStep: string;
+  collaborator?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
 
 export const Onboarding = () => {
   const { processes, isLoading } = useOnboarding();
-  const [selectedProcess, setSelectedProcess] = useState(null);
+  const [selectedProcess, setSelectedProcess] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  // Garantir que processes seja sempre um array válido
-  const safeProcesses = Array.isArray(processes) ? processes : [];
+  // Garantir que processes seja sempre um array válido e converter para formato da tabela
+  const tableData = useMemo<OnboardingTableData[]>(() => {
+    if (!Array.isArray(processes)) return [];
+    
+    return processes.map((process) => ({
+      id: process?.id || '',
+      collaboratorName: process?.collaborator?.name || 'Nome não disponível',
+      position: process?.position || 'Posição não definida',
+      department: process?.department || 'Departamento não definido',
+      status: process?.status || 'not-started',
+      progress: process?.progress || 0,
+      startDate: process?.start_date || '',
+      currentStep: process?.current_step || 'Não definida',
+      collaborator: process?.collaborator
+    }));
+  }, [processes]);
+
+  // Configuração das colunas da tabela
+  const columnHelper = createColumnHelper<OnboardingTableData>();
+
+  const columns = useMemo<ColumnDef<OnboardingTableData>[]>(() => [
+    columnHelper.accessor('collaboratorName', {
+      header: 'Colaborador',
+      cell: (info) => (
+        <div className="font-medium">
+          {info.getValue()}
+        </div>
+      ),
+    }),
+    columnHelper.accessor('position', {
+      header: 'Cargo',
+      cell: (info) => (
+        <div className="text-sm text-muted-foreground">
+          {info.getValue()}
+        </div>
+      ),
+    }),
+    columnHelper.accessor('department', {
+      header: 'Departamento',
+      cell: (info) => (
+        <Badge variant="outline">
+          {info.getValue()}
+        </Badge>
+      ),
+    }),
+    columnHelper.accessor('status', {
+      header: 'Status',
+      cell: (info) => {
+        const status = info.getValue();
+        const getStatusColor = (status: string) => {
+          switch (status) {
+            case 'completed': return 'bg-green-500';
+            case 'in-progress': return 'bg-blue-500';
+            case 'not-started': return 'bg-gray-500';
+            default: return 'bg-gray-500';
+          }
+        };
+        const getStatusText = (status: string) => {
+          switch (status) {
+            case 'completed': return 'Concluído';
+            case 'in-progress': return 'Em Andamento';
+            case 'not-started': return 'Não Iniciado';
+            default: return 'Status Indefinido';
+          }
+        };
+        return (
+          <Badge className={getStatusColor(status)}>
+            {getStatusText(status)}
+          </Badge>
+        );
+      },
+    }),
+    columnHelper.accessor('progress', {
+      header: 'Progresso',
+      cell: (info) => {
+        const progress = info.getValue();
+        return (
+          <div className="flex items-center space-x-2">
+            <Progress value={progress} className="h-2 w-20" />
+            <span className="text-sm font-medium">{progress}%</span>
+          </div>
+        );
+      },
+    }),
+    columnHelper.accessor('startDate', {
+      header: 'Data de Início',
+      cell: (info) => {
+        const date = info.getValue();
+        return (
+          <div className="text-sm">
+            {date ? new Date(date).toLocaleDateString('pt-BR') : 'Data não disponível'}
+          </div>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: 'Ações',
+      cell: (info) => {
+        const row = info.row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => openDetails(row)}>
+                <Eye className="mr-2 h-4 w-4" />
+                Ver Detalhes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openDetails(row)}>
+                <Play className="mr-2 h-4 w-4" />
+                Acompanhar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    }),
+  ], []);
+
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+    },
+  });
 
   // Mock data para o modelo de onboarding
   const defaultSteps = [
@@ -25,7 +204,7 @@ export const Onboarding = () => {
       id: '1',
       title: 'Documentação Pessoal',
       description: 'Envio de documentos pessoais e contratuais',
-      type: 'document',
+      type: 'document' as const,
       completed: true,
       order: 1
     },
@@ -33,7 +212,7 @@ export const Onboarding = () => {
       id: '2',
       title: 'Apresentação da Empresa',
       description: 'Conhecer a história, missão e valores da empresa',
-      type: 'training',
+      type: 'training' as const,
       completed: true,
       order: 2
     },
@@ -41,7 +220,7 @@ export const Onboarding = () => {
       id: '3',
       title: 'Reunião com Gestor',
       description: 'Primeira reunião com o gestor direto',
-      type: 'meeting',
+      type: 'meeting' as const,
       completed: true,
       dueDate: '2024-01-23',
       order: 3
@@ -50,7 +229,7 @@ export const Onboarding = () => {
       id: '4',
       title: 'Treinamento de Segurança',
       description: 'Curso obrigatório sobre políticas de segurança',
-      type: 'training',
+      type: 'training' as const,
       completed: false,
       dueDate: '2024-01-25',
       order: 4
@@ -59,7 +238,7 @@ export const Onboarding = () => {
       id: '5',
       title: 'Setup do Ambiente',
       description: 'Configuração de equipamentos e acessos',
-      type: 'task',
+      type: 'task' as const,
       completed: false,
       dueDate: '2024-01-24',
       order: 5
@@ -68,32 +247,14 @@ export const Onboarding = () => {
       id: '6',
       title: 'Integração com a Equipe',
       description: 'Conhecer os colegas de trabalho',
-      type: 'meeting',
+      type: 'meeting' as const,
       completed: false,
       dueDate: '2024-01-26',
       order: 6
     }
   ];
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'in-progress': return 'bg-blue-500';
-      case 'not-started': return 'bg-gray-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'completed': return 'Concluído';
-      case 'in-progress': return 'Em Andamento';
-      case 'not-started': return 'Não Iniciado';
-      default: return status || 'Status Indefinido';
-    }
-  };
-
-  const getStepIcon = (type) => {
+  const getStepIcon = (type: string) => {
     switch (type) {
       case 'document': return FileText;
       case 'training': return Play;
@@ -103,14 +264,15 @@ export const Onboarding = () => {
     }
   };
 
-  const openDetails = (process) => {
+  const openDetails = (process: any) => {
     setSelectedProcess(process);
     setDetailsOpen(true);
   };
 
   // Filtros seguros para evitar erros
-  const inProgressProcesses = safeProcesses.filter((p) => p?.status !== 'completed') || [];
-  const completedProcesses = safeProcesses.filter((p) => p?.status === 'completed') || [];
+  const safeProcesses = Array.isArray(processes) ? processes : [];
+  const inProgressProcesses = safeProcesses.filter((p) => p?.status !== 'completed');
+  const completedProcesses = safeProcesses.filter((p) => p?.status === 'completed');
   const completedCount = completedProcesses.length;
 
   if (isLoading) {
@@ -196,68 +358,96 @@ export const Onboarding = () => {
           </TabsList>
 
           <TabsContent value="active">
-            <div className="space-y-4">
-              {inProgressProcesses.map((process) => (
-                <Card key={process?.id || Math.random()}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">
-                          {process?.collaborator?.name || 'Nome não disponível'}
-                        </CardTitle>
-                        <CardDescription>
-                          {process?.position || 'Posição não definida'} • {process?.department || 'Departamento não definido'}
-                        </CardDescription>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Iniciado em {process?.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'Data não disponível'}
-                        </p>
-                      </div>
-                      <Badge className={getStatusColor(process?.status)}>
-                        {getStatusText(process?.status)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">Progresso</span>
-                        <span className="text-sm text-muted-foreground">{process?.progress || 0}%</span>
-                      </div>
-                      <Progress value={process?.progress || 0} className="h-2" />
-                    </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Processos de Onboarding Ativos</CardTitle>
+                <CardDescription>
+                  Acompanhe o progresso dos colaboradores em processo de integração
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {tableData.length > 0 ? (
+                  <div className="space-y-4">
+                    <Table>
+                      <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                          <TableRow key={headerGroup.id}>
+                            {headerGroup.headers.map((header) => (
+                              <TableHead key={header.id}>
+                                {header.isPlaceholder
+                                  ? null
+                                  : flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                              </TableHead>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableHeader>
+                      <TableBody>
+                        {table.getRowModel().rows?.length ? (
+                          table.getRowModel().rows.map((row) => (
+                            <TableRow
+                              key={row.id}
+                              data-state={row.getIsSelected() && "selected"}
+                            >
+                              {row.getVisibleCells().map((cell) => (
+                                <TableCell key={cell.id}>
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )}
+                                </TableCell>
+                              ))}
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={columns.length} className="h-24 text-center">
+                              <div className="text-center py-8">
+                                <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                <h3 className="text-lg font-medium mb-2">Nenhum processo ativo</h3>
+                                <p className="text-muted-foreground mb-4">Comece criando um novo onboarding</p>
+                                <NewOnboardingDialog />
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                     
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm">
-                          <strong>Etapa atual:</strong> {process?.current_step || 'Não definida'}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => openDetails(process)}>
-                          Ver Detalhes
+                    {table.getPageCount() > 1 && (
+                      <div className="flex items-center justify-end space-x-2 py-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => table.previousPage()}
+                          disabled={!table.getCanPreviousPage()}
+                        >
+                          Anterior
                         </Button>
-                        <Button size="sm" onClick={() => openDetails(process)}>
-                          Acompanhar
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => table.nextPage()}
+                          disabled={!table.getCanNextPage()}
+                        >
+                          Próximo
                         </Button>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {inProgressProcesses.length === 0 && (
-                <Card>
-                  <CardContent className="py-8">
-                    <div className="text-center">
-                      <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Nenhum processo ativo</h3>
-                      <p className="text-muted-foreground mb-4">Comece criando um novo onboarding</p>
-                      <NewOnboardingDialog />
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Nenhum processo ativo</h3>
+                    <p className="text-muted-foreground mb-4">Comece criando um novo onboarding</p>
+                    <NewOnboardingDialog />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="template">
@@ -312,51 +502,47 @@ export const Onboarding = () => {
           </TabsContent>
 
           <TabsContent value="completed">
-            <div className="space-y-4">
-              {completedProcesses.map((process) => (
-                <Card key={process?.id || Math.random()}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">
-                          {process?.collaborator?.name || 'Nome não disponível'}
-                        </CardTitle>
-                        <CardDescription>
-                          {process?.position || 'Posição não definida'} • {process?.department || 'Departamento não definido'}
-                        </CardDescription>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Concluído • Iniciado em {process?.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'Data não disponível'}
-                        </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Processos Concluídos</CardTitle>
+                <CardDescription>
+                  Histórico de onboardings finalizados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {completedProcesses.length > 0 ? (
+                  <div className="space-y-4">
+                    {completedProcesses.map((process) => (
+                      <div key={process?.id || Math.random()} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                          <h4 className="font-medium">
+                            {process?.collaborator?.name || 'Nome não disponível'}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {process?.position || 'Posição não definida'} • {process?.department || 'Departamento não definido'}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Concluído • Iniciado em {process?.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'Data não disponível'}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <Badge className="bg-green-500">Concluído</Badge>
+                          <Button variant="outline" size="sm" onClick={() => openDetails(process)}>
+                            Ver Relatório
+                          </Button>
+                        </div>
                       </div>
-                      <Badge className="bg-green-500">Concluído</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <Progress value={100} className="h-2 w-32" />
-                        <p className="text-sm text-muted-foreground mt-1">100% concluído</p>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={() => openDetails(process)}>
-                        Ver Relatório
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {completedProcesses.length === 0 && (
-                <Card>
-                  <CardContent className="py-8">
-                    <div className="text-center">
-                      <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Nenhum onboarding concluído</h3>
-                      <p className="text-muted-foreground">Os processos concluídos aparecerão aqui</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Nenhum onboarding concluído</h3>
+                    <p className="text-muted-foreground">Os processos concluídos aparecerão aqui</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
