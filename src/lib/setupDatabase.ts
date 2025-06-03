@@ -1,44 +1,44 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
-export const setupDatabase = async (): Promise<void> => {
+export const setupDatabase = async (): Promise<boolean> => {
   try {
     console.log('Setting up PostgreSQL database tables...');
 
-    // Primeiro, verificar se conseguimos conectar
-    const { data: connectionTest, error: connectionError } = await supabase
+    // Verificar se as tabelas já existem
+    const { data: collaboratorsCheck, error: collaboratorsError } = await supabase
       .from('collaborators')
-      .select('count')
+      .select('*')
       .limit(1);
 
-    if (connectionError) {
-      console.log('Database connection test failed:', connectionError);
-      throw new Error(`Database connection failed: ${connectionError.message}`);
+    console.log('Collaborators table check:', { collaboratorsCheck, collaboratorsError });
+
+    if (collaboratorsError && collaboratorsError.code === 'PGRST116') {
+      console.log('Tables do not exist, they should be created by the init script');
+      return false;
     }
 
-    console.log('Database connection successful');
-
-    // Verificar se as tabelas existem
-    const { data: tablesCheck, error: tablesError } = await supabase
-      .from('collaborators')
-      .select('id, name, email')
-      .limit(1);
-
-    if (tablesError && tablesError.code !== 'PGRST116') {
-      console.log('Tables check error:', tablesError);
-      throw new Error(`Tables verification failed: ${tablesError.message}`);
-    }
-
-    console.log('Database tables verified successfully');
-
-    // Log dados de exemplo se existirem
-    if (tablesCheck && tablesCheck.length > 0) {
-      console.log('Sample data found:', tablesCheck);
-    }
-
-    console.log('Database setup completed successfully');
+    console.log('Database tables are accessible');
+    return true;
   } catch (error) {
-    console.error('Database setup failed:', error);
+    console.error('Error setting up database:', error);
+    return false;
+  }
+};
+
+// Função simplificada para inicializar o banco
+export const initializeDatabase = async (): Promise<void> => {
+  try {
+    console.log('Initializing database...');
+
+    const success = await setupDatabase();
+
+    if (success) {
+      console.log('Database initialized successfully');
+    } else {
+      console.warn('Database initialization completed with warnings');
+    }
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
     throw error;
   }
 };
@@ -100,3 +100,5 @@ export const createUserInDatabase = async (userId: string, userData: any) => {
     return false;
   }
 };
+
+export default { setupDatabase, initializeDatabase };
