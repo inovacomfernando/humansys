@@ -1,54 +1,90 @@
-// Cliente PostgreSQL simples sem Supabase
-export interface DatabaseClient {
-  query: (sql: string, params?: any[]) => Promise<{ data: any[], error: any }>;
-}
 
-// Mock client para desenvolvimento sem dependências externas
-class MockDatabaseClient implements DatabaseClient {
-  private mockData = {
-    collaborators: [
-      {
-        id: "1",
-        user_id: "admin-001",
-        name: "Amanda Motta",
-        email: "amanda@vendasimples.com.br",
-        created_at: new Date().toISOString()
-      }
-    ]
-  };
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from './types';
 
-  async query(sql: string, params?: any[]): Promise<{ data: any[], error: any }> {
-    console.log('Mock Database Query:', sql, params);
+// Use environment variables for PostgreSQL connection
+const SUPABASE_URL = import.meta.env.VITE_DATABASE_URL || "postgresql://localhost:5432/postgres";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_DATABASE_ANON_KEY || "your-anon-key";
 
-    try {
-      // Simular queries básicas
-      if (sql.includes('SELECT') && sql.includes('collaborators')) {
-        return { data: this.mockData.collaborators, error: null };
-      }
+// Create singleton instance to avoid multiple connections
+let supabaseInstance: any = null;
 
-      return { data: [], error: null };
-    } catch (error) {
-      return { data: [], error };
+export const supabase = supabaseInstance || (supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'replit-hr-dashboard'
     }
+  },
+  db: {
+    schema: 'public'
   }
-}
+}));
 
-// Exportar cliente único
-export const dbClient = new MockDatabaseClient();
-
-// Função de verificação de conexão
-export const checkDatabaseConnection = async (): Promise<boolean> => {
+// Função auxiliar para verificar conectividade com PostgreSQL
+export const checkSupabaseConnection = async (): Promise<boolean> => {
   try {
-    const { error } = await dbClient.query('SELECT 1');
-    return !error;
-  } catch {
+    // Usar uma consulta mais simples e robusta
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.warn('Database session check failed:', sessionError.message);
+      return false;
+    }
+
+    // Se há sessão, fazer uma query básica para testar a conectividade
+    if (session) {
+      const { error } = await supabase
+        .from('collaborators')
+        .select('count')
+        .limit(0);
+
+      if (error) {
+        console.warn('Database table access test failed:', error.message);
+        // Erros de RLS/permissão ainda indicam conectividade
+        if (error.message.includes('JWT') || 
+            error.message.includes('auth') || 
+            error.message.includes('RLS') ||
+            error.message.includes('permission') ||
+            error.code === 'PGRST301') {
+          return true;
+        }
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Connection check failed:', error);
     return false;
   }
 };
 
-// Limpar cache (compatibilidade)
-export const clearSystemCache = () => {
-  console.log('Cache cleared');
+// Cache para melhorar performance
+export const queryCache = new Map();
+
+// Função para limpar cache
+export const clearQueryCache = () => {
+  queryCache.clear();
+  console.log('Query cache cleared');
 };
 
-export const queryCache = new Map();
+// Função para refresh completo do sistema
+export const refreshSystemData = async () => {
+  try {
+    clearQueryCache();
+    localStorage.removeItem('replit.auth.token');
+
+    // Recarregar a página para garantir estado limpo
+    window.location.reload();
+
+    return true;
+  } catch (error) {
+    console.error('System refresh failed:', error);
+    return false;
+  }
+};

@@ -19,19 +19,6 @@ mode = "sequential"
 task = "shell.exec"
 args = "npm run dev"
 
-[[workflows.workflow]]
-name = "Setup Database"
-author = 43334172
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "chmod +x scripts/setup-postgres.sh"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "./scripts/setup-postgres.sh"
-
 [[ports]]
 localPort = 8080
 externalPort = 80

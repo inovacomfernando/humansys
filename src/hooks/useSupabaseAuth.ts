@@ -1,130 +1,104 @@
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase, clearSystemCache } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useSupabaseAuth = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Refs para evitar loops
-  const initializingRef = useRef(false);
-  const mountedRef = useRef(true);
 
-  // Função para limpar estado
-  const clearAuthState = useCallback(() => {
-    if (!mountedRef.current) return;
-    
-    setUser(null);
-    setSession(null);
-    setError(null);
-    setIsLoading(false);
-  }, []);
+  // Detectar se é mobile
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  // Função para atualizar estado de autenticação
-  const updateAuthState = useCallback((currentSession: Session | null, error?: any) => {
-    if (!mountedRef.current) return;
-
-    if (error) {
-      console.error('Auth error:', error);
-      setError(error.message);
-      clearAuthState();
-      return;
-    }
-
-    if (currentSession && currentSession.user) {
-      console.log('User authenticated:', currentSession.user.id);
-      setUser(currentSession.user);
-      setSession(currentSession);
-      setError(null);
-    } else {
-      console.log('No authenticated user');
-      clearAuthState();
-    }
-    
-    setIsLoading(false);
-  }, [clearAuthState]);
-
-  // Inicializar autenticação
-  const initializeAuth = useCallback(async () => {
-    if (initializingRef.current || !mountedRef.current) return;
-    
-    initializingRef.current = true;
-    setIsLoading(true);
-
-    try {
-      console.log('Initializing authentication...');
-      
-      // Verificar sessão atual
-      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        throw error;
-      }
-
-      updateAuthState(currentSession);
-      
-    } catch (error: any) {
-      console.error('Failed to initialize auth:', error);
-      updateAuthState(null, error);
-    } finally {
-      initializingRef.current = false;
-    }
-  }, [updateAuthState]);
-
-  // Effect para inicialização e listener de mudanças
   useEffect(() => {
-    mountedRef.current = true;
-    
-    // Inicializar autenticação
-    initializeAuth();
+    let mounted = true;
+    let sessionCheckInterval: NodeJS.Timeout;
 
-    // Listener para mudanças de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        if (!mountedRef.current) return;
-
-        console.log('Auth state changed:', event, currentSession?.user?.id);
-
-        switch (event) {
-          case 'INITIAL_SESSION':
-          case 'SIGNED_IN':
-          case 'TOKEN_REFRESHED':
-            updateAuthState(currentSession);
-            break;
-            
-          case 'SIGNED_OUT':
-            clearAuthState();
-            clearSystemCache();
-            break;
-            
-          default:
-            // Para outros eventos, verificar se ainda há sessão válida
-            if (currentSession) {
-              updateAuthState(currentSession);
-            } else {
-              clearAuthState();
-            }
+    // Verificar sessão atual
+    const getSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        
+        if (mounted) {
+          // Verificar se a sessão não expirou
+          const isValidSession = session && session.expires_at && (session.expires_at * 1000) > Date.now();
+          setUser(isValidSession ? session.user : null);
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in getSession:', error);
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
         }
       }
-    );
-
-    // Cleanup
-    return () => {
-      mountedRef.current = false;
-      subscription.unsubscribe();
     };
-  }, [initializeAuth, updateAuthState, clearAuthState]);
 
-  // Função de cadastro
+    getSession();
+
+    // Escutar mudanças de autenticação
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
+      if (mounted) {
+        // Para logout, limpar tudo imediatamente
+        if (event === 'SIGNED_OUT' || !session) {
+          setUser(null);
+          setIsLoading(false);
+          setIsLoggingOut(false);
+          
+          // Limpar storage local
+          localStorage.clear();
+          sessionStorage.clear();
+          
+          return;
+        }
+
+        // Verificar se a sessão é válida
+        const isValidSession = session && session.expires_at && (session.expires_at * 1000) > Date.now();
+        setUser(isValidSession ? session.user : null);
+        setIsLoading(false);
+      }
+    });
+
+    // Verificação periódica de sessão para mobile (mais frequente)
+    if (isMobile) {
+      sessionCheckInterval = setInterval(async () => {
+        if (!mounted) return;
+        
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const isValidSession = session && session.expires_at && (session.expires_at * 1000) > Date.now();
+          
+          if (!isValidSession && user) {
+            console.log('Session expired, logging out...');
+            setUser(null);
+            localStorage.clear();
+            sessionStorage.clear();
+          }
+        } catch (error) {
+          console.error('Session check failed:', error);
+        }
+      }, 30000); // Check every 30 seconds on mobile
+    }
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+      }
+    };
+  }, [isMobile, user]);
+
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      setIsLoading(true);
-      setError(null);
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -135,76 +109,54 @@ export const useSupabaseAuth = () => {
           },
         },
       });
-
-      if (error) throw error;
-
-      console.log('User signed up successfully');
-      return { data, error: null };
-      
+      return { data, error };
     } catch (error: any) {
-      console.error('Signup error:', error);
-      setError(error.message);
       return { data: null, error };
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Função de login
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      setError(null);
-
-      console.log('Attempting to sign in user:', email);
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      if (error) throw error;
-
-      console.log('User signed in successfully');
-      return { data, error: null };
-      
+      return { data, error };
     } catch (error: any) {
-      console.error('Signin error:', error);
-      setError(error.message);
       return { data: null, error };
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Função de logout
   const signOut = async () => {
     try {
+      console.log('Starting logout process...');
       setIsLoggingOut(true);
       setIsLoading(true);
       
-      console.log('Signing out user...');
-
-      // Limpar estado local primeiro
-      clearAuthState();
-      clearSystemCache();
-
-      // Fazer logout no Supabase
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.warn('Logout warning:', error);
-        // Não tratar como erro crítico
-      }
-
-      console.log('User signed out successfully');
-      return { error: null };
+      // Limpar tudo ANTES do logout
+      localStorage.clear();
+      sessionStorage.clear();
       
+      // Limpar estado imediatamente
+      setUser(null);
+      
+      const { error } = await supabase.auth.signOut();
+      
+      // Timeout adicional para mobile
+      if (isMobile) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      return { error };
     } catch (error: any) {
       console.error('Logout error:', error);
       // Mesmo com erro, considerar logout bem-sucedido
-      clearAuthState();
-      clearSystemCache();
+      setUser(null);
+      localStorage.clear();
+      sessionStorage.clear();
       return { error: null };
     } finally {
       setIsLoggingOut(false);
@@ -214,10 +166,8 @@ export const useSupabaseAuth = () => {
 
   return {
     user,
-    session,
     isLoading: isLoading || isLoggingOut,
     isLoggingOut,
-    error,
     signUp,
     signIn,
     signOut,
