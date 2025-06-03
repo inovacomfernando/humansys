@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,8 +16,8 @@ export const Onboarding = () => {
   const [selectedProcess, setSelectedProcess] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  // Garantir que processes seja sempre um array
-  const safeProcesses = processes || [];
+  // Garantir que processes seja sempre um array válido
+  const safeProcesses = Array.isArray(processes) ? processes : [];
 
   // Mock data para o modelo de onboarding
   const defaultSteps = [
@@ -25,14 +26,16 @@ export const Onboarding = () => {
       title: 'Documentação Pessoal',
       description: 'Envio de documentos pessoais e contratuais',
       type: 'document',
-      completed: true
+      completed: true,
+      order: 1
     },
     {
       id: '2',
       title: 'Apresentação da Empresa',
       description: 'Conhecer a história, missão e valores da empresa',
       type: 'training',
-      completed: true
+      completed: true,
+      order: 2
     },
     {
       id: '3',
@@ -40,7 +43,8 @@ export const Onboarding = () => {
       description: 'Primeira reunião com o gestor direto',
       type: 'meeting',
       completed: true,
-      dueDate: '2024-01-23'
+      dueDate: '2024-01-23',
+      order: 3
     },
     {
       id: '4',
@@ -48,7 +52,8 @@ export const Onboarding = () => {
       description: 'Curso obrigatório sobre políticas de segurança',
       type: 'training',
       completed: false,
-      dueDate: '2024-01-25'
+      dueDate: '2024-01-25',
+      order: 4
     },
     {
       id: '5',
@@ -56,7 +61,8 @@ export const Onboarding = () => {
       description: 'Configuração de equipamentos e acessos',
       type: 'task',
       completed: false,
-      dueDate: '2024-01-24'
+      dueDate: '2024-01-24',
+      order: 5
     },
     {
       id: '6',
@@ -64,11 +70,12 @@ export const Onboarding = () => {
       description: 'Conhecer os colegas de trabalho',
       type: 'meeting',
       completed: false,
-      dueDate: '2024-01-26'
+      dueDate: '2024-01-26',
+      order: 6
     }
   ];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'bg-green-500';
       case 'in-progress': return 'bg-blue-500';
@@ -77,16 +84,16 @@ export const Onboarding = () => {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status) => {
     switch (status) {
       case 'completed': return 'Concluído';
       case 'in-progress': return 'Em Andamento';
       case 'not-started': return 'Não Iniciado';
-      default: return status;
+      default: return status || 'Status Indefinido';
     }
   };
 
-  const getStepIcon = (type: string) => {
+  const getStepIcon = (type) => {
     switch (type) {
       case 'document': return FileText;
       case 'training': return Play;
@@ -96,10 +103,15 @@ export const Onboarding = () => {
     }
   };
 
-  const openDetails = (process: any) => {
+  const openDetails = (process) => {
     setSelectedProcess(process);
     setDetailsOpen(true);
   };
+
+  // Filtros seguros para evitar erros
+  const inProgressProcesses = safeProcesses.filter((p) => p?.status !== 'completed') || [];
+  const completedProcesses = safeProcesses.filter((p) => p?.status === 'completed') || [];
+  const completedCount = completedProcesses.length;
 
   if (isLoading) {
     return (
@@ -114,7 +126,7 @@ export const Onboarding = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header simplificado - removido debug */}
+        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Onboarding</h1>
@@ -134,7 +146,7 @@ export const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {safeProcesses.filter((p) => p.status === 'in-progress').length}
+                {inProgressProcesses.length}
               </div>
             </CardContent>
           </Card>
@@ -146,7 +158,7 @@ export const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {safeProcesses.filter((p) => p.status === 'completed').length}
+                {completedCount}
               </div>
             </CardContent>
           </Card>
@@ -169,7 +181,7 @@ export const Onboarding = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {safeProcesses.length > 0 
-                  ? Math.round((safeProcesses.filter((p) => p.status === 'completed').length / safeProcesses.length) * 100)
+                  ? Math.round((completedCount / safeProcesses.length) * 100)
                   : 0}%
               </div>
             </CardContent>
@@ -185,21 +197,23 @@ export const Onboarding = () => {
 
           <TabsContent value="active">
             <div className="space-y-4">
-              {safeProcesses.filter((p) => p.status !== 'completed').map((process) => (
-                <Card key={process.id}>
+              {inProgressProcesses.map((process) => (
+                <Card key={process?.id || Math.random()}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-lg">{process.collaborator?.name || 'Nome não disponível'}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {process?.collaborator?.name || 'Nome não disponível'}
+                        </CardTitle>
                         <CardDescription>
-                          {process.position} • {process.department}
+                          {process?.position || 'Posição não definida'} • {process?.department || 'Departamento não definido'}
                         </CardDescription>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Iniciado em {new Date(process.start_date).toLocaleDateString('pt-BR')}
+                          Iniciado em {process?.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'Data não disponível'}
                         </p>
                       </div>
-                      <Badge className={getStatusColor(process.status)}>
-                        {getStatusText(process.status)}
+                      <Badge className={getStatusColor(process?.status)}>
+                        {getStatusText(process?.status)}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -207,15 +221,15 @@ export const Onboarding = () => {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium">Progresso</span>
-                        <span className="text-sm text-muted-foreground">{process.progress}%</span>
+                        <span className="text-sm text-muted-foreground">{process?.progress || 0}%</span>
                       </div>
-                      <Progress value={process.progress} className="h-2" />
+                      <Progress value={process?.progress || 0} className="h-2" />
                     </div>
                     
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-sm">
-                          <strong>Etapa atual:</strong> {process.current_step}
+                          <strong>Etapa atual:</strong> {process?.current_step || 'Não definida'}
                         </p>
                       </div>
                       <div className="flex space-x-2">
@@ -231,7 +245,7 @@ export const Onboarding = () => {
                 </Card>
               ))}
               
-              {safeProcesses.filter((p) => p.status !== 'completed').length === 0 && (
+              {inProgressProcesses.length === 0 && (
                 <Card>
                   <CardContent className="py-8">
                     <div className="text-center">
@@ -299,17 +313,19 @@ export const Onboarding = () => {
 
           <TabsContent value="completed">
             <div className="space-y-4">
-              {safeProcesses.filter((p) => p.status === 'completed').map((process) => (
-                <Card key={process.id}>
+              {completedProcesses.map((process) => (
+                <Card key={process?.id || Math.random()}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle className="text-lg">{process.collaborator?.name || 'Nome não disponível'}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {process?.collaborator?.name || 'Nome não disponível'}
+                        </CardTitle>
                         <CardDescription>
-                          {process.position} • {process.department}
+                          {process?.position || 'Posição não definida'} • {process?.department || 'Departamento não definido'}
                         </CardDescription>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Concluído • Iniciado em {new Date(process.start_date).toLocaleDateString('pt-BR')}
+                          Concluído • Iniciado em {process?.start_date ? new Date(process.start_date).toLocaleDateString('pt-BR') : 'Data não disponível'}
                         </p>
                       </div>
                       <Badge className="bg-green-500">Concluído</Badge>
@@ -329,7 +345,7 @@ export const Onboarding = () => {
                 </Card>
               ))}
               
-              {safeProcesses.filter((p) => p.status === 'completed').length === 0 && (
+              {completedProcesses.length === 0 && (
                 <Card>
                   <CardContent className="py-8">
                     <div className="text-center">
@@ -344,11 +360,13 @@ export const Onboarding = () => {
           </TabsContent>
         </Tabs>
 
-        <OnboardingDetails 
-          process={selectedProcess}
-          open={detailsOpen}
-          onOpenChange={setDetailsOpen}
-        />
+        {selectedProcess && (
+          <OnboardingDetails 
+            process={selectedProcess}
+            open={detailsOpen}
+            onOpenChange={setDetailsOpen}
+          />
+        )}
       </div>
     </DashboardLayout>
   );
