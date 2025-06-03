@@ -1,59 +1,102 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const setupDatabase = async (): Promise<void> => {
   try {
-    console.log('Setting up database tables...');
+    console.log('Setting up PostgreSQL database tables...');
 
-    // Just verify connection with a simple query
-    const { data, error } = await supabase
+    // Primeiro, verificar se conseguimos conectar
+    const { data: connectionTest, error: connectionError } = await supabase
       .from('collaborators')
       .select('count')
       .limit(1);
 
-    if (error && error.code !== 'PGRST116') {
-      console.log('Database connection test:', error);
-      // Try individual table creation if needed
-      await createTablesIndividually();
-    } else {
-      console.log('Database connection verified');
+    if (connectionError) {
+      console.log('Database connection test failed:', connectionError);
+      throw new Error(`Database connection failed: ${connectionError.message}`);
+    }
+
+    console.log('Database connection successful');
+
+    // Verificar se as tabelas existem
+    const { data: tablesCheck, error: tablesError } = await supabase
+      .from('collaborators')
+      .select('id, name, email')
+      .limit(1);
+
+    if (tablesError && tablesError.code !== 'PGRST116') {
+      console.log('Tables check error:', tablesError);
+      throw new Error(`Tables verification failed: ${tablesError.message}`);
+    }
+
+    console.log('Database tables verified successfully');
+
+    // Log dados de exemplo se existirem
+    if (tablesCheck && tablesCheck.length > 0) {
+      console.log('Sample data found:', tablesCheck);
     }
 
     console.log('Database setup completed successfully');
   } catch (error) {
     console.error('Database setup failed:', error);
-    // Don't throw error to prevent app from breaking
-    console.log('Continuing without database setup...');
+    throw error;
   }
 };
 
-const createTablesIndividually = async () => {
+// Função para verificar se o usuário existe
+export const checkUserExists = async (email: string): Promise<boolean> => {
   try {
-    console.log('Creating tables individually...');
-
-    // Test table access
-    const { error: testError } = await supabase
+    const { data, error } = await supabase
       .from('collaborators')
       .select('id')
-      .limit(1);
+      .eq('email', email)
+      .single();
 
-    if (testError && testError.code === 'PGRST116') {
-      console.log('Tables need to be created...');
-      // This will be handled by direct PostgreSQL commands
+    if (error && error.code !== 'PGRST116') {
+      console.log('User check error:', error);
+      return false;
     }
 
-    console.log('Individual table creation completed');
+    return !!data;
   } catch (error) {
-    console.log('Individual table creation failed:', error);
+    console.error('Failed to check user:', error);
+    return false;
   }
 };
 
-// Initialize database setup
-export const initializeDatabase = async () => {
+// Função para criar usuário no banco
+export const createUserInDatabase = async (userId: string, userData: any) => {
   try {
-    console.log('Initializing PostgreSQL database...');
-    await setupDatabase();
-    console.log('Database initialized successfully');
+    // Inserir ou atualizar perfil
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        name: userData.name || userData.full_name,
+        updated_at: new Date().toISOString()
+      });
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+    }
+
+    // Inserir créditos iniciais
+    const { error: creditsError } = await supabase
+      .from('user_credits')
+      .upsert({
+        user_id: userId,
+        credits: 100,
+        updated_at: new Date().toISOString()
+      });
+
+    if (creditsError) {
+      console.error('Credits creation error:', creditsError);
+    }
+
+    console.log('User created in database successfully');
+    return true;
   } catch (error) {
-    console.error('Database initialization failed:', error);
+    console.error('Failed to create user in database:', error);
+    return false;
   }
 };

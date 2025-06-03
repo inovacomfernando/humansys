@@ -2,61 +2,80 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// For local development, use the existing Neon database
-const SUPABASE_URL = "https://ep-holy-fire-a6jhjo8y.us-west-2.aws.neon.tech";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwLWhvbHktZmlyZS1hNmpqamhvOHkiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNjg3NDM5MSwiZXhwIjoyMDUyNDUwMzkxfQ.ZjY2ZjZjNjZkNmQ2ZDZkNmQ2ZDZkNmQ2ZDZkNmQ2ZA";
+// Configuração para PostgreSQL local no Replit
+const POSTGRES_URL = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/humansys";
 
-// Create singleton instance to avoid multiple connections
-let supabaseInstance: any = null;
+// Para desenvolvimento local, vamos usar uma configuração simples
+const SUPABASE_URL = "http://localhost:54321"; // Supabase local studio
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsaG9zdCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNjQwOTk1MjAwLCJleHAiOjE5NTY1NzEyMDB9.A7CzTYD6fAXhLgFv_aeIaq-w8TnqaKyYqFPSd09a9y0";
 
-export const supabase = supabaseInstance || (supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'replit-hr-dashboard'
-    }
-  },
-  db: {
-    schema: 'public'
+// Singleton instance para evitar múltiplas conexões
+let supabaseInstance: ReturnType<typeof createClient<Database>> | null = null;
+
+const createSupabaseClient = () => {
+  if (supabaseInstance) {
+    return supabaseInstance;
   }
-}));
 
-// Função auxiliar para verificar conectividade com PostgreSQL
+  supabaseInstance = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false, // Desabilitar para evitar conflitos
+      storageKey: 'humansys-auth-token',
+      storage: {
+        getItem: (key: string) => {
+          try {
+            return localStorage.getItem(key);
+          } catch {
+            return null;
+          }
+        },
+        setItem: (key: string, value: string) => {
+          try {
+            localStorage.setItem(key, value);
+          } catch {
+            // Ignorar erros de storage
+          }
+        },
+        removeItem: (key: string) => {
+          try {
+            localStorage.removeItem(key);
+          } catch {
+            // Ignorar erros de storage
+          }
+        }
+      }
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'humansys-dashboard'
+      }
+    },
+    db: {
+      schema: 'public'
+    }
+  });
+
+  return supabaseInstance;
+};
+
+export const supabase = createSupabaseClient();
+
+// Função para verificar conectividade com PostgreSQL
 export const checkSupabaseConnection = async (): Promise<boolean> => {
   try {
-    // Usar uma consulta mais simples e robusta
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.warn('Database session check failed:', sessionError.message);
+    const { data, error } = await supabase
+      .from('collaborators')
+      .select('id')
+      .limit(1);
+
+    if (error) {
+      console.warn('Database connection test failed:', error.message);
       return false;
     }
 
-    // Se há sessão, fazer uma query básica para testar a conectividade
-    if (session) {
-      const { error } = await supabase
-        .from('collaborators')
-        .select('count')
-        .limit(0);
-
-      if (error) {
-        console.warn('Database table access test failed:', error.message);
-        // Erros de RLS/permissão ainda indicam conectividade
-        if (error.message.includes('JWT') || 
-            error.message.includes('auth') || 
-            error.message.includes('RLS') ||
-            error.message.includes('permission') ||
-            error.code === 'PGRST301') {
-          return true;
-        }
-        return false;
-      }
-    }
-
+    console.log('Database connection successful');
     return true;
   } catch (error) {
     console.error('Connection check failed:', error);
@@ -64,7 +83,7 @@ export const checkSupabaseConnection = async (): Promise<boolean> => {
   }
 };
 
-// Cache para melhorar performance
+// Cache para queries
 export const queryCache = new Map();
 
 // Função para limpar cache
@@ -73,18 +92,41 @@ export const clearQueryCache = () => {
   console.log('Query cache cleared');
 };
 
-// Função para refresh completo do sistema
-export const refreshSystemData = async () => {
+// Função para limpar completamente o sistema
+export const clearSystemCache = () => {
   try {
+    // Limpar localStorage
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+        key.includes('supabase') || 
+        key.includes('auth') || 
+        key.includes('humansys')
+      )) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Limpar sessionStorage
+    sessionStorage.clear();
+    
+    // Limpar query cache
     clearQueryCache();
-    localStorage.removeItem('replit.auth.token');
-
-    // Recarregar a página para garantir estado limpo
-    window.location.reload();
-
+    
+    console.log('System cache cleared completely');
     return true;
   } catch (error) {
-    console.error('System refresh failed:', error);
+    console.error('Failed to clear system cache:', error);
     return false;
   }
+};
+
+// Função para resetar cliente Supabase
+export const resetSupabaseClient = () => {
+  supabaseInstance = null;
+  clearSystemCache();
+  return createSupabaseClient();
 };

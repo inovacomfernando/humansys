@@ -1,204 +1,208 @@
 
--- Initialize PostgreSQL database for HR Dashboard
+-- Habilitar extensões necessárias
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Create user_credits table
-CREATE TABLE IF NOT EXISTS user_credits (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL,
-  plan_type TEXT CHECK (plan_type IN ('trial', 'inicial', 'crescimento', 'profissional')) DEFAULT 'trial',
-  total_credits INTEGER DEFAULT 999999,
-  used_credits INTEGER DEFAULT 0,
-  remaining_credits INTEGER DEFAULT 999999,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id)
-);
-
--- Create credit_transactions table
-CREATE TABLE IF NOT EXISTS credit_transactions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL,
-  type TEXT CHECK (type IN ('used', 'added', 'reset')) NOT NULL,
-  amount INTEGER NOT NULL,
-  description TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create collaborators table
-CREATE TABLE IF NOT EXISTS collaborators (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID,
-  name TEXT NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  role TEXT DEFAULT 'user',
-  department TEXT,
-  position TEXT,
-  start_date DATE,
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'pending')),
-  avatar_url TEXT,
-  phone TEXT,
-  address TEXT,
-  birth_date DATE,
-  emergency_contact TEXT,
-  emergency_phone TEXT,
-  salary DECIMAL(10,2),
-  benefits TEXT[],
-  notes TEXT,
-  skills TEXT[],
-  certifications TEXT[],
-  performance_score INTEGER DEFAULT 0,
-  last_review_date DATE,
-  manager_id UUID REFERENCES collaborators(id),
-  password_hash TEXT,
-  created_by UUID,
-  invited_at TIMESTAMP WITH TIME ZONE,
-  activated_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create organization_users table
-CREATE TABLE IF NOT EXISTS organization_users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL,
-  admin_user_id UUID NOT NULL,
-  role TEXT CHECK (role IN ('admin', 'user')) DEFAULT 'user',
-  status TEXT CHECK (status IN ('active', 'inactive')) DEFAULT 'active',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, admin_user_id)
-);
-
--- Create business_metrics table
-CREATE TABLE IF NOT EXISTS business_metrics (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  company_id UUID NOT NULL,
-  mrr DECIMAL(12,2) DEFAULT 0,
-  arr DECIMAL(12,2) DEFAULT 0,
-  new_mrr DECIMAL(12,2) DEFAULT 0,
-  expansion_mrr DECIMAL(12,2) DEFAULT 0,
-  churned_mrr DECIMAL(12,2) DEFAULT 0,
-  ltv DECIMAL(12,2) DEFAULT 0,
-  cac DECIMAL(12,2) DEFAULT 0,
-  churn_rate DECIMAL(5,2) DEFAULT 0,
-  nrr DECIMAL(5,2) DEFAULT 0,
-  burn_rate DECIMAL(12,2) DEFAULT 0,
-  runway INTEGER DEFAULT 0,
-  activation_rate DECIMAL(5,2) DEFAULT 0,
-  trial_to_paid DECIMAL(5,2) DEFAULT 0,
-  payback_period INTEGER DEFAULT 0,
-  dau_mau DECIMAL(5,2) DEFAULT 0,
-  support_tickets DECIMAL(5,2) DEFAULT 0,
-  gross_margin DECIMAL(5,2) DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create founder_gamification table
-CREATE TABLE IF NOT EXISTS founder_gamification (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  founder_id UUID NOT NULL,
-  level INTEGER DEFAULT 1,
-  xp INTEGER DEFAULT 0,
-  next_level_xp INTEGER DEFAULT 1000,
-  badges TEXT[] DEFAULT '{}',
-  achievements JSONB DEFAULT '[]',
-  leaderboard_position INTEGER DEFAULT 0,
-  total_founders INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create security tables
-CREATE TABLE IF NOT EXISTS security_logs (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  event_type TEXT NOT NULL,
-  user_id UUID,
-  ip_address TEXT NOT NULL,
-  user_agent TEXT NOT NULL,
-  details JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS security_alerts (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  alert_type TEXT NOT NULL,
-  severity TEXT NOT NULL CHECK (severity IN ('low', 'medium', 'high', 'critical')),
-  message TEXT NOT NULL,
-  user_id UUID,
-  ip_address TEXT,
-  resolved BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  resolved_at TIMESTAMP WITH TIME ZONE
-);
-
-CREATE TABLE IF NOT EXISTS blocked_ips (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  ip_address TEXT UNIQUE NOT NULL,
-  reason TEXT NOT NULL,
-  blocked_by UUID,
-  blocked_until TIMESTAMP WITH TIME ZONE,
-  permanent BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create update function
+-- Criar função para atualizar timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = NOW();
+    NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ language 'plpgsql';
 
--- Create triggers
-DROP TRIGGER IF EXISTS update_user_credits_updated_at ON user_credits;
-CREATE TRIGGER update_user_credits_updated_at 
-  BEFORE UPDATE ON user_credits 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Tabela de usuários (autenticação)
+CREATE TABLE IF NOT EXISTS auth_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    encrypted_password VARCHAR(255) NOT NULL,
+    email_confirmed_at TIMESTAMP WITH TIME ZONE,
+    invited_at TIMESTAMP WITH TIME ZONE,
+    confirmation_token VARCHAR(255),
+    confirmation_sent_at TIMESTAMP WITH TIME ZONE,
+    recovery_token VARCHAR(255),
+    recovery_sent_at TIMESTAMP WITH TIME ZONE,
+    email_change_token_new VARCHAR(255),
+    email_change VARCHAR(255),
+    email_change_sent_at TIMESTAMP WITH TIME ZONE,
+    last_sign_in_at TIMESTAMP WITH TIME ZONE,
+    raw_app_meta_data JSONB,
+    raw_user_meta_data JSONB,
+    is_super_admin BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    phone VARCHAR(15),
+    phone_confirmed_at TIMESTAMP WITH TIME ZONE,
+    phone_change VARCHAR(15),
+    phone_change_token VARCHAR(255),
+    phone_change_sent_at TIMESTAMP WITH TIME ZONE,
+    confirmed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    email_change_token_current VARCHAR(255) DEFAULT '',
+    email_change_confirm_status SMALLINT DEFAULT 0,
+    banned_until TIMESTAMP WITH TIME ZONE,
+    reauthentication_token VARCHAR(255),
+    reauthentication_sent_at TIMESTAMP WITH TIME ZONE
+);
 
-DROP TRIGGER IF EXISTS update_collaborators_updated_at ON collaborators;
-CREATE TRIGGER update_collaborators_updated_at 
-  BEFORE UPDATE ON collaborators 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Tabela de perfis
+CREATE TABLE IF NOT EXISTS profiles (
+    id UUID PRIMARY KEY REFERENCES auth_users(id) ON DELETE CASCADE,
+    name VARCHAR(255),
+    avatar_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
-DROP TRIGGER IF EXISTS update_organization_users_updated_at ON organization_users;
-CREATE TRIGGER update_organization_users_updated_at 
-  BEFORE UPDATE ON organization_users 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Tabela de colaboradores
+CREATE TABLE IF NOT EXISTS collaborators (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth_users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    position VARCHAR(255),
+    department VARCHAR(255),
+    hire_date DATE,
+    salary DECIMAL(10, 2),
+    status VARCHAR(50) DEFAULT 'active',
+    phone VARCHAR(20),
+    address TEXT,
+    emergency_contact JSONB,
+    skills JSONB DEFAULT '[]',
+    certifications JSONB DEFAULT '[]',
+    performance_score DECIMAL(3, 2) DEFAULT 0.0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
-DROP TRIGGER IF EXISTS update_business_metrics_updated_at ON business_metrics;
-CREATE TRIGGER update_business_metrics_updated_at 
-  BEFORE UPDATE ON business_metrics 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Tabela de organizações
+CREATE TABLE IF NOT EXISTS organizations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    owner_id UUID REFERENCES auth_users(id) ON DELETE CASCADE,
+    settings JSONB DEFAULT '{}',
+    subscription_tier VARCHAR(50) DEFAULT 'free',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
-DROP TRIGGER IF EXISTS update_founder_gamification_updated_at ON founder_gamification;
-CREATE TRIGGER update_founder_gamification_updated_at 
-  BEFORE UPDATE ON founder_gamification 
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Tabela de usuários da organização
+CREATE TABLE IF NOT EXISTS organization_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth_users(id) ON DELETE CASCADE,
+    role VARCHAR(50) DEFAULT 'member',
+    permissions JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(organization_id, user_id)
+);
 
--- Create indexes
-CREATE INDEX IF NOT EXISTS idx_user_credits_user_id ON user_credits(user_id);
-CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_id ON credit_transactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_credit_transactions_created_at ON credit_transactions(created_at);
+-- Tabela de créditos do usuário
+CREATE TABLE IF NOT EXISTS user_credits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth_users(id) ON DELETE CASCADE,
+    credits INTEGER DEFAULT 100,
+    last_reset_date DATE DEFAULT CURRENT_DATE,
+    total_used INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
+);
+
+-- Tabela de métricas de negócio
+CREATE TABLE IF NOT EXISTS business_metrics (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    metric_type VARCHAR(100) NOT NULL,
+    value DECIMAL(15, 2) NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de gamificação do fundador
+CREATE TABLE IF NOT EXISTS founder_gamification (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth_users(id) ON DELETE CASCADE,
+    points INTEGER DEFAULT 0,
+    level INTEGER DEFAULT 1,
+    badges JSONB DEFAULT '[]',
+    achievements JSONB DEFAULT '[]',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
+);
+
+-- Triggers para atualizar timestamps
+CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_collaborators_updated_at BEFORE UPDATE ON collaborators FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_organization_users_updated_at BEFORE UPDATE ON organization_users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_user_credits_updated_at BEFORE UPDATE ON user_credits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_business_metrics_updated_at BEFORE UPDATE ON business_metrics FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_founder_gamification_updated_at BEFORE UPDATE ON founder_gamification FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id);
-CREATE INDEX IF NOT EXISTS idx_collaborators_status ON collaborators(status);
 CREATE INDEX IF NOT EXISTS idx_collaborators_email ON collaborators(email);
+CREATE INDEX IF NOT EXISTS idx_collaborators_status ON collaborators(status);
+CREATE INDEX IF NOT EXISTS idx_organization_users_org_id ON organization_users(organization_id);
 CREATE INDEX IF NOT EXISTS idx_organization_users_user_id ON organization_users(user_id);
-CREATE INDEX IF NOT EXISTS idx_organization_users_admin_user_id ON organization_users(admin_user_id);
-CREATE INDEX IF NOT EXISTS idx_business_metrics_company_id ON business_metrics(company_id);
-CREATE INDEX IF NOT EXISTS idx_founder_gamification_founder_id ON founder_gamification(founder_id);
-CREATE INDEX IF NOT EXISTS idx_security_logs_created_at ON security_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_security_logs_event_type ON security_logs(event_type);
-CREATE INDEX IF NOT EXISTS idx_security_logs_ip_address ON security_logs(ip_address);
-CREATE INDEX IF NOT EXISTS idx_security_logs_user_id ON security_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_security_alerts_created_at ON security_alerts(created_at);
-CREATE INDEX IF NOT EXISTS idx_security_alerts_severity ON security_alerts(severity);
-CREATE INDEX IF NOT EXISTS idx_security_alerts_resolved ON security_alerts(resolved);
-CREATE INDEX IF NOT EXISTS idx_blocked_ips_ip_address ON blocked_ips(ip_address);
-CREATE INDEX IF NOT EXISTS idx_blocked_ips_blocked_until ON blocked_ips(blocked_until);
+CREATE INDEX IF NOT EXISTS idx_user_credits_user_id ON user_credits(user_id);
+CREATE INDEX IF NOT EXISTS idx_business_metrics_org_id ON business_metrics(organization_id);
+CREATE INDEX IF NOT EXISTS idx_business_metrics_type ON business_metrics(metric_type);
+CREATE INDEX IF NOT EXISTS idx_founder_gamification_user_id ON founder_gamification(user_id);
 
--- Insert sample data for testing
-INSERT INTO collaborators (name, email, role, department, position, status, user_id) VALUES
-('Admin User', 'admin@example.com', 'admin', 'Administração', 'Administrador', 'active', gen_random_uuid())
-ON CONFLICT (email) DO NOTHING;
+-- Inserir usuário padrão para desenvolvimento
+INSERT INTO auth_users (
+    id,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    confirmed_at,
+    raw_user_meta_data
+) VALUES (
+    '5b43d42f-f5e1-46bf-9a95-e6de48163a81',
+    'admin@humansys.com',
+    crypt('admin123', gen_salt('bf')),
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    '{"name": "Admin", "full_name": "Administrador do Sistema"}'::jsonb
+) ON CONFLICT (email) DO NOTHING;
+
+-- Inserir perfil do usuário padrão
+INSERT INTO profiles (id, name) VALUES (
+    '5b43d42f-f5e1-46bf-9a95-e6de48163a81',
+    'Administrador do Sistema'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Inserir créditos iniciais
+INSERT INTO user_credits (user_id, credits) VALUES (
+    '5b43d42f-f5e1-46bf-9a95-e6de48163a81',
+    1000
+) ON CONFLICT (user_id) DO NOTHING;
+
+-- Inserir colaborador de exemplo
+INSERT INTO collaborators (
+    id,
+    user_id,
+    name,
+    email,
+    position,
+    department,
+    hire_date
+) VALUES (
+    '0965ad80-73c7-4fc4-8fe0-c5302926cb57',
+    '5b43d42f-f5e1-46bf-9a95-e6de48163a81',
+    'Amanda Motta',
+    'amanda@vendasimples.com.br',
+    'Desenvolvedora',
+    'Tecnologia',
+    CURRENT_DATE
+) ON CONFLICT (email) DO NOTHING;
+
+COMMIT;

@@ -1,13 +1,13 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
-import { setupDatabase } from './lib/setupDatabase';
 
-// Clear any problematic cache entries on startup
-const clearProblematicCache = () => {
+// Limpar cache corrompido na inicialização
+const clearCorruptedCache = () => {
   try {
-    // Remove any corrupted auth tokens
+    // Remover tokens corrompidos
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
       if (key.includes('supabase.auth') && key.includes('undefined')) {
@@ -16,7 +16,7 @@ const clearProblematicCache = () => {
       }
     });
 
-    // Clear any old cache that might be causing issues
+    // Limpar cache antigo
     keys.forEach(key => {
       if (key.includes('cache') && key.includes('null')) {
         localStorage.removeItem(key);
@@ -28,16 +28,11 @@ const clearProblematicCache = () => {
   }
 };
 
-// Clean up on startup
-clearProblematicCache();
+// Executar limpeza
+clearCorruptedCache();
 
-// Initialize database on app start with better error handling
-setupDatabase()
-  .then(() => console.log('Database initialized successfully'))
-  .catch(error => {
-    console.error('Database initialization failed:', error);
-    // Don't prevent app from starting
-  });
+console.log('🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
+console.log('Sistema em modo de desenvolvimento', 'color: blue; font-size: 12px;');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
