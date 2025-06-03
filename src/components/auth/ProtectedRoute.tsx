@@ -23,32 +23,40 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   useEffect(() => {
     const validateAccess = async () => {
-      // If auth is not required, allow access
+      console.log('🔍 Validando acesso...', { requireAuth, user: user?.email });
+
+      // Se autenticação não é necessária, permitir acesso
       if (!requireAuth) {
+        console.log('✅ Acesso liberado (sem auth necessária)');
         setIsValidating(false);
         return;
       }
 
-      // If no user, redirect to login
+      // Se não há usuário, redirecionar para login
       if (!user) {
+        console.log('❌ Usuário não encontrado, redirecionando para login');
         navigate('/login', { replace: true });
         return;
       }
 
-      // Check session validity
       try {
+        // Verificar validade da sessão
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (error || !session || !session.expires_at || (session.expires_at * 1000) <= Date.now()) {
-          console.log('Invalid session, redirecting to login');
+        if (error || !session) {
+          console.log('❌ Sessão inválida, redirecionando para login');
           localStorage.clear();
           sessionStorage.clear();
           navigate('/login', { replace: true });
           return;
         }
 
-        // Check role if required
+        console.log('✅ Sessão válida para:', session.user.email);
+
+        // Verificar role se necessário
         if (requiredRole) {
+          console.log('🔍 Verificando role:', requiredRole);
+          
           const { data: roleData } = await supabase
             .from('user_roles')
             .select('role')
@@ -57,37 +65,43 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
             .maybeSingle();
           
           if (!roleData) {
-            navigate('/dashboard', { replace: true });
+            console.log('❌ Role insuficiente, redirecionando para dashboard');
+            navigate('/app/dashboard', { replace: true });
             return;
           }
           
+          console.log('✅ Role validada:', requiredRole);
           setHasRequiredRole(true);
         }
 
+        console.log('✅ Acesso autorizado');
         setIsValidating(false);
       } catch (error) {
-        console.error('Access validation error:', error);
+        console.error('❌ Erro na validação de acesso:', error);
         navigate('/login', { replace: true });
       }
     };
 
+    // Só validar quando não estiver carregando auth
     if (!isLoading) {
       validateAccess();
     }
   }, [user, isLoading, requireAuth, requiredRole, navigate]);
 
-  // Show loading while validating
+  // Mostrar loading enquanto valida
   if (isLoading || isValidating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Validando acesso...</p>
+          <p className="text-muted-foreground">
+            {isLoading ? 'Carregando...' : 'Validando acesso...'}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Render children if all validations pass
+  // Renderizar filhos se todas as validações passaram
   return <>{children}</>;
 };
