@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,23 +38,25 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   useEffect(() => {
     if (process?.id && open) {
       loadSteps();
+    } else {
+      setSteps([]);
     }
   }, [process?.id, open]);
 
   const loadSteps = async () => {
-    if (!process?.id) return;
-    
+    if (!process?.id) {
+      setSteps([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const processSteps = await getProcessSteps(process.id);
-      setSteps(processSteps);
+      setSteps(Array.isArray(processSteps) ? processSteps : []);
     } catch (error) {
       console.error('Erro ao carregar etapas:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as etapas do onboarding.",
-        variant: "destructive"
-      });
+      setSteps([]);
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +66,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     try {
       await updateStepStatus(stepId, !currentCompleted, process.id);
       await loadSteps();
-      
+
       // Gamificação: Award bonus points for completing a step
       if (!currentCompleted) {
         awardBonusPoints(50, 'Etapa concluída');
@@ -74,7 +75,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
           description: "+50 pontos de gamificação",
         });
       }
-      
+
       // Atualizar dados de gamificação
       setTimeout(refetchGamification, 100);
     } catch (error) {
@@ -140,7 +141,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
               )}
             </DialogDescription>
           </DialogHeader>
-          
+
           <Tabs defaultValue="progress" className="h-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="progress">
@@ -154,7 +155,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
               <TabsTrigger value="steps">Etapas Interativas</TabsTrigger>
               <TabsTrigger value="feedback">Feedback & Vídeos</TabsTrigger>
             </TabsList>
-            
+
             <div className="overflow-auto max-h-[calc(95vh-280px)]">
               <TabsContent value="progress" className="space-y-6 mt-6">
                 {progress && (
@@ -183,20 +184,20 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
                     <Video className="h-5 w-5" />
                     <span>Vídeos de Onboarding</span>
                   </h3>
-                  
+
                   <div className="grid gap-4">
                     <VideoPlayer
                       url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                       title="Bem-vindo à Empresa"
                       onComplete={() => handleVideoComplete('Bem-vindo à Empresa')}
                     />
-                    
+
                     <VideoPlayer
                       url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                       title="Cultura e Valores"
                       onComplete={() => handleVideoComplete('Cultura e Valores')}
                     />
-                    
+
                     <VideoPlayer
                       url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                       title="Políticas de Segurança"
@@ -211,7 +212,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
                     <MessageSquare className="h-5 w-5" />
                     <span>Feedback em Tempo Real</span>
                   </h3>
-                  
+
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
                       <h4 className="font-medium text-green-800 mb-2">Pontos Fortes</h4>
@@ -224,7 +225,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
                         }
                       </p>
                     </div>
-                    
+
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
                       <h4 className="font-medium text-blue-800 mb-2">Próximos Passos</h4>
                       <p className="text-sm text-blue-700">

@@ -1,252 +1,261 @@
+
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface OnboardingProcess {
   id: string;
   collaborator_id: string;
-  position: string;
-  department: string;
-  start_date: string;
-  progress: number;
-  status: 'not-started' | 'in-progress' | 'completed';
-  current_step: string;
   collaborator?: {
+    id: string;
     name: string;
     email: string;
-    role?: string;
-    department?: string;
   };
+  status: 'not-started' | 'in-progress' | 'completed';
+  progress: number;
+  current_step: string;
+  start_date: string;
+  position: string;
+  department: string;
 }
 
 export interface OnboardingStep {
   id: string;
-  onboarding_process_id: string;
+  process_id: string;
   title: string;
-  completed: boolean;
-  step_order: number;
+  description: string;
+  type: 'document' | 'training' | 'meeting' | 'task';
+  status: 'pending' | 'in-progress' | 'completed';
+  due_date?: string;
+  completed_at?: string;
+  order: number;
 }
 
-export interface Collaborator {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department: string;
-  status: string;
-}
+// Dados mock para desenvolvimento
+const mockProcesses: OnboardingProcess[] = [
+  {
+    id: '1',
+    collaborator_id: '101',
+    collaborator: {
+      id: '101',
+      name: 'Ana Silva',
+      email: 'ana.silva@empresa.com'
+    },
+    status: 'in-progress',
+    progress: 65,
+    current_step: 'Treinamento de Segurança',
+    start_date: '2024-01-20',
+    position: 'Desenvolvedora Frontend',
+    department: 'Tecnologia'
+  },
+  {
+    id: '2',
+    collaborator_id: '102',
+    collaborator: {
+      id: '102',
+      name: 'Carlos Santos',
+      email: 'carlos.santos@empresa.com'
+    },
+    status: 'in-progress',
+    progress: 30,
+    current_step: 'Reunião com Gestor',
+    start_date: '2024-01-22',
+    position: 'Analista de Marketing',
+    department: 'Marketing'
+  },
+  {
+    id: '3',
+    collaborator_id: '103',
+    collaborator: {
+      id: '103',
+      name: 'Maria Oliveira',
+      email: 'maria.oliveira@empresa.com'
+    },
+    status: 'completed',
+    progress: 100,
+    current_step: 'Concluído',
+    start_date: '2024-01-15',
+    position: 'Gerente de Vendas',
+    department: 'Comercial'
+  }
+];
+
+const mockSteps: Record<string, OnboardingStep[]> = {
+  '1': [
+    {
+      id: 'step1-1',
+      process_id: '1',
+      title: 'Documentação Pessoal',
+      description: 'Envio de documentos pessoais e contratuais',
+      type: 'document',
+      status: 'completed',
+      order: 1,
+      completed_at: '2024-01-21'
+    },
+    {
+      id: 'step1-2',
+      process_id: '1',
+      title: 'Apresentação da Empresa',
+      description: 'Conhecer a história, missão e valores',
+      type: 'training',
+      status: 'completed',
+      order: 2,
+      completed_at: '2024-01-22'
+    },
+    {
+      id: 'step1-3',
+      process_id: '1',
+      title: 'Treinamento de Segurança',
+      description: 'Curso obrigatório sobre políticas de segurança',
+      type: 'training',
+      status: 'in-progress',
+      order: 3,
+      due_date: '2024-01-25'
+    },
+    {
+      id: 'step1-4',
+      process_id: '1',
+      title: 'Setup do Ambiente',
+      description: 'Configuração de equipamentos e acessos',
+      type: 'task',
+      status: 'pending',
+      order: 4,
+      due_date: '2024-01-26'
+    }
+  ],
+  '2': [
+    {
+      id: 'step2-1',
+      process_id: '2',
+      title: 'Documentação Pessoal',
+      description: 'Envio de documentos pessoais e contratuais',
+      type: 'document',
+      status: 'completed',
+      order: 1,
+      completed_at: '2024-01-23'
+    },
+    {
+      id: 'step2-2',
+      process_id: '2',
+      title: 'Reunião com Gestor',
+      description: 'Primeira reunião com o gestor direto',
+      type: 'meeting',
+      status: 'in-progress',
+      order: 2,
+      due_date: '2024-01-24'
+    }
+  ],
+  '3': [
+    {
+      id: 'step3-1',
+      process_id: '3',
+      title: 'Processo Completo',
+      description: 'Todas as etapas foram concluídas',
+      type: 'task',
+      status: 'completed',
+      order: 1,
+      completed_at: '2024-01-18'
+    }
+  ]
+};
 
 export const useOnboarding = () => {
   const [processes, setProcesses] = useState<OnboardingProcess[]>([]);
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { executeQuery } = useSupabaseQuery();
-
-  const fetchCollaborators = async () => {
-    if (!user?.id) return;
-
-    const result = await executeQuery<Collaborator[]>(
-      () => supabase
-        .from('collaborators')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('name'),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
-
-    if (result && Array.isArray(result)) {
-      setCollaborators(result as Collaborator[]);
-    }
-  };
-
-  const fetchProcesses = async () => {
-    if (!user?.id) {
-      setProcesses([]);
-      setIsLoading(false);
-      setError(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    const result = await executeQuery<OnboardingProcess[]>(
-      () => supabase
-        .from('onboarding_processes')
-        .select(`
-          *,
-          collaborator:collaborators(name, email, role, department)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false }),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
-
-    if (result && Array.isArray(result)) {
-      const formattedData: OnboardingProcess[] = result.map((item: any) => ({
-        ...item,
-        status: item.status as 'not-started' | 'in-progress' | 'completed',
-      }));
-      
-      setProcesses(formattedData);
-      setError(null);
-    } else {
-      setProcesses([]);
-      setError('Falha ao carregar processos de onboarding');
-    }
-
-    setIsLoading(false);
-  };
 
   useEffect(() => {
-    if (user?.id) {
-      fetchCollaborators();
-      fetchProcesses();
-    }
-  }, [user?.id]);
+    loadProcesses();
+  }, []);
 
-  const createProcess = async (processData: {
-    collaborator_id: string;
-    position: string;
-    department: string;
-    start_date: string;
-  }) => {
-    if (!user?.id) return;
-
-    const dataToInsert = {
-      ...processData,
-      user_id: user.id,
-    };
-
-    const result = await executeQuery(
-      () => supabase
-        .from('onboarding_processes')
-        .insert([dataToInsert])
-        .select(`
-          *,
-          collaborator:collaborators(name, email, role, department)
-        `)
-        .single(),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
-
-    if (result) {
-      const typedResult = result as any;
+  const loadProcesses = async () => {
+    try {
+      setIsLoading(true);
+      console.log('Carregando processos de onboarding...');
       
-      // Criar etapas padrão
-      const defaultSteps = [
-        'Documentação Pessoal',
-        'Apresentação da Empresa', 
-        'Reunião com Gestor',
-        'Treinamento de Segurança',
-        'Setup do Ambiente',
-        'Integração com a Equipe'
-      ];
+      // Simular delay de carregamento
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      const stepsData = defaultSteps.map((title, index) => ({
-        onboarding_process_id: typedResult.id,
-        title,
-        step_order: index + 1,
-        completed: false
-      }));
-
-      await executeQuery(
-        () => supabase.from('onboarding_steps').insert(stepsData),
-        { maxRetries: 1, requireAuth: true, timeout: 5000 }
+      // Garantir que sempre retornamos dados válidos
+      const validProcesses = mockProcesses.filter(process => 
+        process && 
+        typeof process === 'object' && 
+        process.id && 
+        process.collaborator_id
       );
-
-      const formattedData: OnboardingProcess = {
-        ...typedResult,
-        status: typedResult.status as 'not-started' | 'in-progress' | 'completed',
-      };
-
-      setProcesses(prev => [formattedData, ...prev]);
-      toast({
-        title: "Sucesso",
-        description: "Processo de onboarding criado com sucesso."
-      });
       
-      return formattedData;
+      setProcesses(validProcesses);
+      console.log('Processos carregados:', validProcesses.length);
+      
+    } catch (error) {
+      console.error('Erro ao carregar processos:', error);
+      setProcesses([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const getProcessSteps = async (processId: string): Promise<OnboardingStep[]> => {
-    const result = await executeQuery<OnboardingStep[]>(
-      () => supabase
-        .from('onboarding_steps')
-        .select('*')
-        .eq('onboarding_process_id', processId)
-        .order('step_order'),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
+    try {
+      if (!processId || typeof processId !== 'string') {
+        console.warn('ProcessId inválido:', processId);
+        return [];
+      }
 
-    return (result && Array.isArray(result)) ? result as OnboardingStep[] : [];
+      console.log('Carregando etapas do processo:', processId);
+
+      // Simular delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const steps = mockSteps[processId];
+      const validSteps = Array.isArray(steps) 
+        ? steps.filter(step => 
+            step && 
+            typeof step === 'object' && 
+            step.id && 
+            step.title
+          )
+        : [];
+        
+      return validSteps;
+    } catch (error) {
+      console.error('Erro ao buscar etapas:', error);
+      return [];
+    }
   };
 
-  const updateStepStatus = async (stepId: string, completed: boolean, processId: string) => {
-    const stepResult = await executeQuery(
-      () => supabase
-        .from('onboarding_steps')
-        .update({ completed })
-        .eq('id', stepId),
-      { maxRetries: 2, requireAuth: true, timeout: 5000 }
-    );
+  const createProcess = async (processData: Partial<OnboardingProcess>): Promise<OnboardingProcess | null> => {
+    try {
+      console.log('Criando novo processo:', processData);
 
-    if (stepResult !== null) {
-      // Recalcular progresso
-      const steps = await getProcessSteps(processId);
-      const completedSteps = steps.filter(s => s.completed).length;
-      const progress = Math.round((completedSteps / steps.length) * 100);
+      // Simular delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      const newProcess: OnboardingProcess = {
+        id: Date.now().toString(),
+        collaborator_id: processData.collaborator_id || '',
+        collaborator: processData.collaborator,
+        status: 'not-started',
+        progress: 0,
+        current_step: 'Aguardando início',
+        start_date: new Date().toISOString().split('T')[0],
+        position: processData.position || '',
+        department: processData.department || ''
+      };
+
+      // Adicionar aos processos locais
+      setProcesses(prev => [...prev, newProcess]);
       
-      let status: 'not-started' | 'in-progress' | 'completed' = 'not-started';
-      if (progress === 100) status = 'completed';
-      else if (progress > 0) status = 'in-progress';
-
-      const currentStep = progress === 100 ? 'Concluído' : 
-        steps.find(s => !s.completed)?.title || 'Concluído';
-
-      // Atualizar processo
-      await executeQuery(
-        () => supabase
-          .from('onboarding_processes')
-          .update({ progress, status, current_step: currentStep })
-          .eq('id', processId),
-        { maxRetries: 2, requireAuth: true, timeout: 5000 }
-      );
-
-      // Atualizar estado local
-      setProcesses(prev => 
-        prev.map(p => 
-          p.id === processId 
-            ? { ...p, progress, status, current_step: currentStep }
-            : p
-        )
-      );
-
-      toast({
-        title: "Etapa atualizada",
-        description: `Progresso: ${progress}%`
-      });
+      console.log('Processo criado com sucesso:', newProcess);
+      return newProcess;
+    } catch (error) {
+      console.error('Erro ao criar processo:', error);
+      return null;
     }
   };
 
   return {
     processes,
-    collaborators,
     isLoading,
-    error,
-    createProcess,
+    loadProcesses,
     getProcessSteps,
-    updateStepStatus,
-    refetch: () => {
-      fetchCollaborators();
-      fetchProcesses();
-    }
+    createProcess
   };
 };
