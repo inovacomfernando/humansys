@@ -11,18 +11,6 @@ import { NewOnboardingDialog } from '@/components/onboarding/NewOnboardingDialog
 import { OnboardingDetails } from '@/components/onboarding/OnboardingDetails';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  createColumnHelper,
-  flexRender,
-  type ColumnDef,
-  type SortingState,
-  type ColumnFiltersState,
-} from '@tanstack/react-table';
-import {
   Table,
   TableBody,
   TableCell,
@@ -37,166 +25,34 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface OnboardingTableData {
-  id: string;
-  collaboratorName: string;
-  position: string;
-  department: string;
-  status: string;
-  progress: number;
-  startDate: string;
-  currentStep: string;
-  collaborator?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
-
 export const Onboarding = () => {
   const { processes, isLoading } = useOnboarding();
   const [selectedProcess, setSelectedProcess] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  // Garantir que processes seja sempre um array válido e converter para formato da tabela
-  const tableData = useMemo<OnboardingTableData[]>(() => {
+  // Garantir que processes seja sempre um array válido
+  const processData = useMemo(() => {
     if (!Array.isArray(processes)) return [];
-    
-    return processes.map((process) => ({
-      id: process?.id || '',
-      collaboratorName: process?.collaborator?.name || 'Nome não disponível',
-      position: process?.position || 'Posição não definida',
-      department: process?.department || 'Departamento não definido',
-      status: process?.status || 'not-started',
-      progress: process?.progress || 0,
-      startDate: process?.start_date || '',
-      currentStep: process?.current_step || 'Não definida',
-      collaborator: process?.collaborator
-    }));
+    return processes;
   }, [processes]);
 
-  // Configuração das colunas da tabela
-  const columnHelper = createColumnHelper<OnboardingTableData>();
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-500';
+      case 'in-progress': return 'bg-blue-500';
+      case 'not-started': return 'bg-gray-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
-  const columns = useMemo<ColumnDef<OnboardingTableData>[]>(() => [
-    columnHelper.accessor('collaboratorName', {
-      header: 'Colaborador',
-      cell: (info) => (
-        <div className="font-medium">
-          {info.getValue()}
-        </div>
-      ),
-    }),
-    columnHelper.accessor('position', {
-      header: 'Cargo',
-      cell: (info) => (
-        <div className="text-sm text-muted-foreground">
-          {info.getValue()}
-        </div>
-      ),
-    }),
-    columnHelper.accessor('department', {
-      header: 'Departamento',
-      cell: (info) => (
-        <Badge variant="outline">
-          {info.getValue()}
-        </Badge>
-      ),
-    }),
-    columnHelper.accessor('status', {
-      header: 'Status',
-      cell: (info) => {
-        const status = info.getValue();
-        const getStatusColor = (status: string) => {
-          switch (status) {
-            case 'completed': return 'bg-green-500';
-            case 'in-progress': return 'bg-blue-500';
-            case 'not-started': return 'bg-gray-500';
-            default: return 'bg-gray-500';
-          }
-        };
-        const getStatusText = (status: string) => {
-          switch (status) {
-            case 'completed': return 'Concluído';
-            case 'in-progress': return 'Em Andamento';
-            case 'not-started': return 'Não Iniciado';
-            default: return 'Status Indefinido';
-          }
-        };
-        return (
-          <Badge className={getStatusColor(status)}>
-            {getStatusText(status)}
-          </Badge>
-        );
-      },
-    }),
-    columnHelper.accessor('progress', {
-      header: 'Progresso',
-      cell: (info) => {
-        const progress = info.getValue();
-        return (
-          <div className="flex items-center space-x-2">
-            <Progress value={progress} className="h-2 w-20" />
-            <span className="text-sm font-medium">{progress}%</span>
-          </div>
-        );
-      },
-    }),
-    columnHelper.accessor('startDate', {
-      header: 'Data de Início',
-      cell: (info) => {
-        const date = info.getValue();
-        return (
-          <div className="text-sm">
-            {date ? new Date(date).toLocaleDateString('pt-BR') : 'Data não disponível'}
-          </div>
-        );
-      },
-    }),
-    columnHelper.display({
-      id: 'actions',
-      header: 'Ações',
-      cell: (info) => {
-        const row = info.row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => openDetails(row)}>
-                <Eye className="mr-2 h-4 w-4" />
-                Ver Detalhes
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openDetails(row)}>
-                <Play className="mr-2 h-4 w-4" />
-                Acompanhar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    }),
-  ], []);
-
-  const table = useReactTable({
-    data: tableData,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-    },
-  });
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed': return 'Concluído';
+      case 'in-progress': return 'Em Andamento';
+      case 'not-started': return 'Não Iniciado';
+      default: return 'Status Indefinido';
+    }
+  };
 
   // Mock data para o modelo de onboarding
   const defaultSteps = [
@@ -270,7 +126,7 @@ export const Onboarding = () => {
   };
 
   // Filtros seguros para evitar erros
-  const safeProcesses = Array.isArray(processes) ? processes : [];
+  const safeProcesses = processData;
   const inProgressProcesses = safeProcesses.filter((p) => p?.status !== 'completed');
   const completedProcesses = safeProcesses.filter((p) => p?.status === 'completed');
   const completedCount = completedProcesses.length;
@@ -366,77 +222,80 @@ export const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {tableData.length > 0 ? (
+                {processData.length > 0 ? (
                   <div className="space-y-4">
                     <Table>
                       <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                          <TableRow key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => (
-                              <TableHead key={header.id}>
-                                {header.isPlaceholder
-                                  ? null
-                                  : flexRender(
-                                      header.column.columnDef.header,
-                                      header.getContext()
-                                    )}
-                              </TableHead>
-                            ))}
-                          </TableRow>
-                        ))}
+                        <TableRow>
+                          <TableHead>Colaborador</TableHead>
+                          <TableHead>Cargo</TableHead>
+                          <TableHead>Departamento</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Progresso</TableHead>
+                          <TableHead>Data de Início</TableHead>
+                          <TableHead>Ações</TableHead>
+                        </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                          table.getRowModel().rows.map((row) => (
-                            <TableRow
-                              key={row.id}
-                              data-state={row.getIsSelected() && "selected"}
-                            >
-                              {row.getVisibleCells().map((cell) => (
-                                <TableCell key={cell.id}>
-                                  {flexRender(
-                                    cell.column.columnDef.cell,
-                                    cell.getContext()
-                                  )}
-                                </TableCell>
-                              ))}
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={columns.length} className="h-24 text-center">
-                              <div className="text-center py-8">
-                                <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <h3 className="text-lg font-medium mb-2">Nenhum processo ativo</h3>
-                                <p className="text-muted-foreground mb-4">Comece criando um novo onboarding</p>
-                                <NewOnboardingDialog />
+                        {processData.map((process) => (
+                          <TableRow key={process?.id || Math.random()}>
+                            <TableCell>
+                              <div className="font-medium">
+                                {process?.collaborator?.name || 'Nome não disponível'}
                               </div>
                             </TableCell>
+                            <TableCell>
+                              <div className="text-sm text-muted-foreground">
+                                {process?.position || 'Posição não definida'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {process?.department || 'Departamento não definido'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(process?.status || 'not-started')}>
+                                {getStatusText(process?.status || 'not-started')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Progress value={process?.progress || 0} className="h-2 w-20" />
+                                <span className="text-sm font-medium">{process?.progress || 0}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {process?.start_date 
+                                  ? new Date(process.start_date).toLocaleDateString('pt-BR')
+                                  : 'Data não disponível'
+                                }
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => openDetails(process)}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Ver Detalhes
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => openDetails(process)}>
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Acompanhar
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
                           </TableRow>
-                        )}
+                        ))}
                       </TableBody>
                     </Table>
-                    
-                    {table.getPageCount() > 1 && (
-                      <div className="flex items-center justify-end space-x-2 py-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => table.previousPage()}
-                          disabled={!table.getCanPreviousPage()}
-                        >
-                          Anterior
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => table.nextPage()}
-                          disabled={!table.getCanNextPage()}
-                        >
-                          Próximo
-                        </Button>
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8">
