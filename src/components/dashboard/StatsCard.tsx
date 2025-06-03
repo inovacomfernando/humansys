@@ -7,57 +7,54 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   change?: string;
-  icon: React.ElementType;
+  icon: React.ReactNode;
   description?: string;
-  trend?: number;
-  isNew?: boolean;
+  trend?: 'up' | 'down' | 'neutral';
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   change,
-  icon: Icon,
+  icon,
   description,
-  trend = 0,
-  isNew = false
+  trend = 'neutral'
 }) => {
-  const getTrendColor = (trendValue: number) => {
-    if (trendValue > 0) return 'text-green-600';
-    if (trendValue < 0) return 'text-red-600';
-    return 'text-gray-600';
+  const getTrendColor = (trend: string) => {
+    switch (trend) {
+      case 'up': return 'text-green-600';
+      case 'down': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
   };
 
-  const getTrendBgColor = (trendValue: number) => {
-    if (trendValue > 0) return 'bg-green-50 border-green-200';
-    if (trendValue < 0) return 'bg-red-50 border-red-200';
-    return 'bg-gray-50 border-gray-200';
+  const getTrendBgColor = (trend: string) => {
+    switch (trend) {
+      case 'up': return 'bg-green-50 border-green-200';
+      case 'down': return 'bg-red-50 border-red-200';
+      default: return 'bg-gray-50 border-gray-200';
+    }
   };
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 border-gray-100 bg-white/50 backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <div className="flex items-center space-x-2">
-          <CardTitle className="text-sm font-medium text-gray-700">{title}</CardTitle>
-          {isNew && (
-            <Badge className="bg-purple-500 text-white text-xs">Novo</Badge>
-          )}
-        </div>
+        <CardTitle className="text-sm font-medium text-gray-700">{title}</CardTitle>
         <div className={`p-2 rounded-lg ${getTrendBgColor(trend)}`}>
-          <Icon className="h-4 w-4" />
+          {icon}
         </div>
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
-        {(trend !== 0 || change) && (
+        {change && (
           <div className="flex items-center space-x-2">
-            {trend > 0 && <TrendingUp className="h-4 w-4 text-green-600" />}
-            {trend < 0 && <TrendingDown className="h-4 w-4 text-red-600" />}
+            {trend === 'up' && <TrendingUp className="h-4 w-4 text-green-600" />}
+            {trend === 'down' && <TrendingDown className="h-4 w-4 text-red-600" />}
             <Badge 
               variant="secondary" 
               className={`text-xs ${getTrendColor(trend)} ${getTrendBgColor(trend)}`}
             >
-              {change || `${trend > 0 ? '+' : ''}${trend}%`}
+              {change}
             </Badge>
           </div>
         )}
