@@ -1,102 +1,103 @@
-import { supabase } from '@/integrations/supabase/client';
+
+// Sistema de dados local - não requer configuração de banco externo
 
 export const initializeDatabase = async (): Promise<void> => {
   try {
-    console.log('Inicializando banco de dados...');
-
-    // Para desenvolvimento, simular sucesso
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Modo desenvolvimento: banco simulado');
-      return;
+    console.log('Inicializando sistema de dados local...');
+    
+    // Verificar se localStorage está disponível
+    if (typeof Storage === 'undefined') {
+      throw new Error('LocalStorage não disponível');
     }
 
-    // Verificar conectividade básica
-    const { error } = await supabase.from('collaborators').select('count').limit(0);
+    // Verificar dados iniciais
+    const tables = ['collaborators', 'profiles', 'user_credits', 'trainings'];
+    let isInitialized = true;
 
-    if (error && error.code === 'PGRST202') {
-      console.log('Tabelas não encontradas, mas continuando...');
-      return;
+    tables.forEach(table => {
+      if (!localStorage.getItem(table)) {
+        isInitialized = false;
+      }
+    });
+
+    if (!isInitialized) {
+      console.log('Primeira inicialização - criando dados demo...');
     }
 
-    if (error) {
-      console.warn('Erro na verificação do banco:', error);
-      return;
-    }
-
-    console.log('Banco de dados inicializado com sucesso');
+    console.log('Sistema de dados local inicializado com sucesso');
   } catch (error) {
-    console.warn('Aviso na inicialização do banco:', error);
-    // Não falhar por causa de problemas de banco em desenvolvimento
+    console.error('Erro na inicialização do sistema local:', error);
+    throw error;
   }
 };
 
 export const checkTablesExist = async (): Promise<boolean> => {
   try {
-    if (process.env.NODE_ENV === 'development') {
-      return true;
-    }
-
-    const { error } = await supabase.from('collaborators').select('count').limit(0);
-    return !error;
+    // Verificar se as tabelas básicas existem no localStorage
+    const requiredTables = ['collaborators', 'profiles', 'user_credits'];
+    return requiredTables.every(table => localStorage.getItem(table) !== null);
   } catch {
     return false;
   }
 };
 
-// Função para verificar se o usuário existe
+// Função para verificar se o usuário existe no sistema local
 export const checkUserExists = async (email: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('collaborators')
-      .select('id')
-      .eq('email', email)
-      .single();
+    const collaborators = localStorage.getItem('collaborators');
+    if (!collaborators) return false;
 
-    if (error && error.code !== 'PGRST116') {
-      console.log('User check error:', error);
-      return false;
-    }
-
-    return !!data;
+    const data = JSON.parse(collaborators);
+    return data.some((collaborator: any) => collaborator.email === email);
   } catch (error) {
-    console.error('Failed to check user:', error);
+    console.error('Erro ao verificar usuário:', error);
     return false;
   }
 };
 
-// Função para criar usuário no banco
+// Função para criar usuário no sistema local
 export const createUserInDatabase = async (userId: string, userData: any) => {
   try {
-    // Inserir ou atualizar perfil
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert({
-        id: userId,
-        name: userData.name || userData.full_name,
-        updated_at: new Date().toISOString()
-      });
+    // Criar perfil
+    const profiles = JSON.parse(localStorage.getItem('profiles') || '[]');
+    const profile = {
+      id: userId,
+      name: userData.name || userData.full_name,
+      email: userData.email,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
+    const existingProfileIndex = profiles.findIndex((p: any) => p.id === userId);
+    if (existingProfileIndex >= 0) {
+      profiles[existingProfileIndex] = profile;
+    } else {
+      profiles.push(profile);
     }
+    localStorage.setItem('profiles', JSON.stringify(profiles));
 
-    // Inserir créditos iniciais
-    const { error: creditsError } = await supabase
-      .from('user_credits')
-      .upsert({
-        user_id: userId,
-        credits: 100,
-        updated_at: new Date().toISOString()
-      });
+    // Criar créditos iniciais
+    const credits = JSON.parse(localStorage.getItem('user_credits') || '[]');
+    const userCredit = {
+      id: Math.random().toString(36).substr(2, 9),
+      user_id: userId,
+      credits: 100,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-    if (creditsError) {
-      console.error('Credits creation error:', creditsError);
+    const existingCreditIndex = credits.findIndex((c: any) => c.user_id === userId);
+    if (existingCreditIndex >= 0) {
+      credits[existingCreditIndex] = userCredit;
+    } else {
+      credits.push(userCredit);
     }
+    localStorage.setItem('user_credits', JSON.stringify(credits));
 
-    console.log('User created in database successfully');
+    console.log('Usuário criado no sistema local com sucesso');
     return true;
   } catch (error) {
-    console.error('Failed to create user in database:', error);
+    console.error('Erro ao criar usuário no sistema local:', error);
     return false;
   }
 };

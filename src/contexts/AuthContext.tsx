@@ -1,7 +1,19 @@
+
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import type { User, Session } from '@supabase/supabase-js';
+
+interface User {
+  id: string;
+  email: string;
+  user_metadata?: any;
+}
+
+interface Session {
+  user: User;
+  access_token: string;
+  expires_at: number;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -34,8 +46,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log('%c🛠️ MODO DESENVOLVIMENTO', 'color: blue; font-size: 16px; font-weight: bold;');
-    console.log('%cSistema em modo de desenvolvimento', 'color: blue; font-size: 12px;');
+    console.log('%c🏠 SISTEMA LOCAL', 'color: green; font-size: 16px; font-weight: bold;');
+    console.log('%cSistema rodando com dados locais', 'color: green; font-size: 12px;');
 
     // Verificar sessão inicial
     const getInitialSession = async () => {
@@ -43,12 +55,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
 
         if (!error && initialSession) {
-          console.log('Sessão inicial encontrada:', initialSession.user.id);
+          console.log('Sessão local encontrada:', initialSession.user.id);
           setSession(initialSession);
           setUser(initialSession.user);
         }
       } catch (error) {
-        console.log('Nenhuma sessão inicial encontrada');
+        console.log('Nenhuma sessão local encontrada');
       } finally {
         setLoading(false);
       }
@@ -87,7 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       toast({
         title: "Login realizado!",
-        description: "Bem-vindo de volta!",
+        description: "Bem-vindo ao sistema local!",
       });
 
       return { data };
@@ -120,7 +132,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       toast({
         title: "Conta Criada",
-        description: "Sua conta foi criada com sucesso!",
+        description: "Sua conta foi criada no sistema local!",
       });
 
       return { data };
@@ -142,7 +154,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
 
       // Limpar dados locais
-      localStorage.clear();
       sessionStorage.clear();
 
       const { error } = await supabase.auth.signOut();
@@ -174,15 +185,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (error) throw error;
 
       toast({
-        title: "Email Enviado",
-        description: "Verifique seu email para redefinir a senha",
+        title: "Solicitação Enviada",
+        description: "Reset de senha simulado (sistema local)",
       });
 
       return {};
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível enviar o email",
+        description: error.message || "Não foi possível processar solicitação",
         variant: "destructive",
       });
       return { error };
