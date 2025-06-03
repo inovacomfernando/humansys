@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CreditsCard } from '@/components/dashboard/CreditsCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { simpleAuth } from '@/integrations/supabase/client';
 import {
   User,
   Mail,
@@ -53,38 +53,29 @@ export const Profile = () => {
 
     try {
       setLoading(true);
+      console.log('Carregando perfil para usuário:', user.id);
       
-      // Buscar perfil do usuário
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      // Simular delay de carregamento
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error loading profile:', profileError);
-      }
-
-      // Verificar se é owner da empresa através do CNPJ
-      const { data: companyData } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('owner_id', user.id)
-        .maybeSingle();
-
+      // Verificar se é o usuário Amanda (owner)
+      const isAmanda = user.email === 'amanda@vendasimples.com.br';
+      
       const userProfile: UserProfile = {
         id: user.id,
-        full_name: profileData?.full_name || user.user_metadata?.full_name || '',
+        full_name: user.name || user.email?.split('@')[0] || 'Usuário',
         email: user.email || '',
-        company_name: profileData?.company_name || companyData?.name || '',
-        company_cnpj: profileData?.company_cnpj || companyData?.cnpj || '',
-        position: profileData?.position || '',
-        avatar_url: profileData?.avatar_url || user.user_metadata?.avatar_url || '',
-        is_company_owner: !!companyData
+        company_name: isAmanda ? 'VendaSimples' : 'Empresa Exemplo',
+        company_cnpj: isAmanda ? '12.345.678/0001-90' : '98.765.432/0001-10',
+        position: isAmanda ? 'CEO & Founder' : 'Colaborador',
+        avatar_url: '',
+        is_company_owner: isAmanda
       };
 
       setProfile(userProfile);
-      setIsCompanyOwner(!!companyData);
+      setIsCompanyOwner(isAmanda);
+      
+      console.log('Perfil carregado com sucesso:', userProfile);
     } catch (error) {
       console.error('Error loading profile:', error);
       toast({
@@ -102,19 +93,14 @@ export const Profile = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          full_name: profile.full_name,
-          company_name: profile.company_name,
-          company_cnpj: profile.company_cnpj,
-          position: profile.position,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
+      console.log('Salvando perfil:', profile);
+      
+      // Simular delay de salvamento
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // No sistema mock, apenas simular o salvamento
+      // Em um sistema real, aqui faria a chamada para o banco
+      
       toast({
         title: "Sucesso",
         description: "Perfil atualizado com sucesso!"
@@ -136,22 +122,16 @@ export const Profile = () => {
     if (!file || !user?.id) return;
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      console.log('Simulando upload de avatar:', file.name);
+      
+      // Simular delay de upload
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simular URL de avatar (usando um placeholder)
+      const mockAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'User')}&size=200&background=random`;
 
       if (profile) {
-        setProfile({ ...profile, avatar_url: data.publicUrl });
+        setProfile({ ...profile, avatar_url: mockAvatarUrl });
       }
 
       toast({
