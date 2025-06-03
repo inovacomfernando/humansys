@@ -168,10 +168,42 @@ const mockSteps: Record<string, OnboardingStep[]> = {
 
 export const useOnboarding = () => {
   const [processes, setProcesses] = useState<any[]>([]);
+  const [collaborators, setCollaborators] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { executeQuery } = useSupabaseQuery();
   const { toast } = useToast();
+
+  // Mock data de colaboradores para desenvolvimento
+  const mockCollaborators = [
+    {
+      id: '1',
+      name: 'Ana Silva',
+      email: 'ana.silva@empresa.com',
+      role: 'Desenvolvedora Frontend',
+      department: 'Tecnologia',
+      hire_date: '2024-01-15',
+      status: 'active'
+    },
+    {
+      id: '2',
+      name: 'Carlos Oliveira',
+      email: 'carlos.oliveira@empresa.com',
+      role: 'Analista de Marketing',
+      department: 'Marketing',
+      hire_date: '2024-01-10',
+      status: 'active'
+    },
+    {
+      id: '3',
+      name: 'Maria Santos',
+      email: 'maria.santos@empresa.com',
+      role: 'Gerente de Vendas',
+      department: 'Comercial',
+      hire_date: '2024-01-05',
+      status: 'active'
+    }
+  ];
 
   // Mock data para desenvolvimento
   const mockProcesses2 = [
@@ -214,6 +246,40 @@ export const useOnboarding = () => {
       current_step: 'Concluído',
     }
   ];
+
+  const fetchCollaborators = useCallback(async () => {
+    console.log('useOnboarding: Iniciando busca de colaboradores');
+    
+    try {
+      const result = await executeQuery(
+        () => {
+          console.log('useOnboarding: Executando query mock para colaboradores');
+          return new Promise<any[]>((resolve) => {
+            setTimeout(() => {
+              console.log('useOnboarding: Retornando colaboradores mock');
+              resolve(mockCollaborators);
+            }, 200);
+          });
+        },
+        { 
+          maxRetries: 2, 
+          retryDelay: 1000,
+          useCache: true 
+        }
+      );
+
+      if (result && Array.isArray(result)) {
+        console.log('useOnboarding: Colaboradores carregados com sucesso:', result);
+        setCollaborators(result);
+      } else {
+        console.warn('useOnboarding: Resultado de colaboradores não é um array, usando array vazio');
+        setCollaborators([]);
+      }
+    } catch (err) {
+      console.error('useOnboarding: Erro ao carregar colaboradores:', err);
+      setCollaborators([]);
+    }
+  }, [executeQuery]);
 
   const fetchProcesses = useCallback(async () => {
     console.log('useOnboarding: Iniciando busca de processos');
@@ -264,8 +330,9 @@ export const useOnboarding = () => {
   }, [executeQuery, toast]);
 
   useEffect(() => {
+    fetchCollaborators();
     fetchProcesses();
-  }, [fetchProcesses]);
+  }, [fetchCollaborators, fetchProcesses]);
 
   const updateProcessProgress = useCallback(async (processId: string, progress: number) => {
     console.log(`useOnboarding: Atualizando progresso do processo ${processId} para ${progress}%`);
@@ -302,9 +369,12 @@ export const useOnboarding = () => {
     console.log('useOnboarding: Criando novo processo', processData);
 
     try {
+      const selectedCollaborator = collaborators.find(c => c.id === processData.collaborator_id);
+      
       const newProcess = {
         id: Date.now().toString(),
         ...processData,
+        collaborator: selectedCollaborator,
         start_date: new Date().toISOString(),
         status: 'in-progress',
         progress: 0,
@@ -321,7 +391,7 @@ export const useOnboarding = () => {
 
       toast({
         title: "Processo criado",
-        description: `Onboarding iniciado para ${processData.collaborator?.name}`,
+        description: `Onboarding iniciado para ${selectedCollaborator?.name || 'colaborador'}`,
       });
 
       return newProcess;
@@ -334,17 +404,85 @@ export const useOnboarding = () => {
       });
       return null;
     }
-  }, [toast]);
+  }, [toast, collaborators]);
 
-  // Garantir que processes sempre seja um array
+  const getProcessSteps = useCallback(async (processId: string): Promise<OnboardingStep[]> => {
+    console.log('useOnboarding: Buscando etapas para processo', processId);
+    
+    try {
+      const result = await executeQuery(
+        () => {
+          console.log('useOnboarding: Executando query mock para etapas');
+          return new Promise<OnboardingStep[]>((resolve) => {
+            setTimeout(() => {
+              const steps = mockSteps[processId] || [];
+              console.log('useOnboarding: Retornando etapas mock:', steps);
+              resolve(steps);
+            }, 200);
+          });
+        },
+        { 
+          maxRetries: 2, 
+          retryDelay: 1000,
+          useCache: true 
+        }
+      );
+
+      return Array.isArray(result) ? result : [];
+    } catch (err) {
+      console.error('useOnboarding: Erro ao carregar etapas:', err);
+      return [];
+    }
+  }, [executeQuery]);
+
+  const updateStepStatus = useCallback(async (stepId: string, completed: boolean, processId: string) => {
+    console.log('useOnboarding: Atualizando status da etapa', stepId, completed);
+    
+    try {
+      // Simular update no backend
+      await executeQuery(
+        () => {
+          console.log('useOnboarding: Simulando update de etapa');
+          return new Promise<boolean>((resolve) => {
+            setTimeout(() => {
+              resolve(true);
+            }, 200);
+          });
+        },
+        { maxRetries: 2 }
+      );
+
+      toast({
+        title: completed ? "Etapa concluída" : "Etapa reaberta",
+        description: `Status da etapa atualizado com sucesso`,
+      });
+
+      return true;
+    } catch (err) {
+      console.error('useOnboarding: Erro ao atualizar etapa:', err);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a etapa",
+        variant: "destructive"
+      });
+      return false;
+    }
+  }, [executeQuery, toast]);
+
+  // Garantir que processes e collaborators sempre sejam arrays
   const safeProcesses = Array.isArray(processes) ? processes : [];
+  const safeCollaborators = Array.isArray(collaborators) ? collaborators : [];
 
   return {
     processes: safeProcesses,
+    collaborators: safeCollaborators,
     isLoading,
     error,
     updateProcessProgress,
     createProcess,
-    refetch: fetchProcesses
+    getProcessSteps,
+    updateStepStatus,
+    refetch: fetchProcesses,
+    refetchCollaborators: fetchCollaborators
   };
 };

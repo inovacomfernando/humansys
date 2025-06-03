@@ -1,4 +1,5 @@
 
+```tsx
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,11 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 
 export const NewOnboardingDialog = () => {
   const [open, setOpen] = useState(false);
-  const { collaborators, createProcess } = useOnboarding();
+  const { collaborators, createProcess, isLoading } = useOnboarding();
   const { toast } = useToast();
+
+  // Garantir que collaborators seja sempre um array
+  const safeCollaborators = Array.isArray(collaborators) ? collaborators : [];
 
   const [formData, setFormData] = useState({
     collaboratorId: '',
@@ -47,12 +51,17 @@ export const NewOnboardingDialog = () => {
       });
       setOpen(false);
     } catch (error) {
-      // Error is already handled in the hook
+      console.error('Erro ao criar onboarding:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar o onboarding",
+        variant: "destructive"
+      });
     }
   };
 
   const handleCollaboratorChange = (collaboratorId: string) => {
-    const selectedCollaborator = collaborators.find(c => c.id === collaboratorId);
+    const selectedCollaborator = safeCollaborators.find(c => c.id === collaboratorId);
     if (selectedCollaborator) {
       setFormData(prev => ({
         ...prev,
@@ -68,7 +77,7 @@ export const NewOnboardingDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={isLoading}>
           <UserPlus className="mr-2 h-4 w-4" />
           Novo Onboarding
         </Button>
@@ -86,16 +95,23 @@ export const NewOnboardingDialog = () => {
             <Select 
               value={formData.collaboratorId} 
               onValueChange={handleCollaboratorChange}
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um colaborador" />
               </SelectTrigger>
               <SelectContent>
-                {collaborators.map((collaborator) => (
-                  <SelectItem key={collaborator.id} value={collaborator.id}>
-                    {collaborator.name} - {collaborator.role}
+                {safeCollaborators.length > 0 ? (
+                  safeCollaborators.map((collaborator) => (
+                    <SelectItem key={collaborator.id} value={collaborator.id}>
+                      {collaborator.name} - {collaborator.role}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="loading" disabled>
+                    {isLoading ? 'Carregando colaboradores...' : 'Nenhum colaborador disponível'}
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -107,6 +123,7 @@ export const NewOnboardingDialog = () => {
               value={formData.position}
               onChange={(e) => setFormData({...formData, position: e.target.value})}
               placeholder="Digite o cargo"
+              disabled={isLoading}
             />
           </div>
           
@@ -117,6 +134,7 @@ export const NewOnboardingDialog = () => {
               value={formData.department}
               onChange={(e) => setFormData({...formData, department: e.target.value})}
               placeholder="Digite o departamento"
+              disabled={isLoading}
             />
           </div>
           
@@ -127,18 +145,20 @@ export const NewOnboardingDialog = () => {
               type="date"
               value={formData.startDate}
               onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+              disabled={isLoading}
             />
           </div>
         </div>
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
             Cancelar
           </Button>
-          <Button onClick={handleCreateOnboarding}>
-            Criar Onboarding
+          <Button onClick={handleCreateOnboarding} disabled={isLoading}>
+            {isLoading ? 'Criando...' : 'Criar Onboarding'}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+```

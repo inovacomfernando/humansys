@@ -26,7 +26,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Integração com gamificação
+  // Integração com gamificação - com proteção contra process undefined
   const { 
     progress, 
     availableBadges, 
@@ -40,6 +40,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
       loadSteps();
     } else {
       setSteps([]);
+      setIsLoading(false);
     }
   }, [process?.id, open]);
 
@@ -57,12 +58,26 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     } catch (error) {
       console.error('Erro ao carregar etapas:', error);
       setSteps([]);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as etapas do onboarding",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const toggleStep = async (stepId: string, currentCompleted: boolean) => {
+    if (!process?.id) {
+      toast({
+        title: "Erro",
+        description: "Processo não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await updateStepStatus(stepId, !currentCompleted, process.id);
       await loadSteps();
@@ -97,6 +112,10 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     console.log('Salvando etapa:', stepData);
     loadSteps();
     refetchGamification();
+    toast({
+      title: "Etapa atualizada",
+      description: "As alterações foram salvas com sucesso",
+    });
   };
 
   const handleVideoComplete = (stepTitle: string) => {
@@ -118,7 +137,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <span>Onboarding - {process.collaborator?.name}</span>
+                <span>Onboarding - {process.collaborator?.name || 'Colaborador'}</span>
                 {progress && (
                   <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
                     <Trophy className="h-3 w-3 mr-1" />
@@ -142,120 +161,62 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
             </DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="progress" className="h-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="progress">
-                Progresso & Gamificação
-                {achievements.length > 0 && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {achievements.length}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="steps">Etapas Interativas</TabsTrigger>
-              <TabsTrigger value="feedback">Feedback & Vídeos</TabsTrigger>
-            </TabsList>
+          <div className="flex-1 overflow-hidden">
+            <Tabs defaultValue="steps" className="h-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="steps">Etapas</TabsTrigger>
+                <TabsTrigger value="gamification">
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Gamificação
+                </TabsTrigger>
+                <TabsTrigger value="videos">
+                  <Video className="h-4 w-4 mr-2" />
+                  Vídeos
+                </TabsTrigger>
+                <TabsTrigger value="feedback">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Feedback
+                </TabsTrigger>
+              </TabsList>
 
-            <div className="overflow-auto max-h-[calc(95vh-280px)]">
-              <TabsContent value="progress" className="space-y-6 mt-6">
-                {progress && (
-                  <GamificationPanel
-                    progress={progress}
-                    achievements={achievements}
-                    availableBadges={availableBadges}
+              <TabsContent value="steps" className="mt-6">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <OnboardingSteps 
+                    steps={steps}
+                    onToggleStep={toggleStep}
+                    onEditStep={handleEditStep}
                   />
                 )}
               </TabsContent>
 
-              <TabsContent value="steps" className="mt-6">
-                <OnboardingSteps
-                  steps={steps}
-                  onStepToggle={toggleStep}
-                  onStepEdit={handleEditStep}
-                  progressPercentage={process.progress}
-                  isLoading={isLoading}
+              <TabsContent value="gamification" className="mt-6">
+                <GamificationPanel 
+                  progress={progress}
+                  badges={availableBadges}
+                  achievements={achievements}
                 />
               </TabsContent>
 
-              <TabsContent value="feedback" className="mt-6 space-y-6">
-                {/* Vídeos de Onboarding com Gamificação */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium flex items-center space-x-2">
-                    <Video className="h-5 w-5" />
-                    <span>Vídeos de Onboarding</span>
-                  </h3>
+              <TabsContent value="videos" className="mt-6">
+                <VideoPlayer 
+                  steps={steps}
+                  onVideoComplete={handleVideoComplete}
+                />
+              </TabsContent>
 
-                  <div className="grid gap-4">
-                    <VideoPlayer
-                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                      title="Bem-vindo à Empresa"
-                      onComplete={() => handleVideoComplete('Bem-vindo à Empresa')}
-                    />
-
-                    <VideoPlayer
-                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                      title="Cultura e Valores"
-                      onComplete={() => handleVideoComplete('Cultura e Valores')}
-                    />
-
-                    <VideoPlayer
-                      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                      title="Políticas de Segurança"
-                      onComplete={() => handleVideoComplete('Políticas de Segurança')}
-                    />
-                  </div>
-                </div>
-
-                {/* Sistema de Feedback Melhorado */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-medium flex items-center space-x-2">
-                    <MessageSquare className="h-5 w-5" />
-                    <span>Feedback em Tempo Real</span>
-                  </h3>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                      <h4 className="font-medium text-green-800 mb-2">Pontos Fortes</h4>
-                      <p className="text-sm text-green-700">
-                        {progress?.performance_rating === 'excellent' 
-                          ? 'Excelente progresso! Mantendo alta performance em todas as etapas.'
-                          : progress?.performance_rating === 'good'
-                          ? 'Bom progresso! Continue assim para alcançar a excelência.'
-                          : 'Continue se esforçando para melhorar sua performance.'
-                        }
-                      </p>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2">Próximos Passos</h4>
-                      <p className="text-sm text-blue-700">
-                        {progress?.next_milestone 
-                          ? `Próxima conquista: ${progress.next_milestone.name}`
-                          : 'Todas as conquistas desbloqueadas!'
-                        }
-                      </p>
-                    </div>
-                  </div>
+              <TabsContent value="feedback" className="mt-6">
+                <div className="p-6 text-center text-muted-foreground">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium mb-2">Sistema de Feedback</h3>
+                  <p>Em desenvolvimento</p>
                 </div>
               </TabsContent>
-            </div>
-
-            <div className="flex justify-between items-center pt-4 border-t mt-4">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Iniciado em {new Date(process.start_date).toLocaleDateString('pt-BR')}
-                  {progress && <span className="ml-2">• Tempo dedicado: {progress.time_spent_minutes} minutos</span>}
-                </p>
-              </div>
-              <Badge className={
-                process.status === 'completed' ? 'bg-green-500' :
-                process.status === 'in-progress' ? 'bg-blue-500' : 'bg-gray-500'
-              }>
-                {process.status === 'completed' ? 'Concluído' :
-                 process.status === 'in-progress' ? 'Em Andamento' : 'Não Iniciado'}
-              </Badge>
-            </div>
-          </Tabs>
+            </Tabs>
+          </div>
         </DialogContent>
       </Dialog>
 
