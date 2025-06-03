@@ -1,33 +1,38 @@
 import React from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { UpdateBanner } from '@/components/layout/UpdateBanner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { ModernNotificationBanner } from '@/components/layout/ModernNotificationBanner';
+import { ModernIAOCard } from '@/components/dashboard/ModernIAOCard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { Widget } from '@/components/dashboard/Widget';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import { ActivityItem } from '@/components/dashboard/ActivityItem';
 import { TaskItem } from '@/components/dashboard/TaskItem';
-import { CreditsCard } from '@/components/dashboard/CreditsCard';
-import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { useEffect, useState } from 'react';
-import {
-  Users,
-  UserPlus,
-  TrendingUp,
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Users, 
+  Target, 
+  TrendingUp, 
   Award,
+  Plus,
+  Bell,
+  BarChart3,
   Calendar,
   MessageSquare,
   Brain,
-  Trophy,
   Zap,
-  Target,
-  Crown
+  Eye
 } from 'lucide-react';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { CreditsCard } from '@/components/dashboard/CreditsCard';
+import { useAuth } from '@/contexts/AuthContext';
+import { UpdateBanner } from '@/components/layout/UpdateBanner';
+import { Progress } from '@/components/ui/progress';
+import { Widget } from '@/components/dashboard/Widget';
+import { useOptimizedDashboardData } from '@/hooks/useOptimizedDashboardData';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IAAssistantDialog } from '@/components/dashboard/IAAssistantDialog';
 
@@ -73,9 +78,39 @@ export const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        <ModernNotificationBanner />
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Bem-vindo ao seu painel de controle otimizado
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" className="border-gray-200 hover:bg-gray-50">
+              <Eye className="h-4 w-4 mr-2" />
+              Ver Novidades
+            </Button>
+            <Button variant="outline" size="sm" className="border-gray-200 hover:bg-gray-50">
+              <Calendar className="h-4 w-4 mr-2" />
+              Hoje
+            </Button>
+            <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Ação
+            </Button>
+          </div>
+        </div>
+
+        <ModernIAOCard />
+
         <UpdateBanner />
 
         {/* Brainsys IAO V.1 Module */}
+        {/*
         <Card className="relative overflow-hidden bg-gradient-to-r from-purple-900/90 via-blue-900/90 to-indigo-900/90 border-purple-500/20 backdrop-blur-sm">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 opacity-30"></div>
           <CardContent className="relative p-6">
@@ -129,7 +164,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Quick Insights Preview */}
+           
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                 <div className="flex items-center justify-between mb-1">
@@ -160,27 +195,8 @@ export const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+        */}
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Bem-vindo ao seu painel de controle otimizado
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            {isFounder && (
-              <Button onClick={() => navigate('/app/founder/dashboard')} variant="outline">
-                <Crown className="h-4 w-4 mr-2" />
-                Founder Dashboard
-              </Button>
-            )}
-            <Button onClick={() => navigate('/changelog')} variant="outline">
-              <Trophy className="h-4 w-4 mr-2" />
-              Ver Novidades
-            </Button>
-          </div>
-        </div>
 
         {/* Quick Stats */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
@@ -193,7 +209,7 @@ export const Dashboard = () => {
           <StatsCard
             title="Processos Ativos"
             value={data.stats.activeProcesses}
-            icon={UserPlus}
+            icon={Users}
             trend={8}
           />
           <StatsCard
@@ -205,7 +221,7 @@ export const Dashboard = () => {
           <StatsCard
             title="Pontos Gamificação"
             value={data.stats.gamificationPoints}
-            icon={Trophy}
+            icon={Award}
             trend={25}
             isNew={true}
           />
@@ -240,7 +256,7 @@ export const Dashboard = () => {
               <div className="flex items-center space-x-3 p-4 bg-white rounded-lg cursor-pointer hover:shadow-md transition-shadow"
                    onClick={() => navigate('/onboarding')}>
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Trophy className="h-5 w-5 text-blue-600" />
+                  <Award className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
                   <h4 className="font-medium">Gamificação</h4>
@@ -355,7 +371,7 @@ export const Dashboard = () => {
                   Adicionar Colaborador
                 </Button>
                 <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/onboarding')}>
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <Plus className="h-4 w-4 mr-2" />
                   Novo Onboarding
                 </Button>
                 <Button variant="outline" size="sm" className="justify-start" onClick={() => navigate('/feedback')}>
