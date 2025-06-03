@@ -1,10 +1,15 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { dbClient } from '@/integrations/supabase/client';
+
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
   logout: () => Promise<void>;
@@ -15,107 +20,73 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [initialized, setInitialized] = useState(false);
 
-  // Inicializar autenticação
+  // Verificar sessão salva no localStorage na inicialização
   useEffect(() => {
-    if (initialized) return;
-
-    const initAuth = async () => {
+    const checkSavedSession = async () => {
       try {
-        console.log('🔐 Inicializando autenticação...');
+        console.log('🔐 Verificando sessão salva...');
 
-        // Verificar sessão atual
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error('Erro ao obter sessão:', sessionError);
-          setError(sessionError.message);
-        } else if (currentSession) {
-          console.log('✅ Sessão encontrada:', currentSession.user.id);
-          setSession(currentSession);
-          setUser(currentSession.user);
+        const savedSession = localStorage.getItem('orientohub-auth-user');
+        if (savedSession) {
+          const userData = JSON.parse(savedSession);
+          console.log('✅ Sessão encontrada:', userData.email);
+          setUser(userData);
         } else {
-          console.log('ℹ️ Nenhuma sessão ativa');
+          console.log('ℹ️ Nenhuma sessão salva');
         }
-
-        // Configurar listener de mudanças de auth
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
-            console.log('🔄 Auth state changed:', event, newSession?.user?.id);
-
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
-
-            if (event === 'SIGNED_OUT') {
-              setError(null);
-            }
-          }
-        );
-
-        setInitialized(true);
-        return () => subscription.unsubscribe();
-
       } catch (error: any) {
-        console.error('❌ Erro na inicialização auth:', error);
-        setError(error.message);
+        console.error('❌ Erro ao verificar sessão:', error);
+        localStorage.removeItem('orientohub-auth-user');
       } finally {
         setIsLoading(false);
       }
     };
 
-    initAuth();
-  }, [initialized]);
+    checkSavedSession();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Tentar login local primeiro
-      const { data: collaboratorData } = await supabase
-        .from('collaborators')
-        .select('*')
-        .eq('email', email)
-        .single();
+      console.log('🔑 Tentando login para:', email);
 
-      if (collaboratorData) {
-        // Simular autenticação local
-        const mockUser: User = {
-          id: collaboratorData.user_id,
-          email: collaboratorData.email,
-          user_metadata: {
-            name: collaboratorData.name,
+      // Buscar colaborador no banco
+      const { data: collaborators, error: dbError } = await dbClient.query(
+        'SELECT * FROM collaborators WHERE email = $1 LIMIT 1',
+        [email]
+      );
+
+      if (dbError) {
+        throw new Error('Erro ao verificar credenciais');
+      }
+
+      if (collaborators && collaborators.length > 0) {
+        const collaborator = collaborators[0];
+
+        // Simular verificação de senha (em produção, usar hash)
+        if (password === 'admin123' || password === '123456') {
+          const userData: User = {
+            id: collaborator.user_id || collaborator.id,
+            email: collaborator.email,
+            name: collaborator.name,
             role: 'user'
-          },
-          app_metadata: {},
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
+          };
 
-        const mockSession: Session = {
-          access_token: 'mock-token',
-          refresh_token: 'mock-refresh',
-          expires_in: 3600,
-          expires_at: Date.now() / 1000 + 3600,
-          token_type: 'bearer',
-          user: mockUser
-        };
+          setUser(userData);
+          localStorage.setItem('orientohub-auth-user', JSON.stringify(userData));
 
-        setUser(mockUser);
-        setSession(mockSession);
-
-        // Salvar no localStorage
-        localStorage.setItem('orientohub-auth-session', JSON.stringify(mockSession));
-
-        console.log('✅ Login local realizado:', mockUser.email);
-        return { user: mockUser, error: null };
+          console.log('✅ Login realizado com sucesso');
+          return { user: userData, error: null };
+        } else {
+          throw new Error('Senha incorreta');
+        }
       } else {
-        throw new Error('Credenciais inválidas');
+        throw new Error('Usuário não encontrado');
       }
 
     } catch (error: any) {
@@ -129,11 +100,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
+      console.log('👋 Fazendo logout...');
       setUser(null);
-      setSession(null);
       setError(null);
-      localStorage.removeItem('orientohub-auth-session');
-      console.log('👋 Logout realizado');
+      localStorage.removeItem('orientohub-auth-user');
+      console.log('✅ Logout realizado');
     } catch (error: any) {
       console.error('❌ Erro no logout:', error);
       setError(error.message);
@@ -143,7 +114,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       user,
-      session,
       isLoading,
       login,
       logout,

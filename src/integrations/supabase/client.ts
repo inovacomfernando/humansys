@@ -1,94 +1,54 @@
+// Cliente PostgreSQL simples sem Supabase
+export interface DatabaseClient {
+  query: (sql: string, params?: any[]) => Promise<{ data: any[], error: any }>;
+}
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
-
-// Garantir instância única global
-let supabaseInstance: SupabaseClient | null = null;
-let isInitializing = false;
-
-const supabaseUrl = 'http://127.0.0.1:54321'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
-
-const createSupabaseClient = (): SupabaseClient => {
-  // Prevenir múltiplas criações simultâneas
-  if (isInitializing && supabaseInstance) {
-    return supabaseInstance;
-  }
-
-  // Se já existe, retornar
-  if (supabaseInstance) {
-    return supabaseInstance;
-  }
-
-  isInitializing = true;
-
-  try {
-    console.log('🔗 Criando cliente Supabase único...');
-
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false, // Desabilitar para evitar conflitos
-        persistSession: true,
-        detectSessionInUrl: false,
-        storageKey: 'orientohub-auth-session',
-        storage: {
-          getItem: (key: string) => {
-            try {
-              return localStorage.getItem(key);
-            } catch {
-              return null;
-            }
-          },
-          setItem: (key: string, value: string) => {
-            try {
-              localStorage.setItem(key, value);
-            } catch {
-              // Ignorar erros de storage
-            }
-          },
-          removeItem: (key: string) => {
-            try {
-              localStorage.removeItem(key);
-            } catch {
-              // Ignorar erros de storage
-            }
-          }
-        }
-      },
-      global: {
-        headers: {
-          'x-client-info': 'orientohub-local-v1'
-        }
-      },
-      db: {
-        schema: 'public'
-      },
-      realtime: {
-        enabled: false
+// Mock client para desenvolvimento sem dependências externas
+class MockDatabaseClient implements DatabaseClient {
+  private mockData = {
+    collaborators: [
+      {
+        id: "1",
+        user_id: "admin-001",
+        name: "Amanda Motta",
+        email: "amanda@vendasimples.com.br",
+        created_at: new Date().toISOString()
       }
-    });
+    ]
+  };
 
-    console.log('✅ Cliente Supabase único criado');
-    return supabaseInstance;
+  async query(sql: string, params?: any[]): Promise<{ data: any[], error: any }> {
+    console.log('Mock Database Query:', sql, params);
 
-  } catch (error) {
-    console.error('❌ Erro crítico ao criar cliente:', error);
-    throw error;
-  } finally {
-    isInitializing = false;
+    try {
+      // Simular queries básicas
+      if (sql.includes('SELECT') && sql.includes('collaborators')) {
+        return { data: this.mockData.collaborators, error: null };
+      }
+
+      return { data: [], error: null };
+    } catch (error) {
+      return { data: [], error };
+    }
   }
-};
+}
 
 // Exportar cliente único
-export const supabase = createSupabaseClient();
+export const dbClient = new MockDatabaseClient();
 
-// Função de verificação de conexão simples
-export const checkSupabaseConnection = async (): Promise<boolean> => {
+// Função de verificação de conexão
+export const checkDatabaseConnection = async (): Promise<boolean> => {
   try {
-    const { error } = await supabase.from('collaborators').select('count').limit(0);
+    const { error } = await dbClient.query('SELECT 1');
     return !error;
   } catch {
     return false;
   }
 };
 
-export default supabase;
+// Limpar cache (compatibilidade)
+export const clearSystemCache = () => {
+  console.log('Cache cleared');
+};
+
+export const queryCache = new Map();
