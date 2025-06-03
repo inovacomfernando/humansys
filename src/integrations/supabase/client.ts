@@ -109,6 +109,29 @@ const MOCK_DATA = {
 export const supabase = {
   auth: simpleAuth,
   
+  // Mock para channels/realtime
+  channel: (name: string) => ({
+    on: (event: string, callback: any) => {
+      console.log(`Mock channel: ${name} listening to ${event}`);
+      return {
+        subscribe: () => {
+          console.log(`Mock subscription to ${name}:${event}`);
+          return { unsubscribe: () => console.log(`Unsubscribed from ${name}:${event}`) };
+        }
+      };
+    },
+    subscribe: () => {
+      console.log(`Mock channel subscription: ${name}`);
+      return { unsubscribe: () => console.log(`Unsubscribed from channel: ${name}`) };
+    }
+  }),
+  
+  // Mock para removeChannel
+  removeChannel: (channel: any) => {
+    console.log('Mock removeChannel called');
+    return Promise.resolve();
+  },
+  
   from: (table: string) => ({
     select: (columns: string = '*') => ({
       eq: (column: string, value: any) => ({
