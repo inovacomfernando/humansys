@@ -43,10 +43,20 @@ import {
 import { useDebounceNavigation } from '@/hooks/useDebounceNavigation';
 import { FeatureCard } from '@/components/landing/FeatureCard';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import { CheckIcon, StarIcon, ArrowRightIcon, Users, Target, BarChart3, BookOpen, Calendar, MessageSquare, Award, Shield, Zap, TrendingUp, Clock, Globe, Smartphone, ChevronDown, PlayCircle, Download, FileText, Video, Headphones, Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube, Github } from 'lucide-react';
 
 export const Landing = () => {
   const { debouncedNavigate } = useDebounceNavigation();
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const features = [
     {
@@ -261,8 +271,18 @@ export const Landing = () => {
     });
   };
 
+  const handleGetStarted = () => {
+    navigate('/login');
+  };
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Newsletter signup:', email);
+    setEmail('');
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Header showAuth />
 
       {/* Hero Section */}
@@ -688,55 +708,60 @@ export const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-8 sm:py-12 md:py-16 lg:py-20">
-        <div className="container px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center mb-8 sm:mb-12 lg:mb-16">
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
-              Funcionalidades Completas
-            </h2>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-muted-foreground px-4 sm:px-0">
-              Todas as ferramentas que você precisa para uma gestão de RH eficiente
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <DynamicBadge variant="secondary" className="mb-4">
+              Recursos Avançados
+            </DynamicBadge>
+            <h2 className="text-4xl font-bold mb-6">Tudo que você precisa em uma plataforma</h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Gerencie pessoas, processos e performance com inteligência artificial integrada
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {features.map((feature, index) => (
-              <Card key={index} className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                <CardHeader className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-3 sm:mb-4">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                    </div>
-                    {feature.isNew && (
-                      <Badge className="bg-green-500 text-white text-xs">
-                        Novo
-                      </Badge>
-                    )}
-                  </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <FeatureCard
+              icon={<Users className="h-8 w-8" />}
+              title="Gestão de Colaboradores"
+              description="Centralize informações, acompanhe performance e gerencie equipes de forma inteligente"
+              features={["Perfis completos", "Histórico detalhado", "Avaliações 360°"]}
+            />
+            
+            <FeatureCard
+              icon={<Target className="h-8 w-8" />}
+              title="Onboarding Inteligente"
+              description="Acelere a integração de novos colaboradores com processos automatizados e gamificação"
+              features={["Trilhas personalizadas", "Gamificação", "Acompanhamento em tempo real"]}
+            />
 
-                  <CardTitle className="text-base sm:text-lg">
-                    {feature.title}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    {feature.description}
-                  </CardDescription>
-                </CardHeader>
+            <FeatureCard
+              icon={<BarChart3 className="h-8 w-8" />}
+              title="Analytics Avançado"
+              description="Tome decisões baseadas em dados com relatórios inteligentes e insights preditivos"
+              features={["Dashboards em tempo real", "Relatórios automáticos", "Insights com IA"]}
+            />
 
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  {feature.realImpact && (
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center text-green-600">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
-                        <span className="text-xs">{feature.realImpact.metric}</span>
-                      </div>
-                      <div className="text-muted-foreground text-xs">
-                        {feature.realImpact.example}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+            <FeatureCard
+              icon={<BookOpen className="h-8 w-8" />}
+              title="Treinamentos Modernos"
+              description="Crie e gerencie programas de capacitação com certificações digitais"
+              features={["Trilhas de aprendizado", "Certificações", "Acompanhamento de progresso"]}
+            />
+
+            <FeatureCard
+              icon={<Calendar className="h-8 w-8" />}
+              title="Agendamento Inteligente"
+              description="Otimize reuniões e eventos com sugestões automáticas de horários"
+              features={["Calendário integrado", "Sugestões de horários", "Lembretes automáticos"]}
+            />
+
+            <FeatureCard
+              icon={<MessageSquare className="h-8 w-8" />}
+              title="Feedback Contínuo"
+              description="Promova uma cultura de feedback com ferramentas modernas e eficazes"
+              features={["Feedback 360°", "Pesquisas automáticas", "Análise de sentimento"]}
+            />
           </div>
         </div>
       </section>
@@ -1320,8 +1345,6 @@ export const Landing = () => {
                 </div>
               </CardContent>
             </Card>
-
-
           </div>
         </div>
       </section>
@@ -1392,7 +1415,7 @@ export const Landing = () => {
                 Teste Grátis 30 Dias
               </Button>
               <Button 
-size="lg" 
+                size="lg" 
                 variant="outline"
                 className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-primary"
                 onClick={() => debouncedNavigate('/plans')}

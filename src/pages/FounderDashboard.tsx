@@ -101,15 +101,15 @@ export default function FounderDashboard() {
 
       const mockHealthScores: CustomerHealthScore[] = [
         {
+          id: '1',
           company_id: '1',
           health_score: 78,
-          last_activity: '2024-01-15T00:00:00Z',
-          factors: {
-            usage: 85,
-            engagement: 75,
-            support_tickets: 90,
-            payment_status: 100
-          }
+          engagement_score: 85,
+          adoption_score: 75,
+          satisfaction_score: 80,
+          churn_risk: 'low',
+          last_activity_at: '2024-01-15T00:00:00Z',
+          calculated_at: '2024-01-15T00:00:00Z'
         }
       ];
 

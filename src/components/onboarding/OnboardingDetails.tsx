@@ -132,43 +132,6 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
   if (!process) return null;
 
-  // Convert progress to match types safely
-  const convertedProgress = progress ? {
-    ...progress,
-    badges_earned: (progress.badges_earned || []).map((badge: any) => ({
-      ...badge,
-      category: badge.category as 'milestone' | 'speed' | 'quality' | 'engagement'
-    }))
-  } as OnboardingProgress : null;
-
-  // Create mock gamification stats from progress
-  const gamificationStats: GamificationStats = {
-    totalPoints: convertedProgress?.gamification_score || 0,
-    totalBadges: convertedProgress?.badges_earned?.length || 0,
-    currentStreak: convertedProgress?.current_streak || 0,
-    longestStreak: convertedProgress?.current_streak || 0,
-    rank: 1,
-    level: Math.floor((convertedProgress?.gamification_score || 0) / 100) + 1,
-    nextLevelProgress: ((convertedProgress?.gamification_score || 0) % 100),
-    recentAchievements: (achievements || []).slice(0, 3).map((achievement: any) => ({
-      id: achievement.id || '',
-      badge_id: achievement.badge_id || '',
-      user_id: achievement.user_id || '',
-      earned_at: achievement.earned_at || new Date().toISOString(),
-      badge: achievement.badge || {}
-    }))
-  };
-
-  // Create mock leaderboard
-  const leaderboard: LeaderboardEntry[] = [{
-    user_id: process.collaborator?.id || '',
-    name: process.collaborator?.name || 'Colaborador',
-    points: convertedProgress?.gamification_score || 0,
-    badges_count: convertedProgress?.badges_earned?.length || 0,
-    rank: 1,
-    department: process.department || 'N/A'
-  }];
-
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -177,10 +140,10 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <span>Onboarding - {process.collaborator?.name || 'Colaborador'}</span>
-                {convertedProgress && (
+                {progress && (
                   <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
                     <Trophy className="h-3 w-3 mr-1" />
-                    {convertedProgress.gamification_score} pontos
+                    {progress.gamification_score} pontos
                   </Badge>
                 )}
               </div>
@@ -191,7 +154,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
             </DialogTitle>
             <DialogDescription className="flex items-center justify-between">
               <span>{process.position} • {process.department}</span>
-              {convertedProgress && convertedProgress.performance_rating === 'excellent' && (
+              {progress && progress.performance_rating === 'excellent' && (
                 <Badge variant="outline" className="text-green-600 border-green-200">
                   <Sparkles className="h-3 w-3 mr-1" />
                   Performance Excelente
@@ -233,10 +196,13 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
               </TabsContent>
 
               <TabsContent value="gamification" className="mt-6">
-                <GamificationPanel 
-                  stats={gamificationStats}
-                  leaderboard={leaderboard}
-                />
+                {progress && (
+                  <GamificationPanel 
+                    progress={progress}
+                    achievements={achievements || []}
+                    availableBadges={availableBadges || []}
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="videos" className="mt-6">
