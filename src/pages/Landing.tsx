@@ -43,62 +43,74 @@ export const Landing = () => {
     {
       icon: Users,
       title: 'Gestão de Colaboradores',
-      description: 'Gerencie equipes com facilidade e acompanhe o desenvolvimento de cada colaborador'
+      description: 'Gerencie equipes com facilidade e acompanhe o desenvolvimento de cada colaborador',
+      path: '/collaborators'
     },
     {
       icon: Target,
       title: 'Definição de Metas',
-      description: 'Estabeleça objetivos claros e acompanhe o progresso em tempo real'
+      description: 'Estabeleça objetivos claros e acompanhe o progresso em tempo real',
+      path: '/goals'
     },
     {
       icon: BarChart3,
       title: 'Análises Avançadas',
-      description: 'Relatórios detalhados e insights para tomada de decisões estratégicas'
+      description: 'Relatórios detalhados e insights para tomada de decisões estratégicas',
+      path: '/analytics'
     },
     {
       icon: BookOpen,
       title: 'Biblioteca de Recursos',
-      description: 'Acesso a materiais de treinamento e desenvolvimento profissional'
+      description: 'Acesso a materiais de treinamento e desenvolvimento profissional',
+      path: '/training'
     },
     {
       icon: MessageSquare,
       title: 'Comunicação Integrada',
-      description: 'Ferramentas de feedback e comunicação para melhor colaboração'
+      description: 'Ferramentas de feedback e comunicação para melhor colaboração',
+      path: '/feedback'
     },
     {
       icon: Award,
       title: 'Sistema de Reconhecimento',
-      description: 'Gamificação e badges para motivar e engajar sua equipe'
+      description: 'Gamificação e badges para motivar e engajar sua equipe',
+      path: '/certificates'
     },
     {
       icon: Shield,
       title: 'Segurança Avançada',
-      description: 'Proteção de dados com criptografia e controles de acesso'
+      description: 'Proteção de dados com criptografia e controles de acesso',
+      path: '/security'
     },
     {
       icon: Zap,
       title: 'Automação Inteligente',
-      description: 'Fluxos automatizados para otimizar processos de RH'
+      description: 'Fluxos automatizados para otimizar processos de RH',
+      path: '/automation'
     },
     {
       icon: TrendingUp,
       title: 'Crescimento Acelerado',
-      description: 'Ferramentas para impulsionar o desenvolvimento organizacional'
+      description: 'Ferramentas para impulsionar o desenvolvimento organizacional',
+      path: '/growth'
     },
     {
       icon: Smartphone,
       title: 'Acesso Mobile',
-      description: 'Plataforma responsiva para acesso em qualquer dispositivo'
+      description: 'Plataforma responsiva para acesso em qualquer dispositivo',
+      path: '/mobile'
     },
     {
       icon: FileText,
       title: 'Documentação Completa',
-      description: 'Manuais e guias para maximizar o uso da plataforma'
+      description: 'Manuais e guias para maximizar o uso da plataforma',
+      path: '/documentation'
     },
     {
       icon: Video,
       title: 'Treinamentos em Vídeo',
-      description: 'Conteúdo audiovisual para capacitação contínua'
+      description: 'Conteúdo audiovisual para capacitação contínua',
+      path: '/video-training'
     }
   ];
 
@@ -112,6 +124,10 @@ export const Landing = () => {
       console.log('Email submitted:', email);
       // Handle email submission
     }
+  };
+
+  const handleFeatureClick = (path: string) => {
+    navigate(path);
   };
 
   useEffect(() => {
@@ -151,7 +167,7 @@ export const Landing = () => {
       <section className="py-20 lg:py-28">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-4xl mx-auto">
-            <DynamicBadge text="🚀 Nova versão disponível" />
+            <DynamicBadge>🚀 Nova versão disponível</DynamicBadge>
             <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               Transforme sua gestão de pessoas
             </h1>
@@ -189,6 +205,8 @@ export const Landing = () => {
                 icon={feature.icon}
                 title={feature.title}
                 description={feature.description}
+                path={feature.path}
+                onClick={handleFeatureClick}
               />
             ))}
           </div>
