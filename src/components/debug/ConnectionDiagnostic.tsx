@@ -33,7 +33,7 @@ export const ConnectionDiagnostic: React.FC = () => {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        setSessionStatus('error');
+        setSessionStatus('invalid');
         setErrorDetails(prev => prev + `Session Error: ${sessionError.message}\n`);
       } else if (!session) {
         setSessionStatus('invalid');

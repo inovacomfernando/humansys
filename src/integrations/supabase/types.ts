@@ -36,6 +36,39 @@ export type Database = {
         }
         Relationships: []
       }
+      brainsys_insights: {
+        Row: {
+          confidence_score: number | null
+          content: Json
+          created_at: string | null
+          id: string
+          insight_type: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          content: Json
+          created_at?: string | null
+          id?: string
+          insight_type: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          content?: Json
+          created_at?: string | null
+          id?: string
+          insight_type?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       certificate_templates: {
         Row: {
           active: boolean
@@ -504,6 +537,77 @@ export type Database = {
           },
         ]
       }
+      organization_users: {
+        Row: {
+          admin_user_id: string
+          created_at: string | null
+          id: string
+          organization_id: string
+          role: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          role?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          role?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_users_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          admin_user_id: string
+          created_at: string | null
+          id: string
+          name: string
+          status: string | null
+          subscription_plan: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          status?: string | null
+          subscription_plan?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          status?: string | null
+          subscription_plan?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -794,6 +898,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_credits: {
+        Row: {
+          created_at: string | null
+          id: string
+          plan_type: string | null
+          remaining_credits: number
+          total_credits: number
+          updated_at: string | null
+          used_credits: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          plan_type?: string | null
+          remaining_credits?: number
+          total_credits?: number
+          updated_at?: string | null
+          used_credits?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          plan_type?: string | null
+          remaining_credits?: number
+          total_credits?: number
+          updated_at?: string | null
+          used_credits?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
