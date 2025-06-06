@@ -130,6 +130,39 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     refetchGamification();
   };
 
+  const loadSteps = async () => {
+    if (!process?.id) {
+      setSteps([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const processSteps = await getProcessSteps(process.id);
+      setSteps(Array.isArray(processSteps) ? processSteps : []);
+    } catch (error) {
+      console.error('Erro ao carregar etapas:', error);
+      setSteps([]);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as etapas do onboarding",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (process?.id && open) {
+      loadSteps();
+    } else {
+      setSteps([]);
+      setIsLoading(false);
+    }
+  }, [process?.id, open]);
+
   if (!process) return null;
 
   // Convert progress to match types safely
@@ -234,13 +267,15 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
               <TabsContent value="gamification" className="mt-6">
                 <GamificationPanel 
-                  stats={gamificationStats}
+                  gamificationStats={gamificationStats}
                   leaderboard={leaderboard}
                 />
               </TabsContent>
 
               <TabsContent value="videos" className="mt-6">
                 <VideoPlayer 
+                  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                  title="Vídeo de Onboarding"
                   onComplete={handleVideoComplete}
                 />
               </TabsContent>

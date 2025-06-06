@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -7,6 +6,9 @@ interface HealthMetrics {
   lastActivity: number;
   isHealthy: boolean;
   warnings: string[];
+  networkStatus: 'good' | 'slow' | 'offline';
+  consecutiveFailures: number;
+  lastCheck: Date;
 }
 
 export const useSessionHealthCheck = () => {
@@ -15,14 +17,18 @@ export const useSessionHealthCheck = () => {
     sessionDuration: 0,
     lastActivity: Date.now(),
     isHealthy: true,
-    warnings: []
+    warnings: [],
+    networkStatus: 'good',
+    consecutiveFailures: 0,
+    lastCheck: new Date()
   });
   const [isMonitoring, setIsMonitoring] = useState(false);
 
   const updateActivity = useCallback(() => {
     setHealthMetrics(prev => ({
       ...prev,
-      lastActivity: Date.now()
+      lastActivity: Date.now(),
+      lastCheck: new Date()
     }));
   }, []);
 
@@ -33,11 +39,13 @@ export const useSessionHealthCheck = () => {
     
     const warnings: string[] = [];
     let isHealthy = true;
+    let networkStatus: 'good' | 'slow' | 'offline' = 'good';
 
     // Check for inactivity (30 minutes)
     if (timeSinceActivity > 30 * 60 * 1000) {
       warnings.push('Sessão inativa por mais de 30 minutos');
       isHealthy = false;
+      networkStatus = 'slow';
     }
 
     // Check for very long session (8 hours)
@@ -49,9 +57,16 @@ export const useSessionHealthCheck = () => {
       ...prev,
       sessionDuration,
       isHealthy,
-      warnings
+      warnings,
+      networkStatus,
+      lastCheck: new Date()
     }));
   }, [healthMetrics.lastActivity, healthMetrics.sessionDuration]);
+
+  const forceRefresh = useCallback(() => {
+    checkSessionHealth();
+    updateActivity();
+  }, [checkSessionHealth, updateActivity]);
 
   useEffect(() => {
     if (user && !isMonitoring) {
@@ -94,14 +109,19 @@ export const useSessionHealthCheck = () => {
       sessionDuration: 0,
       lastActivity: Date.now(),
       isHealthy: true,
-      warnings: []
+      warnings: [],
+      networkStatus: 'good',
+      consecutiveFailures: 0,
+      lastCheck: new Date()
     });
   };
 
   return {
     healthMetrics,
+    sessionHealth: healthMetrics, // Add alias for backward compatibility
     isMonitoring,
-    forceHealthCheck,
+    forceHealthCheck: checkSessionHealth,
+    forceRefresh,
     resetSession,
     updateActivity
   };

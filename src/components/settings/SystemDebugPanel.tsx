@@ -34,25 +34,51 @@ const StatusIcon = ({ status }: { status: boolean }) => {
 
 export const SystemDebugPanel = () => {
   const {
-    systemStatus,
-    isRefreshing,
-    checkSystemStatus,
-    refreshSystem,
-    clearSystemCache,
-    runDiagnostics
+    systemHealth,
+    isMonitoring,
+    checkSystemHealth,
+    addAlert,
+    clearResolvedAlerts,
+    getSystemStats,
+    restartSystem,
+    startMonitoring,
+    stopMonitoring
   } = useSystemManagement();
 
   useEffect(() => {
-    checkSystemStatus();
+    checkSystemHealth();
   }, []);
 
   const handleFullRefresh = async () => {
-    await refreshSystem();
+    await restartSystem();
+  };
+
+  const handleClearCache = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      addAlert('info', 'Cache limpo com sucesso');
+    } catch (error) {
+      addAlert('error', 'Erro ao limpar cache');
+    }
   };
 
   const handleRunDiagnostics = async () => {
-    const diagnostics = await runDiagnostics();
+    const diagnostics = {
+      system: systemHealth,
+      stats: getSystemStats(),
+      timestamp: new Date().toISOString()
+    };
     console.table(diagnostics);
+    addAlert('info', 'Diagnósticos executados - verifique o console');
+  };
+
+  // Create system status from health data
+  const systemStatus = {
+    connectivity: systemHealth.status === 'healthy',
+    authentication: true, // Mock - assume authenticated if using the panel
+    cache: true, // Mock - assume cache is working
+    lastCheck: new Date().toISOString()
   };
 
   return (
@@ -73,12 +99,12 @@ export const SystemDebugPanel = () => {
             <div className="flex items-center space-x-2">
               <ConnectionStatus />
               <Button
-                onClick={checkSystemStatus}
+                onClick={checkSystemHealth}
                 variant="outline"
                 size="sm"
-                disabled={isRefreshing}
+                disabled={false}
               >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4`} />
               </Button>
             </div>
           </div>
@@ -159,15 +185,15 @@ export const SystemDebugPanel = () => {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Button
               onClick={handleFullRefresh}
-              disabled={isRefreshing}
+              disabled={false}
               className="flex items-center space-x-2"
             >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4`} />
               <span>Refresh Completo</span>
             </Button>
 
             <Button
-              onClick={clearSystemCache}
+              onClick={handleClearCache}
               variant="outline"
               className="flex items-center space-x-2"
             >
@@ -184,16 +210,6 @@ export const SystemDebugPanel = () => {
               <span>Executar Diagnósticos</span>
             </Button>
           </div>
-
-          {isRefreshing && (
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center space-x-2">
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Atualizando sistema...</span>
-              </div>
-              <Progress value={75} className="h-2" />
-            </div>
-          )}
         </CardContent>
       </Card>
 

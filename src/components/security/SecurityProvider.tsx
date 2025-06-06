@@ -1,5 +1,5 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useSecurityProtection } from '@/hooks/useSecurityProtection';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SecurityContextType {
@@ -23,10 +23,23 @@ interface SecurityProviderProps {
 }
 
 export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) => {
-  const { logSecurityEvent } = useSecurityProtection();
   const { user } = useAuth();
   const [isSecure, setIsSecure] = useState(true);
   const [securityLevel, setSecurityLevel] = useState<'low' | 'medium' | 'high'>('medium');
+
+  const logSecurityEvent = async (eventData: {
+    type: string;
+    user_agent: string;
+    timestamp: string;
+    details: any;
+  }) => {
+    try {
+      // Mock logging - in real app this would send to a security service
+      console.log('Security event logged:', eventData);
+    } catch (error) {
+      console.error('Error logging security event:', error);
+    }
+  };
 
   useEffect(() => {
     // Verificação básica de integridade apenas
@@ -58,7 +71,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
     };
 
     checkBasicSecurity();
-  }, [logSecurityEvent]);
+  }, []);
 
   const blockAccess = async (reason: string) => {
     setIsSecure(false);

@@ -4,12 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Wifi, WifiOff, Clock, Database, RefreshCw } from 'lucide-react';
 import { useSessionHealthCheck } from '@/hooks/useSessionHealthCheck';
-import { useIntelligentCache } from '@/hooks/useIntelligentCache';
+import { useSmartCache } from '@/hooks/useSmartCache';
 import { Button } from '@/components/ui/button';
 
 export const SystemHealthIndicator = () => {
   const { sessionHealth, forceRefresh } = useSessionHealthCheck();
-  const { stats } = useIntelligentCache();
+  const { getStats } = useSmartCache();
+  const stats = getStats();
 
   const getStatusColor = () => {
     if (!sessionHealth.isHealthy) return 'destructive';
@@ -55,12 +56,12 @@ export const SystemHealthIndicator = () => {
             <div className="flex items-center space-x-1">
               <Database className="h-3 w-3 text-muted-foreground" />
               <span className="text-muted-foreground">Cache:</span>
-              <span className="font-medium">{stats.totalEntries}</span>
+              <span className="font-medium">{stats.size}</span>
             </div>
             
             <div className="flex items-center space-x-1">
               <span className="text-muted-foreground">Hit Rate:</span>
-              <span className="font-medium">{Math.round(stats.hitRate)}%</span>
+              <span className="font-medium">{stats.hitRate}</span>
             </div>
           </div>
 
