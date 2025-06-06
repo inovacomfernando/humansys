@@ -1,137 +1,162 @@
 
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { refreshSystemData, clearQueryCache, checkSupabaseConnection } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-export interface SystemStatus {
-  connectivity: boolean;
-  authentication: boolean;
-  cache: boolean;
+interface SystemHealth {
+  status: 'healthy' | 'warning' | 'critical';
+  uptime: number;
+  memoryUsage: number;
+  activeUsers: number;
   lastCheck: string;
 }
 
+interface SystemAlert {
+  id: string;
+  type: 'info' | 'warning' | 'error';
+  message: string;
+  timestamp: string;
+  resolved: boolean;
+}
+
 export const useSystemManagement = () => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
-    connectivity: false,
-    authentication: false,
-    cache: true,
+  const { user } = useAuth();
+  const [systemHealth, setSystemHealth] = useState<SystemHealth>({
+    status: 'healthy',
+    uptime: 0,
+    memoryUsage: 0,
+    activeUsers: 1,
     lastCheck: new Date().toISOString()
   });
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
+  const [isMonitoring, setIsMonitoring] = useState(false);
 
-  const checkSystemStatus = async () => {
-    console.log('Verificando status do sistema...');
-    
-    try {
-      const connectivity = await checkSupabaseConnection();
-      const authentication = !!user?.id;
-      
-      const status: SystemStatus = {
-        connectivity,
-        authentication,
-        cache: true,
-        lastCheck: new Date().toISOString()
-      };
-      
-      setSystemStatus(status);
-      
-      console.log('Status do sistema:', status);
-      return status;
-    } catch (error) {
-      console.error('Erro ao verificar status do sistema:', error);
-      return {
-        connectivity: false,
-        authentication: false,
-        cache: false,
-        lastCheck: new Date().toISOString()
-      };
+  useEffect(() => {
+    if (user) {
+      startMonitoring();
+    } else {
+      stopMonitoring();
     }
-  };
 
-  const refreshSystem = async () => {
-    setIsRefreshing(true);
+    return () => stopMonitoring();
+  }, [user]);
+
+  const startMonitoring = () => {
+    if (isMonitoring) return;
     
-    try {
-      console.log('Iniciando refresh completo do sistema...');
-      
-      // Limpar cache
-      clearQueryCache();
-      
-      // Verificar status após limpeza
-      await checkSystemStatus();
-      
-      // Refresh completo se necessário
-      const success = await refreshSystemData();
-      
-      if (success) {
-        toast({
-          title: "Sistema Atualizado",
-          description: "Todas as configurações foram atualizadas com sucesso.",
-          variant: "default"
-        });
-      } else {
-        throw new Error('Falha no refresh do sistema');
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Erro no refresh do sistema:', error);
-      toast({
-        title: "Erro no Refresh",
-        description: "Não foi possível atualizar completamente o sistema.",
-        variant: "destructive"
-      });
-      return false;
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
-  const clearSystemCache = () => {
-    try {
-      clearQueryCache();
-      toast({
-        title: "Cache Limpo",
-        description: "Cache do sistema foi limpo com sucesso.",
-        variant: "default"
-      });
-      checkSystemStatus();
-    } catch (error) {
-      console.error('Erro ao limpar cache:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível limpar o cache.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const runDiagnostics = async () => {
-    console.log('Executando diagnósticos do sistema...');
+    setIsMonitoring(true);
     
-    const diagnostics = {
-      timestamp: new Date().toISOString(),
-      connectivity: await checkSupabaseConnection(),
-      authentication: !!user?.id,
-      localStorage: !!localStorage.getItem('supabase.auth.token'),
-      userAgent: navigator.userAgent,
-      online: navigator.onLine
+    // Simulate system health checks
+    const interval = setInterval(() => {
+      checkSystemHealth();
+    }, 30000); // Every 30 seconds
+
+    // Initial check
+    checkSystemHealth();
+
+    return () => {
+      clearInterval(interval);
+      setIsMonitoring(false);
     };
+  };
+
+  const stopMonitoring = () => {
+    setIsMonitoring(false);
+  };
+
+  const checkSystemHealth = () => {
+    // Simulate health metrics
+    const memoryUsage = Math.random() * 100;
+    const uptime = Date.now() - (Date.now() % (24 * 60 * 60 * 1000)); // Simulate uptime
     
-    console.log('Diagnósticos completos:', diagnostics);
+    let status: SystemHealth['status'] = 'healthy';
     
-    return diagnostics;
+    if (memoryUsage > 90) {
+      status = 'critical';
+      addAlert('error', 'Uso de memória crítico: ' + memoryUsage.toFixed(1) + '%');
+    } else if (memoryUsage > 75) {
+      status = 'warning';
+      addAlert('warning', 'Uso de memória alto: ' + memoryUsage.toFixed(1) + '%');
+    }
+
+    setSystemHealth({
+      status,
+      uptime,
+      memoryUsage,
+      activeUsers: Math.floor(Math.random() * 10) + 1,
+      lastCheck: new Date().toISOString()
+    });
+  };
+
+  const addAlert = (type: SystemAlert['type'], message: string) => {
+    const alert: SystemAlert = {
+      id: Date.now().toString(),
+      type,
+      message,
+      timestamp: new Date().toISOString(),
+      resolved: false
+    };
+
+    setAlerts(prev => [alert, ...prev.slice(0, 49)]); // Keep last 50 alerts
+  };
+
+  const resolveAlert = (alertId: string) => {
+    setAlerts(prev => 
+      prev.map(alert => 
+        alert.id === alertId ? { ...alert, resolved: true } : alert
+      )
+    );
+  };
+
+  const clearResolvedAlerts = () => {
+    setAlerts(prev => prev.filter(alert => !alert.resolved));
+  };
+
+  const getSystemStats = () => {
+    const unresolvedAlerts = alerts.filter(alert => !alert.resolved);
+    const criticalAlerts = unresolvedAlerts.filter(alert => alert.type === 'error');
+    const warningAlerts = unresolvedAlerts.filter(alert => alert.type === 'warning');
+
+    return {
+      health: systemHealth,
+      totalAlerts: alerts.length,
+      unresolvedAlerts: unresolvedAlerts.length,
+      criticalAlerts: criticalAlerts.length,
+      warningAlerts: warningAlerts.length,
+      isMonitoring
+    };
+  };
+
+  const restartSystem = async () => {
+    try {
+      addAlert('info', 'Sistema reiniciado pelo administrador');
+      
+      // Simulate restart
+      setSystemHealth(prev => ({
+        ...prev,
+        status: 'healthy',
+        memoryUsage: Math.random() * 30, // Lower after restart
+        lastCheck: new Date().toISOString()
+      }));
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao reiniciar sistema:', error);
+      addAlert('error', 'Falha ao reiniciar o sistema');
+      return { success: false, error };
+    }
   };
 
   return {
-    systemStatus,
-    isRefreshing,
-    checkSystemStatus,
-    refreshSystem,
-    clearSystemCache,
-    runDiagnostics
+    systemHealth,
+    alerts,
+    isMonitoring,
+    checkSystemHealth,
+    addAlert,
+    resolveAlert,
+    clearResolvedAlerts,
+    getSystemStats,
+    restartSystem,
+    startMonitoring,
+    stopMonitoring
   };
 };

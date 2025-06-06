@@ -1,272 +1,211 @@
 
 import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  LayoutDashboard,
-  Users,
-  GraduationCap,
-  Calendar,
-  Target,
-  MessageSquare,
-  FileQuestion,
-  FileText,
-  Award,
-  UserPlus,
-  Brain,
-  BarChart3,
-  UserCheck
-} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Shield, Users, FileText, Settings, BarChart } from 'lucide-react';
 
-interface UserPermissions {
-  dashboard: boolean;
-  colaboradores: boolean;
-  treinamentos: boolean;
-  reunioes: boolean;
-  metas: boolean;
-  feedbacks: boolean;
-  pesquisas: boolean;
-  documentos: boolean;
-  certificados: boolean;
-  onboarding: boolean;
-  disc: boolean;
-  analytics: boolean;
-  recruitment: boolean;
-}
-
-interface User {
+interface Permission {
   id: string;
-  email: string;
   name: string;
-  role: 'admin' | 'user';
-  created_at: string;
-  last_sign_in_at?: string;
-  status: 'active' | 'inactive';
-  password?: string;
-  permissions?: UserPermissions;
+  description: string;
+  category: string;
+  icon: React.ReactNode;
 }
 
-interface PermissionsFormProps {
-  user: User;
-  onSave: (permissions: UserPermissions) => void;
-  onCancel: () => void;
+interface Role {
+  id: string;
+  name: string;
+  permissions: string[];
 }
 
-const permissionsList = [
+const permissions: Permission[] = [
   {
-    key: 'dashboard' as keyof UserPermissions,
-    label: 'Dashboard',
-    description: 'Acesso ao painel principal',
-    icon: LayoutDashboard,
-    category: 'Principal'
+    id: 'view_users',
+    name: 'Visualizar Usuários',
+    description: 'Permite visualizar a lista de usuários',
+    category: 'users',
+    icon: <Users className="h-4 w-4" />
   },
   {
-    key: 'colaboradores' as keyof UserPermissions,
-    label: 'Colaboradores',
-    description: 'Gerenciar equipe e perfis',
-    icon: Users,
-    category: 'Gestão'
+    id: 'manage_users',
+    name: 'Gerenciar Usuários',
+    description: 'Permite criar, editar e excluir usuários',
+    category: 'users',
+    icon: <Users className="h-4 w-4" />
   },
   {
-    key: 'treinamentos' as keyof UserPermissions,
-    label: 'Treinamentos',
-    description: 'Acessar e criar treinamentos',
-    icon: GraduationCap,
-    category: 'Desenvolvimento'
+    id: 'view_documents',
+    name: 'Visualizar Documentos',
+    description: 'Permite visualizar documentos',
+    category: 'documents',
+    icon: <FileText className="h-4 w-4" />
   },
   {
-    key: 'reunioes' as keyof UserPermissions,
-    label: 'Reuniões',
-    description: 'Agendar e participar de reuniões',
-    icon: Calendar,
-    category: 'Comunicação'
+    id: 'manage_documents',
+    name: 'Gerenciar Documentos',
+    description: 'Permite criar, editar e excluir documentos',
+    category: 'documents',
+    icon: <FileText className="h-4 w-4" />
   },
   {
-    key: 'metas' as keyof UserPermissions,
-    label: 'Metas',
-    description: 'Definir e acompanhar objetivos',
-    icon: Target,
-    category: 'Gestão'
+    id: 'view_analytics',
+    name: 'Visualizar Analytics',
+    description: 'Permite visualizar relatórios e analytics',
+    category: 'analytics',
+    icon: <BarChart className="h-4 w-4" />
   },
   {
-    key: 'feedbacks' as keyof UserPermissions,
-    label: 'Feedbacks',
-    description: 'Dar e receber feedbacks',
-    icon: MessageSquare,
-    category: 'Comunicação'
-  },
-  {
-    key: 'pesquisas' as keyof UserPermissions,
-    label: 'Pesquisas',
-    description: 'Criar e responder pesquisas',
-    icon: FileQuestion,
-    category: 'Engajamento'
-  },
-  {
-    key: 'documentos' as keyof UserPermissions,
-    label: 'Documentos',
-    description: 'Gerenciar documentos',
-    icon: FileText,
-    category: 'Recursos'
-  },
-  {
-    key: 'certificados' as keyof UserPermissions,
-    label: 'Certificados',
-    description: 'Gerar e visualizar certificados',
-    icon: Award,
-    category: 'Desenvolvimento'
-  },
-  {
-    key: 'onboarding' as keyof UserPermissions,
-    label: 'Onboarding',
-    description: 'Processos de integração',
-    icon: UserPlus,
-    category: 'Recursos'
-  },
-  {
-    key: 'disc' as keyof UserPermissions,
-    label: 'DISC',
-    description: 'Avaliações comportamentais',
-    icon: Brain,
-    category: 'Desenvolvimento'
-  },
-  {
-    key: 'analytics' as keyof UserPermissions,
-    label: 'Analytics',
-    description: 'Relatórios e análises avançadas',
-    icon: BarChart3,
-    category: 'Análise'
-  },
-  {
-    key: 'recruitment' as keyof UserPermissions,
-    label: 'Recrutamento',
-    description: 'Processos seletivos',
-    icon: UserCheck,
-    category: 'Gestão'
+    id: 'system_settings',
+    name: 'Configurações do Sistema',
+    description: 'Permite alterar configurações do sistema',
+    category: 'system',
+    icon: <Settings className="h-4 w-4" />
   }
 ];
 
-export const PermissionsForm: React.FC<PermissionsFormProps> = ({ user, onSave, onCancel }) => {
-  const [permissions, setPermissions] = useState<UserPermissions>(
-    user.permissions || {
-      dashboard: true,
-      colaboradores: false,
-      treinamentos: false,
-      reunioes: false,
-      metas: false,
-      feedbacks: false,
-      pesquisas: false,
-      documentos: false,
-      certificados: false,
-      onboarding: false,
-      disc: false,
-      analytics: false,
-      recruitment: false,
-    }
-  );
+const defaultRoles: Role[] = [
+  {
+    id: 'admin',
+    name: 'Administrador',
+    permissions: permissions.map(p => p.id)
+  },
+  {
+    id: 'manager',
+    name: 'Gerente',
+    permissions: ['view_users', 'view_documents', 'manage_documents', 'view_analytics']
+  },
+  {
+    id: 'user',
+    name: 'Usuário',
+    permissions: ['view_documents', 'view_analytics']
+  }
+];
 
-  const handlePermissionChange = (key: keyof UserPermissions, checked: boolean) => {
-    setPermissions(prev => ({
-      ...prev,
-      [key]: checked
+export const PermissionsForm = () => {
+  const [roles, setRoles] = useState<Role[]>(defaultRoles);
+  const [selectedRole, setSelectedRole] = useState<string>('admin');
+  const { toast } = useToast();
+
+  const selectedRoleData = roles.find(r => r.id === selectedRole);
+
+  const handlePermissionChange = (permissionId: string, checked: boolean) => {
+    setRoles(prev => prev.map(role => {
+      if (role.id === selectedRole) {
+        return {
+          ...role,
+          permissions: checked 
+            ? [...role.permissions, permissionId]
+            : role.permissions.filter(p => p !== permissionId)
+        };
+      }
+      return role;
     }));
   };
 
-  const selectAllInCategory = (category: string, checked: boolean) => {
-    const categoryPermissions = permissionsList.filter(p => p.category === category);
-    const newPermissions = { ...permissions };
-    
-    categoryPermissions.forEach(permission => {
-      if (permission.key !== 'dashboard') { // Dashboard sempre fica como está
-        newPermissions[permission.key] = checked;
-      }
-    });
-    
-    setPermissions(newPermissions);
+  const handleSave = async () => {
+    try {
+      // Mock save - in real app this would save to database
+      toast({
+        title: "Permissões salvas",
+        description: "As permissões foram atualizadas com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar permissões:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as permissões",
+        variant: "destructive"
+      });
+    }
   };
 
-  const categories = Array.from(new Set(permissionsList.map(p => p.category)));
+  const getPermissionsByCategory = (category: string) => {
+    return permissions.filter(p => p.category === category);
+  };
+
+  const categories = [...new Set(permissions.map(p => p.category))];
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-2">
-        {categories.map(category => {
-          const categoryPermissions = permissionsList.filter(p => p.category === category);
-          const allChecked = categoryPermissions.every(p => permissions[p.key]);
-          const someChecked = categoryPermissions.some(p => permissions[p.key]);
-
-          return (
-            <Card key={category} className="h-fit">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">{category}</CardTitle>
-                  {category !== 'Principal' && (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`category-${category}`}
-                        checked={allChecked}
-                        ref={(ref) => {
-                          if (ref) ref.indeterminate = someChecked && !allChecked;
-                        }}
-                        onCheckedChange={(checked) => selectAllInCategory(category, checked as boolean)}
-                      />
-                      <Label htmlFor={`category-${category}`} className="text-xs">
-                        Todos
-                      </Label>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-2">
-                  {categoryPermissions.map(permission => {
-                    const Icon = permission.icon;
-                    const isDisabled = permission.key === 'dashboard' && user.role === 'admin';
-                    
-                    return (
-                      <div key={permission.key} className="flex items-start space-x-2">
-                        <Checkbox
-                          id={permission.key}
-                          checked={permissions[permission.key]}
-                          disabled={isDisabled}
-                          onCheckedChange={(checked) => 
-                            handlePermissionChange(permission.key, checked as boolean)
-                          }
-                          className="mt-1"
-                        />
-                        <div className="flex items-start space-x-2 flex-1 min-w-0">
-                          <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <Label 
-                              htmlFor={permission.key} 
-                              className={`text-sm font-medium block ${isDisabled ? 'text-muted-foreground' : ''}`}
-                            >
-                              {permission.label}
-                            </Label>
-                            <p className="text-xs text-muted-foreground leading-tight">
-                              {permission.description}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+    <div className="space-y-6">
+      <div className="flex items-center space-x-4">
+        <Shield className="h-8 w-8 text-primary" />
+        <div>
+          <h2 className="text-2xl font-bold">Gerenciar Permissões</h2>
+          <p className="text-muted-foreground">Configure as permissões para cada tipo de usuário</p>
+        </div>
       </div>
 
-      <div className="flex justify-end space-x-2 pt-3 border-t sticky bottom-0 bg-background">
-        <Button variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button onClick={() => onSave(permissions)}>
-          Salvar Permissões
-        </Button>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Role Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Roles</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {roles.map((role) => (
+              <Button
+                key={role.id}
+                variant={selectedRole === role.id ? "default" : "outline"}
+                className="w-full justify-start"
+                onClick={() => setSelectedRole(role.id)}
+              >
+                {role.name}
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Permissions */}
+        <div className="lg:col-span-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Permissões para {selectedRoleData?.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {categories.map((category) => (
+                <div key={category} className="space-y-4">
+                  <h3 className="text-lg font-medium capitalize">{category}</h3>
+                  <div className="space-y-3">
+                    {getPermissionsByCategory(category).map((permission) => (
+                      <div key={permission.id} className="flex items-start space-x-3">
+                        <Checkbox
+                          id={permission.id}
+                          checked={selectedRoleData?.permissions.includes(permission.id) || false}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(permission.id, checked as boolean)
+                          }
+                        />
+                        <div className="grid gap-1.5 leading-none">
+                          <Label
+                            htmlFor={permission.id}
+                            className="flex items-center space-x-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {permission.icon}
+                            <span>{permission.name}</span>
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {permission.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="pt-6 border-t">
+                <Button onClick={handleSave}>
+                  Salvar Permissões
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -120,9 +120,9 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     });
   };
 
-  const handleVideoComplete = (stepTitle: string) => {
+  const handleVideoComplete = () => {
     // Award bonus for completing video
-    awardBonusPoints(25, `Vídeo assistido: ${stepTitle}`);
+    awardBonusPoints(25, 'Vídeo assistido');
     toast({
       title: "📹 Vídeo Concluído!",
       description: "+25 pontos de gamificação",

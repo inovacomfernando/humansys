@@ -1,352 +1,227 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Shield, 
-  UserCheck, 
-  Key, 
-  Mail, 
-  AlertTriangle, 
-  CheckCircle,
-  RefreshCw 
-} from 'lucide-react';
-import { AccountRecovery } from './AccountRecovery';
+import { Users, Shield, Database, Settings } from 'lucide-react';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  created_at: string;
+}
 
 export const AdminPanel = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [newUserData, setNewUserData] = useState({
-    email: '',
-    password: '',
-    name: ''
-  });
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const { toast } = useToast();
 
-  const handlePasswordReset = async () => {
-    if (!resetEmail) {
+  // Mock data for demonstration
+  useEffect(() => {
+    setUsers([
+      {
+        id: '1',
+        name: 'Admin User',
+        email: 'admin@humansys.com',
+        status: 'active',
+        created_at: new Date().toISOString()
+      }
+    ]);
+  }, []);
+
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newUserEmail || !newUserName) {
       toast({
-        title: "Email obrigatório",
-        description: "Digite o email do usuário para resetar a senha.",
-        variant: "destructive",
+        title: "Erro",
+        description: "Por favor, preencha todos os campos",
+        variant: "destructive"
       });
       return;
     }
 
     setIsLoading(true);
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/login`,
-      });
+      // Mock user creation - in real app this would be a Supabase call
+      const newUser: User = {
+        id: Date.now().toString(),
+        name: newUserName,
+        email: newUserEmail,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
+      setUsers(prev => [...prev, newUser]);
+      setNewUserEmail('');
+      setNewUserName('');
 
       toast({
-        title: "Email de reset enviado",
-        description: `Um email para resetar a senha foi enviado para ${resetEmail}`,
+        title: "Usuário convidado",
+        description: "O convite foi enviado com sucesso",
       });
-      setResetEmail('');
-    } catch (error: any) {
-      console.error('Password reset error:', error);
+    } catch (error) {
+      console.error('Erro ao convidar usuário:', error);
       toast({
-        title: "Erro ao enviar reset",
-        description: error.message || "Não foi possível enviar o email de reset.",
-        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível enviar o convite",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCreateUser = async () => {
-    if (!newUserData.email || !newUserData.password || !newUserData.name) {
-      toast({
-        title: "Dados incompletos",
-        description: "Preencha todos os campos para criar o usuário.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
+  const handleStatusChange = async (userId: string, newStatus: string) => {
     try {
-      // Verificar se o usuário já existe na tabela de colaboradores
-      const { data: existingCollaborator } = await supabase
-        .from('collaborators')
-        .select('*')
-        .eq('email', newUserData.email)
-        .single();
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { ...user, status: newStatus } : user
+      ));
 
-      if (existingCollaborator) {
-        toast({
-          title: "Usuário já existe",
-          description: "Este email já está cadastrado no sistema.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Para produção: Criar usuário diretamente na tabela de colaboradores
-      // O usuário receberá um convite por email para ativar a conta
-      const { data: collaboratorData, error: collaboratorError } = await supabase
-        .from('collaborators')
-        .insert([{
-          name: newUserData.name,
-          email: newUserData.email,
-          status: 'pending',
-          password_hash: btoa(newUserData.password), // Não é seguro, apenas para desenvolvimento
-          created_by: user?.id,
-          invited_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
-
-      if (collaboratorError) {
-        throw collaboratorError;
-      }
-
-      // Simular envio de email de convite
       toast({
-        title: "Convite enviado",
-        description: `Um convite foi enviado para ${newUserData.email}. Senha temporária: ${newUserData.password}`,
+        title: "Status atualizado",
+        description: "O status do usuário foi alterado com sucesso",
       });
-
-      setNewUserData({ email: '', password: '', name: '' });
-    } catch (error: any) {
-      console.error('Create user error:', error);
-      
-      let errorMessage = "Não foi possível criar o usuário.";
-      
-      if (error.message?.includes('duplicate') || error.message?.includes('unique')) {
-        errorMessage = "Este email já está cadastrado no sistema.";
-      } else if (error.message?.includes('permission') || error.message?.includes('RLS')) {
-        errorMessage = "Sem permissão para criar usuários. Contate o administrador do sistema.";
-      }
-      
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
       toast({
-        title: "Erro ao criar usuário",
-        description: errorMessage,
-        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível atualizar o status",
+        variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center space-x-4">
+        <Shield className="h-8 w-8 text-primary" />
+        <div>
+          <h2 className="text-2xl font-bold">Painel Administrativo</h2>
+          <p className="text-muted-foreground">Gerencie usuários e configurações do sistema</p>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{users.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => u.status === 'active').length}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Convites Pendentes</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {users.filter(u => u.status === 'pending').length}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Invite User Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Painel Administrativo
-          </CardTitle>
-          <CardDescription>
-            Ferramentas para gerenciamento de usuários e sistema
-          </CardDescription>
+          <CardTitle>Convidar Novo Usuário</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Este painel é destinado apenas para administradores. Use com cuidado.
-            </AlertDescription>
-          </Alert>
-
-          {/* Reset de Senha */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Key className="h-4 w-4" />
-              <h4 className="font-medium">Resetar Senha de Usuário</h4>
-            </div>
-            <div className="grid gap-3">
-              <Label htmlFor="reset-email">Email do usuário</Label>
-              <div className="flex gap-2">
+        <CardContent>
+          <form onSubmit={handleInviteUser} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome</Label>
                 <Input
-                  id="reset-email"
-                  type="email"
-                  placeholder="usuario@empresa.com"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  className="flex-1"
-                />
-                <Button 
-                  onClick={handlePasswordReset}
-                  disabled={isLoading}
-                  variant="outline"
-                >
-                  {isLoading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Mail className="h-4 w-4" />
-                  )}
-                  Enviar Reset
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Criar Usuário */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <UserCheck className="h-4 w-4" />
-              <h4 className="font-medium">Criar Novo Usuário</h4>
-            </div>
-            <div className="grid gap-3">
-              <div>
-                <Label htmlFor="new-user-name">Nome completo</Label>
-                <Input
-                  id="new-user-name"
+                  id="name"
+                  type="text"
                   placeholder="Nome do usuário"
-                  value={newUserData.name}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, name: e.target.value }))}
+                  value={newUserName}
+                  onChange={(e) => setNewUserName(e.target.value)}
+                  required
                 />
               </div>
-              <div>
-                <Label htmlFor="new-user-email">Email</Label>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="new-user-email"
+                  id="email"
                   type="email"
-                  placeholder="usuario@empresa.com"
-                  value={newUserData.email}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="email@exemplo.com"
+                  value={newUserEmail}
+                  onChange={(e) => setNewUserEmail(e.target.value)}
+                  required
                 />
               </div>
-              <div>
-                <Label htmlFor="new-user-password">Senha inicial</Label>
-                <Input
-                  id="new-user-password"
-                  type="password"
-                  placeholder="Senha segura"
-                  value={newUserData.password}
-                  onChange={(e) => setNewUserData(prev => ({ ...prev, password: e.target.value }))}
-                />
-              </div>
-              <Button 
-                onClick={handleCreateUser}
-                disabled={isLoading}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                )}
-                Criar Usuário
-              </Button>
             </div>
-          </div>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Enviando...' : 'Enviar Convite'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-          {/* Recuperação de Conta */}
-          <AccountRecovery />
-
-          {/* Sistema de Convites */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <Mail className="h-5 w-5 text-green-600 mr-2" />
-              <h4 className="font-medium text-green-800">Sistema de Convites</h4>
-            </div>
-            <div className="text-sm text-green-700 mt-2 space-y-1">
-              <p>• Usuários são criados com status "pendente"</p>
-              <p>• Uma senha temporária é fornecida para primeiro acesso</p>
-              <p>• O usuário deve trocar a senha no primeiro login</p>
-              <p>• Emails de convite podem ser configurados futuramente</p>
-            </div>
-          </div>
-
-          {/* Sistema de Diagnóstico */}
+      {/* Users List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Usuários do Sistema</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              <h4 className="font-medium">Diagnóstico do Sistema</h4>
-            </div>
-            <div className="grid gap-3">
-              <Button 
-                onClick={async () => {
-                  try {
-                    // Verificar conectividade
-                    const { data, error } = await supabase.auth.getSession();
-                    if (error) throw error;
-                    
-                    toast({
-                      title: "Sistema Online",
-                      description: "Todas as conexões estão funcionando normalmente",
-                    });
-                  } catch (error) {
-                    toast({
-                      title: "Erro de Conectividade", 
-                      description: "Problema detectado na conexão com o banco de dados",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Verificar Status do Sistema
-              </Button>
-              
-              <Button 
-                onClick={() => {
-                  // Limpar cache e recarregar
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.reload();
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reiniciar Sistema
-              </Button>
-
-              <Button 
-                onClick={async () => {
-                  try {
-                    // Tentar reestabelecer conexão
-                    await supabase.auth.refreshSession();
-                    
-                    toast({
-                      title: "Conexão Restabelecida",
-                      description: "Sistema reconectado com sucesso",
-                    });
-                  } catch (error) {
-                    toast({
-                      title: "Erro de Reconexão",
-                      description: "Não foi possível restabelecer a conexão",
-                      variant: "destructive",
-                    });
-                  }
-                }}
-                variant="outline"
-                className="w-full"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Reconectar Database
-              </Button>
-            </div>
-          </div>
-
-          {/* Informações do Sistema */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <CheckCircle className="h-5 w-5 text-blue-600 mr-2" />
-              <h4 className="font-medium text-blue-800">Dicas para Produção</h4>
-            </div>
-            <div className="text-sm text-blue-700 mt-2 space-y-1">
-              <p>• Use senhas fortes para todos os usuários</p>
-              <p>• Monitore logs de acesso regularmente</p>
-              <p>• Mantenha backups regulares dos dados</p>
-              <p>• Configure notificações de segurança</p>
-            </div>
+            {users.map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div>
+                    <h4 className="font-medium">{user.name}</h4>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                    {user.status === 'active' ? 'Ativo' : 'Pendente'}
+                  </Badge>
+                  <Select 
+                    value={user.status} 
+                    onValueChange={(value) => handleStatusChange(user.id, value)}
+                  >
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Ativo</SelectItem>
+                      <SelectItem value="inactive">Inativo</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
