@@ -12,7 +12,7 @@ import { OnboardingSteps } from './OnboardingSteps';
 import { EditStepDialog } from './EditStepDialog';
 import { VideoPlayer } from './VideoPlayer';
 import { useToast } from '@/hooks/use-toast';
-import { OnboardingProgress } from '@/types/gamification';
+import { OnboardingProgress, GamificationStats, LeaderboardEntry } from '@/types/gamification';
 
 interface OnboardingDetailsProps {
   process: any;
@@ -132,7 +132,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
   if (!process) return null;
 
-  // Convert progress to match types
+  // Convert progress to match types safely
   const convertedProgress = progress ? {
     ...progress,
     badges_earned: (progress.badges_earned || []).map((badge: any) => ({
@@ -141,11 +141,33 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     }))
   } as OnboardingProgress : null;
 
-  const convertedAchievements = (achievements || []).map((achievement: any) => ({
-    ...achievement,
-    user_id: achievement.user_id || '',
-    badge: achievement.badge || {}
-  }));
+  // Create mock gamification stats from progress
+  const gamificationStats: GamificationStats = {
+    totalPoints: convertedProgress?.gamification_score || 0,
+    totalBadges: convertedProgress?.badges_earned?.length || 0,
+    currentStreak: convertedProgress?.current_streak || 0,
+    longestStreak: convertedProgress?.current_streak || 0,
+    rank: 1,
+    level: Math.floor((convertedProgress?.gamification_score || 0) / 100) + 1,
+    nextLevelProgress: ((convertedProgress?.gamification_score || 0) % 100),
+    recentAchievements: (achievements || []).slice(0, 3).map((achievement: any) => ({
+      id: achievement.id || '',
+      badge_id: achievement.badge_id || '',
+      user_id: achievement.user_id || '',
+      earned_at: achievement.earned_at || new Date().toISOString(),
+      badge: achievement.badge || {}
+    }))
+  };
+
+  // Create mock leaderboard
+  const leaderboard: LeaderboardEntry[] = [{
+    user_id: process.collaborator?.id || '',
+    name: process.collaborator?.name || 'Colaborador',
+    points: convertedProgress?.gamification_score || 0,
+    badges_count: convertedProgress?.badges_earned?.length || 0,
+    rank: 1,
+    department: process.department || 'N/A'
+  }];
 
   return (
     <>
@@ -212,15 +234,14 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
               <TabsContent value="gamification" className="mt-6">
                 <GamificationPanel 
-                  progress={convertedProgress}
-                  badges={availableBadges}
-                  achievements={convertedAchievements}
+                  stats={gamificationStats}
+                  leaderboard={leaderboard}
                 />
               </TabsContent>
 
               <TabsContent value="videos" className="mt-6">
                 <VideoPlayer 
-                  onVideoComplete={handleVideoComplete}
+                  onComplete={handleVideoComplete}
                 />
               </TabsContent>
 

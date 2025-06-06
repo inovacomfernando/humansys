@@ -102,9 +102,14 @@ export const useCredits = () => {
           throw error;
         }
       } else {
-        setCredits(data);
+        // Type assertion to ensure plan_type matches our type
+        const typedCredits: UserCredits = {
+          ...data,
+          plan_type: (data.plan_type as 'inicial' | 'crescimento' | 'profissional' | 'trial') || 'trial'
+        };
+        setCredits(typedCredits);
         // Cache the result
-        localStorage.setItem(`credits_${user.id}`, JSON.stringify(data));
+        localStorage.setItem(`credits_${user.id}`, JSON.stringify(typedCredits));
         localStorage.setItem(`credits_timestamp_${user.id}`, Date.now().toString());
       }
     } catch (err) {
@@ -148,30 +153,17 @@ export const useCredits = () => {
       localStorage.setItem(`credits_${user.id}`, JSON.stringify(newCredits));
       localStorage.setItem(`credits_timestamp_${user.id}`, Date.now().toString());
 
-      // Try to save to database
-      const { error } = await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: user.id,
-          amount,
-          type,
-          description
-        });
-
-      if (error) {
-        console.log('Transaction save error:', error);
-        // Save transaction to local storage as backup
-        const transactionId = `transaction_${Date.now()}_${Math.random()}`;
-        const transaction = {
-          user_id: user.id,
-          amount,
-          type,
-          description,
-          created_at: new Date().toISOString(),
-          synced: false
-        };
-        localStorage.setItem(transactionId, JSON.stringify(transaction));
-      }
+      // Save transaction to local storage as backup (since credit_transactions table doesn't exist)
+      const transactionId = `transaction_${Date.now()}_${Math.random()}`;
+      const transaction = {
+        user_id: user.id,
+        amount,
+        type,
+        description,
+        created_at: new Date().toISOString(),
+        synced: false
+      };
+      localStorage.setItem(transactionId, JSON.stringify(transaction));
 
       return true;
     } catch (err) {
@@ -202,22 +194,13 @@ export const useCredits = () => {
 
       if (error) throw error;
 
-      // Registrar transação
-      await supabase
-        .from('credit_transactions')
-        .insert([{
-          user_id: user.id,
-          type: 'reset',
-          amount: newTotalCredits,
-          description: `Plano alterado para ${planType} - ${newTotalCredits} créditos`
-        }]);
-
       // Registrar usuário como admin na organização se não existir
       await supabase
         .from('organization_users')
         .upsert({
           user_id: user.id,
           admin_user_id: user.id,
+          organization_id: user.id, // Use user.id as org id for now
           role: 'admin',
           status: 'active'
         }, {
@@ -269,16 +252,6 @@ export const useCredits = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-
-      // Registrar transação
-      await supabase
-        .from('credit_transactions')
-        .insert([{
-          user_id: user.id,
-          type: 'used',
-          amount: 1,
-          description
-        }]);
 
       await fetchCredits();
       return true;

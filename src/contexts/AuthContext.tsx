@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { simpleAuth } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: string;
@@ -7,12 +8,16 @@ interface User {
   name?: string;
   user_metadata?: {
     role?: string;
+    name?: string;
+    full_name?: string;
+    avatar_url?: string;
   };
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isLoggingOut: boolean;
   signIn: (email: string, password: string) => Promise<{ user?: User; error?: any }>;
   signOut: () => Promise<void>;
 }
@@ -22,12 +27,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const { data: { session } } = await simpleAuth.getSession();
-        setUser(session?.user || null);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.user_metadata?.full_name,
+            user_metadata: session.user.user_metadata
+          });
+        }
       } catch (error) {
         console.error('Erro ao verificar sessão:', error);
         setUser(null);
@@ -37,19 +50,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.user_metadata?.full_name,
+          user_metadata: session.user.user_metadata
+        });
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { user: authUser, error } = await simpleAuth.signIn(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
         return { error };
       }
 
-      setUser(authUser);
-      return { user: authUser };
+      if (data.user) {
+        const authUser = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.name || data.user.user_metadata?.full_name,
+          user_metadata: data.user.user_metadata
+        };
+        setUser(authUser);
+        return { user: authUser };
+      }
+
+      return { error: 'No user returned' };
     } catch (error) {
       return { error };
     } finally {
@@ -58,20 +100,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    setIsLoading(true);
+    setIsLoggingOut(true);
     try {
-      await simpleAuth.signOut();
+      await supabase.auth.signOut();
       setUser(null);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     } finally {
-      setIsLoading(false);
+      setIsLoggingOut(false);
     }
   };
 
   const value = {
     user,
     isLoading,
+    isLoggingOut,
     signIn,
     signOut,
   };

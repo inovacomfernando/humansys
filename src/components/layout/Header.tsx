@@ -18,7 +18,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
-import { Moon, Sun, Monitor, LogOut, Settings, User, Loader2, Home, ChevronDown } from 'lucide-react';
+import { Moon, Sun, Monitor, LogOut, Settings, User, Loader2, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,11 +28,10 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoggingOut } = useAuth();
   const { theme, effectiveTheme, setTheme, companyLogo } = useTheme();
   const location = useLocation();
   const { toast } = useToast();
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   const getUserName = () => {
     if (!user) return '';
@@ -48,7 +47,6 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
     e.stopPropagation();
 
     try {
-      setIsLoggingOut(true);
       console.log('Starting logout...');
 
       // Clear everything immediately (before API call)
@@ -74,8 +72,6 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
       localStorage.clear();
       sessionStorage.clear();
       window.location.href = '/login';
-    } finally {
-      setIsLoggingOut(false);
     }
   };
 
