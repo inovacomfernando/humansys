@@ -15,10 +15,10 @@ export const ProtectedRoute = ({
   requireAuth = true,
   requiredRole
 }: ProtectedRouteProps) => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">

@@ -8,14 +8,14 @@ import { Landing } from '@/pages/Landing';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [showLanding, setShowLanding] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     const handleRedirection = async () => {
       // Wait for auth to load
-      if (isLoading || redirecting) return;
+      if (loading || redirecting) return;
 
       // If not authenticated, show landing page
       if (!user) {
@@ -38,7 +38,7 @@ const Index = () => {
     };
 
     handleRedirection();
-  }, [user, isLoading, navigate, redirecting]);
+  }, [user, loading, navigate, redirecting]);
 
   // Show landing page for non-authenticated users
   if (showLanding) {

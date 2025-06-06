@@ -103,7 +103,6 @@ export default function FounderDashboard() {
         {
           company_id: '1',
           health_score: 78,
-          risk_level: 'low',
           last_activity: '2024-01-15T00:00:00Z',
           factors: {
             usage: 85,

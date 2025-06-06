@@ -8,10 +8,10 @@ export const useOptimizedAuth = () => {
 
   useEffect(() => {
     // Simple initialization check
-    if (!auth.isLoading) {
+    if (!auth.loading) {
       setIsInitialized(true);
     }
-  }, [auth.isLoading]);
+  }, [auth.loading]);
 
   const clearAuthCache = () => {
     try {

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -28,7 +29,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const navigate = useNavigate();
-  const { user, signOut, isLoggingOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const { theme, effectiveTheme, setTheme, companyLogo } = useTheme();
   const location = useLocation();
   const { toast } = useToast();
@@ -188,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
               size="sm"
               onClick={() => navigate('/')}
               className="transition-all duration-200 hover:scale-105"
-              disabled={isLoggingOut}
+              disabled={loading}
             >
               <Home className="mr-2 h-4 w-4" />
               Home
@@ -202,7 +203,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                 variant="ghost"
                 size="icon"
                 className="w-9 h-9 transition-all duration-200 hover:scale-110"
-                disabled={isLoggingOut}
+                disabled={loading}
               >
                 <ThemeIcon className="h-4 w-4" />
               </Button>
@@ -232,7 +233,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                 <Button 
                   variant="ghost" 
                   className="relative h-9 w-9 rounded-full transition-all duration-200 hover:scale-110"
-                  disabled={isLoggingOut}
+                  disabled={loading}
                 >
                   <Avatar className="h-9 w-9">
                     <AvatarImage 
@@ -244,7 +245,7 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                       }}
                     />
                     <AvatarFallback>
-                      {isLoggingOut ? (
+                      {loading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         getUserName().charAt(0).toUpperCase()
@@ -254,22 +255,22 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-background border border-border" align="end">
-                <DropdownMenuItem onClick={() => navigate('/app/settings?tab=profile')} className="cursor-pointer" disabled={isLoggingOut}>
+                <DropdownMenuItem onClick={() => navigate('/app/settings?tab=profile')} className="cursor-pointer" disabled={loading}>
                   <User className="mr-2 h-4 w-4" />
                   Perfil
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer" disabled={isLoggingOut}>
+                <DropdownMenuItem onClick={() => navigate('/settings')} className="cursor-pointer" disabled={loading}>
                   <Settings className="mr-2 h-4 w-4" />
                   Configurações
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer" disabled={isLoggingOut}>
-                  {isLoggingOut ? (
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer" disabled={loading}>
+                  {loading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <LogOut className="mr-2 h-4 w-4" />
                   )}
-                  {isLoggingOut ? 'Saindo...' : 'Sair'}
+                  {loading ? 'Saindo...' : 'Sair'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

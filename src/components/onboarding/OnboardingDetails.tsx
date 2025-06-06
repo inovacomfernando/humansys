@@ -37,7 +37,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
     refetch: refetchGamification 
   } = useOnboardingGamification(process?.id || '', steps);
 
-  const loadSteps = async () => {
+  const loadProcessSteps = async () => {
     if (!process?.id) {
       setSteps([]);
       setIsLoading(false);
@@ -63,7 +63,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
   useEffect(() => {
     if (process?.id && open) {
-      loadSteps();
+      loadProcessSteps();
     } else {
       setSteps([]);
       setIsLoading(false);
@@ -82,7 +82,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
     try {
       await updateStepStatus(stepId, !currentCompleted, process.id);
-      await loadSteps();
+      await loadProcessSteps();
 
       // Gamificação: Award bonus points for completing a step
       if (!currentCompleted) {
@@ -112,7 +112,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
   const handleSaveStep = (stepData: Partial<OnboardingStep>) => {
     console.log('Salvando etapa:', stepData);
-    loadSteps();
+    loadProcessSteps();
     refetchGamification();
     toast({
       title: "Etapa atualizada",

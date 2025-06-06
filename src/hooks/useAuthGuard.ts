@@ -5,14 +5,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useAuthGuard = (requireAuth: boolean = true) => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isValidating, setIsValidating] = useState(true);
 
   useEffect(() => {
     const validateSession = async () => {
-      if (isLoading) return;
+      if (loading) return;
       
       setIsValidating(true);
       
@@ -57,7 +57,7 @@ export const useAuthGuard = (requireAuth: boolean = true) => {
     };
 
     validateSession();
-  }, [user, isLoading, requireAuth, navigate, location.pathname]);
+  }, [user, loading, requireAuth, navigate, location.pathname]);
 
   return {
     isValidating,
