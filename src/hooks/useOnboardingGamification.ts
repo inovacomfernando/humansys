@@ -1,39 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { OnboardingStep } from './useOnboarding';
-
-export interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  category: string;
-  criteria: {
-    type: string;
-    value: number;
-  };
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-}
-
-export interface Achievement {
-  id: string;
-  badge_id: string;
-  earned_at: string;
-  points_awarded: number;
-}
-
-export interface OnboardingProgress {
-  progress_percentage: number;
-  completed_steps: number;
-  total_steps: number;
-  badges_earned: Badge[];
-  gamification_score: number;
-  current_streak: number;
-  estimated_completion: string;
-  next_milestone?: Badge;
-  performance_rating: 'excellent' | 'good' | 'average' | 'needs_improvement';
-  time_spent_minutes: number;
-}
+import { Badge, Achievement, OnboardingProgress } from '@/types/gamification';
 
 // Mock badges para desenvolvimento
 const onboardingBadges: Badge[] = [
@@ -153,11 +121,12 @@ export const useOnboardingGamification = (processId: string, steps: OnboardingSt
       setProgress(progressData);
 
       // Atualizar achievements
-      const newAchievements = earnedBadges.map(badge => ({
+      const newAchievements: Achievement[] = earnedBadges.map(badge => ({
         id: `achievement-${badge.id}-${processId}`,
         badge_id: badge.id,
+        user_id: processId, // Using processId as user_id for now
         earned_at: new Date().toISOString(),
-        points_awarded: 50
+        badge: badge
       }));
 
       setAchievements(newAchievements);
