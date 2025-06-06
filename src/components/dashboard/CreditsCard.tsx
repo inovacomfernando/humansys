@@ -25,9 +25,12 @@ export const CreditsCard = () => {
     );
   }
 
-  // Simple fallback for credits display
-  const creditsValue = typeof credits === 'number' ? credits : 100;
-  const isTrialMode = true; // Assuming trial mode for now
+  // Handle credits as either number or object
+  const creditsData = typeof credits === 'number' 
+    ? { total_credits: credits, used_credits: 0, remaining_credits: credits, plan_type: 'trial' as const }
+    : credits || { total_credits: 100, used_credits: 0, remaining_credits: 100, plan_type: 'trial' as const };
+
+  const isTrialMode = creditsData.plan_type === 'trial';
 
   return (
     <Card className="col-span-full lg:col-span-1">
@@ -40,12 +43,12 @@ export const CreditsCard = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-2xl font-bold">
-                {isTrialMode ? '∞' : creditsValue}
+                {isTrialMode ? '∞' : creditsData.remaining_credits}
               </div>
               <p className="text-xs text-muted-foreground">
                 {isTrialMode 
                   ? 'Ilimitado (Teste Grátis)' 
-                  : `de ${creditsValue} créditos`
+                  : `de ${creditsData.total_credits} créditos`
                 }
               </p>
             </div>
@@ -57,10 +60,10 @@ export const CreditsCard = () => {
           {!isTrialMode && (
             <div className="space-y-2">
               <div className="flex justify-between text-xs">
-                <span>Utilizados: 0</span>
-                <span>Restantes: {creditsValue}</span>
+                <span>Utilizados: {creditsData.used_credits}</span>
+                <span>Restantes: {creditsData.remaining_credits}</span>
               </div>
-              <Progress value={0} className="h-2" />
+              <Progress value={(creditsData.used_credits / creditsData.total_credits) * 100} className="h-2" />
             </div>
           )}
 
