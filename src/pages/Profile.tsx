@@ -5,83 +5,90 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditsCard } from '@/components/dashboard/CreditsCard';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { simpleAuth } from '@/integrations/supabase/client';
-import {
-  User,
-  Mail,
-  Building,
-  Briefcase,
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Calendar,
+  Edit,
   Camera,
   Save,
-  Crown,
-  Users,
-  CreditCard,
-  Settings
+  X
 } from 'lucide-react';
 
 interface UserProfile {
   id: string;
-  full_name: string;
   email: string;
-  company_name?: string;
-  company_cnpj?: string;
-  position?: string;
+  full_name?: string;
+  phone?: string;
+  location?: string;
+  bio?: string;
   avatar_url?: string;
-  is_company_owner: boolean;
+  role?: string;
+  department?: string;
+  join_date?: string;
 }
 
 export const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [isCompanyOwner, setIsCompanyOwner] = useState(false);
 
   useEffect(() => {
-    loadProfile();
-  }, [user?.id]);
+    if (user) {
+      loadProfile();
+    }
+  }, [user]);
 
   const loadProfile = async () => {
-    if (!user?.id) return;
+    if (!user) return;
 
     try {
       setLoading(true);
-      console.log('Carregando perfil para usuário:', user.id);
       
-      // Simular delay de carregamento
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // First try to get profile from collaborators table
+      const { data: collaboratorData, error: collaboratorError } = await supabase
+        .from('collaborators')
+        .select('*')
+        .eq('email', user.email)
+        .single();
 
-      // Verificar se é o usuário Amanda (owner)
-      const isAmanda = user.email === 'amanda@vendasimples.com.br';
-      
-      const userProfile: UserProfile = {
-        id: user.id,
-        full_name: user.name || user.email?.split('@')[0] || 'Usuário',
-        email: user.email || '',
-        company_name: isAmanda ? 'VendaSimples' : 'Empresa Exemplo',
-        company_cnpj: isAmanda ? '12.345.678/0001-90' : '98.765.432/0001-10',
-        position: isAmanda ? 'CEO & Founder' : 'Colaborador',
-        avatar_url: '',
-        is_company_owner: isAmanda
-      };
-
-      setProfile(userProfile);
-      setIsCompanyOwner(isAmanda);
-      
-      console.log('Perfil carregado com sucesso:', userProfile);
+      if (collaboratorData) {
+        setProfile({
+          id: collaboratorData.id,
+          email: collaboratorData.email,
+          full_name: collaboratorData.name,
+          phone: collaboratorData.phone,
+          location: collaboratorData.location,
+          role: collaboratorData.role,
+          department: collaboratorData.department,
+          join_date: collaboratorData.join_date,
+        });
+      } else {
+        // Fallback to basic user data
+        setProfile({
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+        });
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar o perfil",
-        variant: "destructive"
+        description: "Não foi possível carregar o perfil.",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -89,292 +96,250 @@ export const Profile = () => {
   };
 
   const handleSave = async () => {
-    if (!profile || !user?.id) return;
+    if (!profile || !user) return;
 
     setSaving(true);
     try {
-      console.log('Salvando perfil:', profile);
-      
-      // Simular delay de salvamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // No sistema mock, apenas simular o salvamento
-      // Em um sistema real, aqui faria a chamada para o banco
+      // Update user metadata
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: profile.full_name,
+        }
+      });
+
+      if (authError) throw authError;
+
+      // Try to update collaborator record if it exists
+      const { error: collaboratorError } = await supabase
+        .from('collaborators')
+        .update({
+          name: profile.full_name,
+          phone: profile.phone,
+          location: profile.location,
+        })
+        .eq('email', user.email);
+
+      // Don't throw error if collaborator record doesn't exist
       
       toast({
-        title: "Sucesso",
-        description: "Perfil atualizado com sucesso!"
+        title: "Perfil atualizado",
+        description: "Suas informações foram salvas com sucesso.",
       });
-    } catch (error) {
-      console.error('Error saving profile:', error);
+      
+      setEditMode(false);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar o perfil",
-        variant: "destructive"
+        description: error.message || "Não foi possível atualizar o perfil.",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user?.id) return;
-
-    try {
-      console.log('Simulando upload de avatar:', file.name);
-      
-      // Simular delay de upload
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simular URL de avatar (usando um placeholder)
-      const mockAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'User')}&size=200&background=random`;
-
-      if (profile) {
-        setProfile({ ...profile, avatar_url: mockAvatarUrl });
-      }
-
-      toast({
-        title: "Sucesso",
-        description: "Foto de perfil atualizada!"
-      });
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível fazer upload da imagem",
-        variant: "destructive"
-      });
-    }
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="space-y-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       </DashboardLayout>
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <DashboardLayout>
+        <div className="text-center p-8">
+          <h2 className="text-xl font-semibold mb-2">Perfil não encontrado</h2>
+          <p className="text-muted-foreground">Não foi possível carregar as informações do perfil.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <User className="h-8 w-8" />
-              Perfil
-              {isCompanyOwner && (
-                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600">
-                  <Crown className="h-3 w-3 mr-1" />
-                  Owner
-                </Badge>
-              )}
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie suas informações pessoais e preferências da conta
-            </p>
+            <h1 className="text-3xl font-bold">Meu Perfil</h1>
+            <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
+          </div>
+          <div className="flex gap-2">
+            {editMode ? (
+              <>
+                <Button variant="outline" onClick={() => setEditMode(false)}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancelar
+                </Button>
+                <Button onClick={handleSave} disabled={saving}>
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => setEditMode(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </Button>
+            )}
           </div>
         </div>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="profile">Informações Pessoais</TabsTrigger>
-            <TabsTrigger value="company">Empresa</TabsTrigger>
-            {isCompanyOwner && (
-              <TabsTrigger value="credits">Gestão de Créditos</TabsTrigger>
-            )}
-          </TabsList>
-
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Foto de Perfil</CardTitle>
-                <CardDescription>
-                  Clique na foto para alterar sua imagem de perfil
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <Avatar className="h-20 w-20 cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
-                      <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-                      <AvatarFallback>
-                        {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1">
-                      <Camera className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{profile.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{profile.email}</p>
-                  </div>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleAvatarUpload}
-                  />
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Profile Card */}
+          <Card className="md:col-span-1">
+            <CardHeader className="text-center">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={profile.avatar_url} />
+                    <AvatarFallback className="text-lg">
+                      {getInitials(profile.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {editMode && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold">{profile.full_name || 'Usuário'}</h3>
+                  <p className="text-sm text-muted-foreground">{profile.email}</p>
+                  {profile.role && (
+                    <Badge variant="secondary" className="mt-2">
+                      {profile.role}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações Pessoais</CardTitle>
-                <CardDescription>
-                  Atualize suas informações básicas
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Nome Completo</Label>
+          {/* Information Card */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Informações Pessoais</CardTitle>
+              <CardDescription>
+                Atualize suas informações de contato e perfil
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome Completo</Label>
+                  {editMode ? (
                     <Input
-                      id="full_name"
-                      value={profile.full_name}
+                      id="name"
+                      value={profile.full_name || ''}
                       onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
                       placeholder="Seu nome completo"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profile.email}
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Cargo</Label>
-                  <Input
-                    id="position"
-                    value={profile.position}
-                    onChange={(e) => setProfile({ ...profile, position: e.target.value })}
-                    placeholder="Seu cargo na empresa"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="company" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  Informações da Empresa
-                </CardTitle>
-                <CardDescription>
-                  Dados da sua empresa ou organização
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">Nome da Empresa</Label>
-                  <Input
-                    id="company_name"
-                    value={profile.company_name}
-                    onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
-                    placeholder="Nome da sua empresa"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company_cnpj">CNPJ</Label>
-                  <Input
-                    id="company_cnpj"
-                    value={profile.company_cnpj}
-                    onChange={(e) => setProfile({ ...profile, company_cnpj: e.target.value })}
-                    placeholder="00.000.000/0000-00"
-                    disabled={!isCompanyOwner}
-                    className={!isCompanyOwner ? "bg-muted" : ""}
-                  />
-                  {!isCompanyOwner && (
-                    <p className="text-xs text-muted-foreground">
-                      Apenas o proprietário da empresa pode alterar o CNPJ
-                    </p>
+                  ) : (
+                    <div className="flex items-center space-x-2 py-2">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span>{profile.full_name || 'Não informado'}</span>
+                    </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
-          {isCompanyOwner && (
-            <TabsContent value="credits" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Gestão de Créditos
-                    <Badge variant="outline">Apenas Owner</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Gerencie os créditos para cadastro de colaboradores
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <CreditsCard />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Permissões de Empresa
-                  </CardTitle>
-                  <CardDescription>
-                    Suas permissões como proprietário da empresa
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Cadastro de Colaboradores</p>
-                        <p className="text-sm text-muted-foreground">Gerenciar equipe e créditos</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Autorizado</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Founder Dashboard</p>
-                        <p className="text-sm text-muted-foreground">Acesso a métricas de negócio</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Autorizado</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">Configurações da Empresa</p>
-                        <p className="text-sm text-muted-foreground">Alterar dados corporativos</p>
-                      </div>
-                      <Badge className="bg-green-100 text-green-800">Autorizado</Badge>
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="flex items-center space-x-2 py-2">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{profile.email}</span>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-        </Tabs>
+                </div>
 
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving} size="lg">
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Salvando...' : 'Salvar Alterações'}
-          </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone</Label>
+                  {editMode ? (
+                    <Input
+                      id="phone"
+                      value={profile.phone || ''}
+                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                      placeholder="Seu telefone"
+                    />
+                  ) : (
+                    <div className="flex items-center space-x-2 py-2">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span>{profile.phone || 'Não informado'}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location">Localização</Label>
+                  {editMode ? (
+                    <Input
+                      id="location"
+                      value={profile.location || ''}
+                      onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                      placeholder="Sua localização"
+                    />
+                  ) : (
+                    <div className="flex items-center space-x-2 py-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{profile.location || 'Não informado'}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {profile.department && (
+                <>
+                  <Separator />
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Departamento</Label>
+                      <div className="flex items-center space-x-2 py-2">
+                        <span>{profile.department}</span>
+                      </div>
+                    </div>
+
+                    {profile.join_date && (
+                      <div className="space-y-2">
+                        <Label>Data de Ingresso</Label>
+                        <div className="flex items-center space-x-2 py-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>{new Date(profile.join_date).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {editMode && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Biografia</Label>
+                    <Textarea
+                      id="bio"
+                      value={profile.bio || ''}
+                      onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+                      placeholder="Conte um pouco sobre você..."
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </DashboardLayout>

@@ -11,7 +11,7 @@ import { FounderReportsTab } from '@/components/founder/FounderReportsTab';
 import { FounderDocumentationTab } from '@/components/founder/FounderDocumentationTab';
 import { FounderDashboardHeader } from '@/components/founder/FounderDashboardHeader';
 import { useAuth } from '@/contexts/AuthContext';
-import type { FounderAnalytics, RevenueChartData, ChurnAnalysis, Company } from '@/types/founder';
+import type { FounderAnalytics, RevenueChartData, ChurnAnalysis, Company, CustomerHealthScore } from '@/types/founder';
 
 export default function FounderDashboard() {
   const { user } = useAuth();
@@ -20,6 +20,7 @@ export default function FounderDashboard() {
   const [revenueChart, setRevenueChart] = useState<RevenueChartData[]>([]);
   const [churnAnalysis, setChurnAnalysis] = useState<ChurnAnalysis[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [healthScores, setHealthScores] = useState<CustomerHealthScore[]>([]);
 
   useEffect(() => {
     loadFounderData();
@@ -98,16 +99,41 @@ export default function FounderDashboard() {
         }
       ];
 
+      const mockHealthScores: CustomerHealthScore[] = [
+        {
+          company_id: '1',
+          health_score: 78,
+          risk_level: 'low',
+          last_activity: '2024-01-15T00:00:00Z',
+          factors: {
+            usage: 85,
+            engagement: 75,
+            support_tickets: 90,
+            payment_status: 100
+          }
+        }
+      ];
+
       setAnalytics(mockAnalytics);
       setRevenueChart(mockRevenueChart);
       setChurnAnalysis(mockChurnAnalysis);
       setCompanies(mockCompanies);
+      setHealthScores(mockHealthScores);
 
     } catch (error) {
       console.error('Erro ao carregar dados do founder:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadFounderData();
+  };
+
+  const exportToCSV = (data: any[], filename: string) => {
+    console.log('Exporting to CSV:', filename, data);
+    // Mock CSV export functionality
   };
 
   if (loading) {
@@ -134,7 +160,11 @@ export default function FounderDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <FounderDashboardHeader />
+        <FounderDashboardHeader 
+          onRefetch={handleRefresh}
+          onExport={exportToCSV}
+          companies={companies}
+        />
         
         <FounderKPICards analytics={analytics} />
 
@@ -163,11 +193,16 @@ export default function FounderDashboard() {
           </TabsContent>
 
           <TabsContent value="engagement">
-            <FounderEngagementTab />
+            <FounderEngagementTab analytics={analytics} />
           </TabsContent>
 
           <TabsContent value="reports">
-            <FounderReportsTab />
+            <FounderReportsTab 
+              companies={companies}
+              healthScores={healthScores}
+              churnAnalysis={churnAnalysis}
+              exportToCSV={exportToCSV}
+            />
           </TabsContent>
 
           <TabsContent value="docs">

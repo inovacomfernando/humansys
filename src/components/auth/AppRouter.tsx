@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 
 // Lazy load heavy components
 const Dashboard = React.lazy(() => import('@/pages/Dashboard').then(module => ({ default: module.Dashboard })));
-const FounderDashboard = React.lazy(() => import('@/pages/FounderDashboard').then(module => ({ default: module.FounderDashboard })));
+const FounderDashboard = React.lazy(() => import('@/pages/FounderDashboard'));
 const Login = React.lazy(() => import('@/pages/Login').then(module => ({ default: module.Login })));
 const Landing = React.lazy(() => import('@/pages/Landing').then(module => ({ default: module.Landing })));
 const Profile = React.lazy(() => import('@/pages/Profile').then(module => ({ default: module.Profile })));
@@ -23,7 +23,7 @@ import { Goals } from '@/pages/Goals';
 import { Analytics } from '@/pages/Analytics';
 import { Changelog } from '@/pages/Changelog';
 import { Documentation } from '@/pages/Documentation';
-import { Settings } from '@/pages/Settings';
+import Settings from '@/pages/Settings';
 import { Certificates } from '@/pages/Certificates';
 import { Documents } from '@/pages/Documents';
 import { Meetings } from '@/pages/Meetings';
