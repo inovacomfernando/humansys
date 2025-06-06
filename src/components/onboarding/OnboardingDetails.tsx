@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +12,7 @@ import { OnboardingSteps } from './OnboardingSteps';
 import { EditStepDialog } from './EditStepDialog';
 import { VideoPlayer } from './VideoPlayer';
 import { useToast } from '@/hooks/use-toast';
+import { OnboardingProgress } from '@/types/gamification';
 
 interface OnboardingDetailsProps {
   process: any;
@@ -26,7 +28,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Integração com gamificação - com proteção contra process undefined
+  // Integração com gamificação - with protection against process undefined
   const { 
     progress, 
     availableBadges, 
@@ -130,6 +132,21 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
   if (!process) return null;
 
+  // Convert progress to match types
+  const convertedProgress = progress ? {
+    ...progress,
+    badges_earned: (progress.badges_earned || []).map((badge: any) => ({
+      ...badge,
+      category: badge.category as 'milestone' | 'speed' | 'quality' | 'engagement'
+    }))
+  } as OnboardingProgress : null;
+
+  const convertedAchievements = (achievements || []).map((achievement: any) => ({
+    ...achievement,
+    user_id: achievement.user_id || '',
+    badge: achievement.badge || {}
+  }));
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,10 +155,10 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <span>Onboarding - {process.collaborator?.name || 'Colaborador'}</span>
-                {progress && (
+                {convertedProgress && (
                   <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
                     <Trophy className="h-3 w-3 mr-1" />
-                    {progress.gamification_score} pontos
+                    {convertedProgress.gamification_score} pontos
                   </Badge>
                 )}
               </div>
@@ -152,7 +169,7 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
             </DialogTitle>
             <DialogDescription className="flex items-center justify-between">
               <span>{process.position} • {process.department}</span>
-              {progress && progress.performance_rating === 'excellent' && (
+              {convertedProgress && convertedProgress.performance_rating === 'excellent' && (
                 <Badge variant="outline" className="text-green-600 border-green-200">
                   <Sparkles className="h-3 w-3 mr-1" />
                   Performance Excelente
@@ -195,15 +212,14 @@ export const OnboardingDetails = ({ process, open, onOpenChange }: OnboardingDet
 
               <TabsContent value="gamification" className="mt-6">
                 <GamificationPanel 
-                  progress={progress}
+                  progress={convertedProgress}
                   badges={availableBadges}
-                  achievements={achievements}
+                  achievements={convertedAchievements}
                 />
               </TabsContent>
 
               <TabsContent value="videos" className="mt-6">
                 <VideoPlayer 
-                  steps={steps}
                   onVideoComplete={handleVideoComplete}
                 />
               </TabsContent>

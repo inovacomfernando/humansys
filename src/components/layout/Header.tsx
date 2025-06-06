@@ -28,10 +28,11 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
   const navigate = useNavigate();
-  const { user, signOut, isLoggingOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { theme, effectiveTheme, setTheme, companyLogo } = useTheme();
   const location = useLocation();
   const { toast } = useToast();
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   const getUserName = () => {
     if (!user) return '';
@@ -47,16 +48,12 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
     e.stopPropagation();
 
     try {
-      console.log('Starting aggressive logout...');
+      setIsLoggingOut(true);
+      console.log('Starting logout...');
 
       // Clear everything immediately (before API call)
       localStorage.clear();
       sessionStorage.clear();
-
-      // Clear query cache
-      if (window.queryCache) {
-        window.queryCache.clear();
-      }
 
       // Show immediate feedback
       toast({
@@ -76,10 +73,9 @@ export const Header: React.FC<HeaderProps> = ({ showAuth = true }) => {
       // Even with error, force cleanup and redirect
       localStorage.clear();
       sessionStorage.clear();
-      if (window.queryCache) {
-        window.queryCache.clear();
-      }
       window.location.href = '/login';
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 

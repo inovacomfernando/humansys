@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 
@@ -22,7 +23,6 @@ export const DynamicBadge: React.FC<DynamicBadgeProps> = ({
         text-white
         shadow-lg
         border-0
-        animate-[pulse_1.5s_ease-in-out_infinite]
         hover:animate-none
         hover:scale-105
         transition-all
@@ -36,19 +36,9 @@ export const DynamicBadge: React.FC<DynamicBadgeProps> = ({
         before:via-white/20
         before:to-transparent
         before:translate-x-[-100%]
-        before:animate-[shimmer_2s_infinite]
       `}
-      style={{
-        animation: 'pulse 1.5s ease-in-out infinite, shimmer 2s infinite'
-      }}
     >
       {children}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </Badge>
   );
 };
